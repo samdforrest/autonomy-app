@@ -1,111 +1,262 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
+interface Module {
+  id: string;
+  title: string;
+  emoji: string;
+  description: string;
+  isActive: boolean;
+}
 
 export default function TabTwoScreen() {
+  const modules: Module[] = [
+    {
+      id: '1',
+      title: 'Job',
+      emoji: '💼',
+      description: 'Work skills and career development',
+      isActive: true
+    },
+    {
+      id: '2',
+      title: 'Collaboration',
+      emoji: '🤝',
+      description: 'Working together effectively',
+      isActive: false
+    },
+    {
+      id: '3',
+      title: 'Growth',
+      emoji: '🌱',
+      description: 'Personal development and progress',
+      isActive: false
+    },
+    {
+      id: '4',
+      title: 'Regulation',
+      emoji: '📏',
+      description: 'Self-control and emotional balance',
+      isActive: false
+    },
+    {
+      id: '5',
+      title: 'Questions',
+      emoji: '❓',
+      description: 'Curiosity and inquiry skills',
+      isActive: false
+    },
+    {
+      id: '6',
+      title: 'Process',
+      emoji: '🔄',
+      description: 'Systematic thinking and workflows',
+      isActive: false
+    },
+    {
+      id: '7',
+      title: 'Self Coach',
+      emoji: '🧘‍♂️',
+      description: 'Self-reflection and guidance',
+      isActive: false
+    },
+    {
+      id: '8',
+      title: 'Mistakes',
+      emoji: '❌',
+      description: 'Learning from errors and setbacks',
+      isActive: false
+    },
+    {
+      id: '9',
+      title: 'Mastery Moments',
+      emoji: '🏆',
+      description: 'Celebrating achievements and success',
+      isActive: false
+    }
+  ];
+
+  const handleModulePress = (module: Module) => {
+    if (!module.isActive) {
+      console.log(`${module.title} module is locked`);
+      return;
+    }
+    // TODO: Navigate to module details
+    console.log(`${module.title} module pressed`);
+  };
+
+  const renderModule = ({ item }: { item: Module }) => (
+    <TouchableOpacity 
+      style={[
+        styles.moduleCard,
+        !item.isActive && styles.moduleCardLocked
+      ]} 
+      onPress={() => handleModulePress(item)}
+      disabled={!item.isActive}
+    >
+      <View style={[
+        styles.progressCircle,
+        !item.isActive && styles.progressCircleLocked
+      ]}>
+        <View style={[
+          styles.progressInner,
+          !item.isActive && styles.progressInnerLocked
+        ]}>
+          <ThemedText style={styles.moduleIcon}>{item.emoji}</ThemedText>
+        </View>
+        <View style={styles.daysBadge}>
+          <ThemedText style={styles.daysText}>5</ThemedText>
+        </View>
+      </View>
+      <ThemedText style={[
+        styles.moduleTitle,
+        !item.isActive && styles.moduleTitleLocked
+      ]}>
+        {item.title}
+      </ThemedText>
+      <ThemedText style={[
+        styles.moduleDescription,
+        !item.isActive && styles.moduleDescriptionLocked
+      ]}>
+        {item.description}
+      </ThemedText>
+    </TouchableOpacity>
+  );
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
+    <ThemedView style={styles.container}>
+      <ThemedView style={styles.header}>
+        <ThemedText type="title" style={styles.title}>Learning Modules</ThemedText>
+        <ThemedText style={styles.subtitle}>Start your learning journey</ThemedText>
       </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+      
+      <FlatList
+        data={modules}
+        renderItem={renderModule}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        contentContainerStyle={styles.moduleGrid}
+        columnWrapperStyle={styles.moduleRow}
+        showsVerticalScrollIndicator={false}
+      />
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    padding: 20,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  header: {
+    alignItems: 'center',
+    marginTop: 40,
+    marginBottom: 40,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    opacity: 0.7,
+  },
+  moduleGrid: {
+    paddingHorizontal: 10,
+    paddingBottom: 20,
+  },
+  moduleRow: {
+    justifyContent: 'space-around',
+    marginBottom: 20,
+  },
+  moduleCard: {
+    alignItems: 'center',
+    padding: 15,
+    borderRadius: 20,
+    backgroundColor: '#f8f9fa',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    width: '45%',
+    minHeight: 200,
+  },
+  moduleCardLocked: {
+    backgroundColor: '#e9ecef',
+    opacity: 0.6,
+  },
+  progressCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#FFC107',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    position: 'relative',
+    borderWidth: 3,
+    borderColor: '#FFD54F',
+  },
+  progressCircleLocked: {
+    backgroundColor: '#dee2e6',
+    borderColor: '#adb5bd',
+  },
+  progressInner: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#FF9800',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressInnerLocked: {
+    backgroundColor: '#6c757d',
+  },
+  moduleIcon: {
+    fontSize: 32,
+  },
+  daysBadge: {
+    position: 'absolute',
+    bottom: -5,
+    right: -5,
+    backgroundColor: '#FFC107',
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  daysText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  moduleTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 6,
+    color: '#333',
+    textAlign: 'center',
+  },
+  moduleTitleLocked: {
+    color: '#6c757d',
+  },
+  moduleDescription: {
+    fontSize: 12,
+    textAlign: 'center',
+    opacity: 0.7,
+    color: '#666',
+    lineHeight: 16,
+  },
+  moduleDescriptionLocked: {
+    color: '#adb5bd',
   },
 });
