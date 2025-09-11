@@ -1,5 +1,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { router } from 'expo-router';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface Module {
@@ -82,8 +83,13 @@ export default function TabTwoScreen() {
       console.log(`${module.title} module is locked`);
       return;
     }
-    // TODO: Navigate to module details
-    console.log(`${module.title} module pressed`);
+    
+    // Navigate to specific module
+    if (module.title === 'Job') {
+      router.push('/job-module');
+    } else {
+      console.log(`${module.title} module pressed - coming soon`);
+    }
   };
 
   const renderModule = ({ item }: { item: Module }) => (
