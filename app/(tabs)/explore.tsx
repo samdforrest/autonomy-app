@@ -1,5 +1,7 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface Module {
@@ -82,8 +84,13 @@ export default function TabTwoScreen() {
       console.log(`${module.title} module is locked`);
       return;
     }
-    // TODO: Navigate to module details
-    console.log(`${module.title} module pressed`);
+    
+    // Navigate to specific module
+    if (module.title === 'Job') {
+      router.push('/job-module');
+    } else {
+      console.log(`${module.title} module pressed - coming soon`);
+    }
   };
 
   const renderModule = ({ item }: { item: Module }) => (
@@ -127,6 +134,13 @@ export default function TabTwoScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.header}>
+        <ThemedView style={styles.logoContainer}>
+          <Image 
+            source={require('@/assets/images/autonomy-brain.png')} 
+            style={styles.brainLogo}
+            contentFit="contain"
+          />
+        </ThemedView>
         <ThemedText type="title" style={styles.title}>Learning Modules</ThemedText>
         <ThemedText style={styles.subtitle}>Start your learning journey</ThemedText>
       </ThemedView>
@@ -153,6 +167,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 40,
     marginBottom: 40,
+  },
+  logoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 2,
+    borderColor: '#e9ecef',
+  },
+  brainLogo: {
+    width: 60,
+    height: 60,
   },
   title: {
     fontSize: 28,
