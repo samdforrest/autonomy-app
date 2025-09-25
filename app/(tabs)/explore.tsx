@@ -68,7 +68,7 @@ export default function TabTwoScreen() {
       title: 'Mistakes',
       emoji: '❌',
       description: 'Learning from errors and setbacks',
-      isActive: false
+      isActive: true
     },
     {
       id: '9',
@@ -88,6 +88,8 @@ export default function TabTwoScreen() {
     // Navigate to specific module
     if (module.title === 'Job') {
       router.push('/job-module');
+    } else if (module.title === 'Mistakes') {
+      router.push('/mistakes-module');
     } else {
       console.log(`${module.title} module pressed - coming soon`);
     }
