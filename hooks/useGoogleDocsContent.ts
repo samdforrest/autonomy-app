@@ -15,8 +15,9 @@ interface UseGoogleDocsContentResult {
 export function useGoogleDocsContent(
   documentId: string,
   format: 'raw' | 'job' | 'mistakes' = 'raw',
-  autoFetch: boolean = true
+  options: { tab?: string; day?: number; autoFetch?: boolean } = {}
 ): UseGoogleDocsContentResult {
+  const { tab, day, autoFetch = true } = options;
   const [content, setContent] = useState<DocumentResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(autoFetch);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +33,7 @@ export function useGoogleDocsContent(
       setLoading(true);
       setError(null);
       
-      const result = await apiService.fetchDocument(documentId, format);
+      const result = await apiService.fetchDocument(documentId, format, { tab, day });
       setContent(result);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -51,7 +52,7 @@ export function useGoogleDocsContent(
     if (autoFetch && documentId) {
       fetchContent();
     }
-  }, [documentId, format, autoFetch]);
+  }, [documentId, format, tab, day, autoFetch]);
 
   return {
     content,
@@ -66,7 +67,8 @@ export function useGoogleDocsContent(
  */
 export function useMultipleGoogleDocsContent(
   documentIds: string[],
-  format: 'raw' | 'job' | 'mistakes' = 'raw'
+  format: 'raw' | 'job' | 'mistakes' = 'raw',
+  options: { tab?: string; day?: number } = {}
 ) {
   const [content, setContent] = useState<Record<string, DocumentResponse | { error: string }>>({});
   const [loading, setLoading] = useState<boolean>(true);
@@ -83,7 +85,7 @@ export function useMultipleGoogleDocsContent(
       setLoading(true);
       setError(null);
       
-      const result = await apiService.fetchMultipleDocuments(documentIds, format);
+      const result = await apiService.fetchMultipleDocuments(documentIds, format, options);
       setContent(result);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -102,12 +104,100 @@ export function useMultipleGoogleDocsContent(
     if (documentIds.length > 0) {
       fetchContent();
     }
-  }, [documentIds.join(','), format]);
+  }, [documentIds.join(','), format, options.tab, options.day]);
 
   return {
     content,
     loading,
     error,
     refetch
+  };
+}
+
+/**
+ * Hook for fetching available tabs from a document
+ */
+export function useDocumentTabs(documentId: string) {
+  const [tabs, setTabs] = useState<string[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTabs = async () => {
+    if (!documentId) {
+      setError('No document ID provided');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const result = await apiService.fetchDocumentTabs(documentId);
+      setTabs(result);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
+      console.error('Failed to fetch document tabs:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (documentId) {
+      fetchTabs();
+    }
+  }, [documentId]);
+
+  return {
+    tabs,
+    loading,
+    error,
+    refetch: fetchTabs
+  };
+}
+
+/**
+ * Hook for fetching available days from a specific tab
+ */
+export function useTabDays(documentId: string, tabName: string) {
+  const [days, setDays] = useState<{ day: number; title: string; fullTitle: string }[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchDays = async () => {
+    if (!documentId || !tabName) {
+      setError('Document ID and tab name are required');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const result = await apiService.fetchTabDays(documentId, tabName);
+      setDays(result);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
+      console.error('Failed to fetch tab days:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (documentId && tabName) {
+      fetchDays();
+    }
+  }, [documentId, tabName]);
+
+  return {
+    days,
+    loading,
+    error,
+    refetch: fetchDays
   };
 }

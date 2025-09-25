@@ -2,12 +2,13 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useGoogleDocsContent } from '../hooks/useGoogleDocsContent';
-import { DOCUMENT_IDS } from '../services/api';
+import { DOCUMENT_REFS } from '../services/api';
 
 export default function MistakesDay1Screen() {
   const { content, loading, error, refetch } = useGoogleDocsContent(
-    DOCUMENT_IDS.MISTAKES_DAY_1,
-    'mistakes'
+    DOCUMENT_REFS.MAIN_DOCUMENT,
+    'mistakes',
+    { tab: 'Mistakes', day: 1 }
   );
 
   // Loading state
@@ -93,7 +94,7 @@ export default function MistakesDay1Screen() {
       <ThemedView style={styles.header}>
         <ThemedText style={styles.dayLabel}>Day 1 of 5</ThemedText>
         <ThemedText type="title" style={styles.title}>
-          {content?.title || 'Understanding Mistakes'}
+          {content?.dayTitle || content?.title || 'Understanding Mistakes'}
         </ThemedText>
         <ThemedText style={styles.subtitle}>Parent + Child • Collaborative Learning</ThemedText>
         

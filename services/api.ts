@@ -37,17 +37,24 @@ class ApiService {
 
   /**
    * Fetch document content from Google Docs via backend
-   * @param documentId - Google Docs document ID
+   * @param documentRef - Document reference key (not actual ID)
    * @param format - Output format ('raw', 'job', 'mistakes')
+   * @param options - Additional options { tab, day }
    * @returns Parsed document content
    */
   async fetchDocument(
-    documentId: string, 
-    format: 'raw' | 'job' | 'mistakes' = 'raw'
+    documentRef: string, 
+    format: 'raw' | 'job' | 'mistakes' = 'raw',
+    options: { tab?: string; day?: number } = {}
   ): Promise<DocumentResponse> {
     try {
+      // Build URL with query parameters
+      const params = new URLSearchParams({ format });
+      if (options.tab) params.append('tab', options.tab);
+      if (options.day) params.append('day', options.day.toString());
+
       const response = await fetch(
-        `${this.baseUrl}/documents/${documentId}?format=${format}`,
+        `${this.baseUrl}/documents/${documentRef}?${params.toString()}`,
         {
           method: 'GET',
           headers: {
@@ -74,14 +81,58 @@ class ApiService {
   }
 
   /**
+   * Fetch specific day content from specific tab (alternative endpoint)
+   * @param documentRef - Document reference key (not actual ID)
+   * @param tabName - Tab name
+   * @param dayNumber - Day number
+   * @param format - Output format
+   * @returns Parsed document content
+   */
+  async fetchTabDay(
+    documentRef: string,
+    tabName: string,
+    dayNumber: number,
+    format: 'raw' | 'job' | 'mistakes' = 'raw'
+  ): Promise<DocumentResponse> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/documents/${documentRef}/tab/${encodeURIComponent(tabName)}/day/${dayNumber}?format=${format}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result: ApiResponse<DocumentResponse> = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Unknown API error');
+      }
+
+      return result.data;
+    } catch (error) {
+      console.error('Failed to fetch tab/day content:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Fetch multiple documents at once
    * @param documentIds - Array of document IDs
    * @param format - Output format
+   * @param options - Additional options { tab, day }
    * @returns Object with document IDs as keys
    */
   async fetchMultipleDocuments(
     documentIds: string[],
-    format: 'raw' | 'job' | 'mistakes' = 'raw'
+    format: 'raw' | 'job' | 'mistakes' = 'raw',
+    options: { tab?: string; day?: number } = {}
   ): Promise<Record<string, DocumentResponse | { error: string }>> {
     try {
       const response = await fetch(`${this.baseUrl}/documents/batch`, {
@@ -91,7 +142,8 @@ class ApiService {
         },
         body: JSON.stringify({
           documentIds,
-          format
+          format,
+          options
         }),
       });
 
@@ -108,6 +160,78 @@ class ApiService {
       return result.data;
     } catch (error) {
       console.error('Failed to fetch multiple documents:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get available tabs from a document
+   * @param documentId - Google Docs document ID
+   * @returns Array of tab names
+   */
+  async fetchDocumentTabs(documentId: string): Promise<string[]> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/documents/${documentId}/tabs`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result: ApiResponse<string[]> = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Unknown API error');
+      }
+
+      return result.data;
+    } catch (error) {
+      console.error('Failed to fetch document tabs:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get available days from a specific tab
+   * @param documentId - Google Docs document ID
+   * @param tabName - Tab name
+   * @returns Array of day objects
+   */
+  async fetchTabDays(
+    documentId: string, 
+    tabName: string
+  ): Promise<{ day: number; title: string; fullTitle: string }[]> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/documents/${documentId}/tab/${encodeURIComponent(tabName)}/days`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result: ApiResponse<{ day: number; title: string; fullTitle: string }[]> = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Unknown API error');
+      }
+
+      return result.data;
+    } catch (error) {
+      console.error('Failed to fetch tab days:', error);
       throw error;
     }
   }
@@ -172,12 +296,9 @@ class ApiService {
 // Export singleton instance
 export const apiService = new ApiService();
 
-// Document ID constants for your modules
-export const DOCUMENT_IDS = {
-  // Replace these with your actual Google Docs document IDs
-  MISTAKES_DAY_1: '1h4r4010V40CCNOtRod84AO_k7XNmBxc64M-Gx__NfYI', // Your test doc
-  JOB_DAY_1: '1h4r4010V40CCNOtRod84AO_k7XNmBxc64M-Gx__NfYI', // Replace with actual job doc
-  // Add more document IDs as needed
-  // MISTAKES_DAY_2: 'another-doc-id',
-  // JOB_DAY_2: 'another-doc-id',
+// Document reference constants - no actual IDs exposed
+export const DOCUMENT_REFS = {
+  MAIN_DOCUMENT: 'main_document', // References the main document with tabs
+  // Add more document references as needed
+  // SECONDARY_DOCUMENT: 'secondary_document',
 };

@@ -1,26 +1,34 @@
 const express = require('express');
 const GoogleDocsService = require('../services/google-docs-service');
+const { getDocumentId } = require('../config/document-mapping');
 
 const router = express.Router();
 const docsService = new GoogleDocsService();
 
 /**
- * GET /api/documents/:documentId
- * Fetch and parse a single Google Docs document
+ * GET /api/documents/:documentRef
+ * Fetch and parse a single Google Docs document using document reference
  */
-router.get('/:documentId', async (req, res) => {
+router.get('/:documentRef', async (req, res) => {
   try {
-    const { documentId } = req.params;
-    const { format = 'raw' } = req.query;
+    const { documentRef } = req.params;
+    const { format = 'raw', tab, day } = req.query;
 
-    if (!documentId) {
+    if (!documentRef) {
       return res.status(400).json({
-        error: 'Document ID is required',
-        example: '/api/documents/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
+        error: 'Document reference is required',
+        example: '/api/documents/main_document'
       });
     }
 
-    const result = await docsService.getDocument(documentId, format);
+    // Convert document reference to actual document ID
+    const documentId = getDocumentId(documentRef);
+
+    const options = {};
+    if (tab) options.tab = tab;
+    if (day) options.day = parseInt(day);
+
+    const result = await docsService.getDocument(documentId, format, options);
     
     res.json({
       success: true,
@@ -30,6 +38,110 @@ router.get('/:documentId', async (req, res) => {
 
   } catch (error) {
     console.error('Document fetch error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+/**
+ * GET /api/documents/:documentId/tab/:tabName/day/:dayNumber
+ * Fetch specific day content from specific tab
+ */
+router.get('/:documentId/tab/:tabName/day/:dayNumber', async (req, res) => {
+  try {
+    const { documentId, tabName, dayNumber } = req.params;
+    const { format = 'raw' } = req.query;
+
+    if (!documentId || !tabName || !dayNumber) {
+      return res.status(400).json({
+        error: 'Document ID, tab name, and day number are required',
+        example: '/api/documents/DOC_ID/tab/Mistakes/day/1'
+      });
+    }
+
+    const options = {
+      tab: decodeURIComponent(tabName),
+      day: parseInt(dayNumber)
+    };
+
+    const result = await docsService.getDocument(documentId, format, options);
+    
+    res.json({
+      success: true,
+      data: result,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Tab/Day fetch error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+/**
+ * GET /api/documents/:documentId/tabs
+ * Get available tabs from document
+ */
+router.get('/:documentId/tabs', async (req, res) => {
+  try {
+    const { documentId } = req.params;
+
+    if (!documentId) {
+      return res.status(400).json({
+        error: 'Document ID is required'
+      });
+    }
+
+    const tabs = await docsService.getDocumentTabs(documentId);
+    
+    res.json({
+      success: true,
+      data: tabs,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Tabs fetch error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+/**
+ * GET /api/documents/:documentId/tab/:tabName/days
+ * Get available days from specific tab
+ */
+router.get('/:documentId/tab/:tabName/days', async (req, res) => {
+  try {
+    const { documentId, tabName } = req.params;
+
+    if (!documentId || !tabName) {
+      return res.status(400).json({
+        error: 'Document ID and tab name are required',
+        example: '/api/documents/DOC_ID/tab/Mistakes/days'
+      });
+    }
+
+    const days = await docsService.getTabDays(documentId, decodeURIComponent(tabName));
+    
+    res.json({
+      success: true,
+      data: days,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Tab days fetch error:', error.message);
     res.status(500).json({
       success: false,
       error: error.message,

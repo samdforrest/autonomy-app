@@ -12,29 +12,195 @@ class DocumentParser {
   /**
    * Main parsing function - converts Google Docs content to structured JSON
    * @param {Object} document - Google Docs API document response
+   * @param {Object} options - Parsing options { tab, day }
    * @returns {Object} - Structured JSON representation
    */
-  parseDocument(document) {
+  parseDocument(document, options = {}) {
     this.parsedContent = {
       title: document.title || 'Untitled Document',
       sections: {},
       metadata: {
         documentId: document.documentId,
         lastModified: new Date().toISOString(),
-        totalSections: 0
+        totalSections: 0,
+        tab: options.tab || null,
+        day: options.day || null
       }
     };
 
-    const content = document.body?.content || [];
+    // If tab is specified, try to find and parse that tab
+    if (options.tab) {
+      const tabContent = this.extractTabContent(document, options.tab);
+      if (tabContent.length === 0) {
+        throw new Error(`Tab "${options.tab}" not found in document`);
+      }
+      
+      // If day is also specified, filter content for that specific day
+      if (options.day) {
+        const dayContent = this.extractDayContent(tabContent, options.day);
+        if (dayContent.length === 0) {
+          throw new Error(`Day ${options.day} not found in tab "${options.tab}"`);
+        }
+        this.parseContent(dayContent);
+        
+        // Extract day title from "Day X - Title" format
+        const dayTitle = this.extractDayTitle(dayContent, options.day);
+        if (dayTitle) {
+          this.parsedContent.dayTitle = dayTitle;
+        }
+      } else {
+        this.parseContent(tabContent);
+      }
+    } else {
+      // Default behavior - parse main document body
+      const content = document.body?.content || [];
+      this.parseContent(content);
+    }
+
+    this.parsedContent.metadata.totalSections = Object.keys(this.parsedContent.sections).length;
+    return this.parsedContent;
+  }
+
+  /**
+   * Extract content from a specific tab
+   * @param {Object} document - Google Docs document
+   * @param {string} tabName - Name of the tab to extract
+   * @returns {Array} - Content elements from the specified tab
+   */
+  extractTabContent(document, tabName) {
+    // Debug: Log the entire document structure to understand tabs
+    console.log('🔍 Document structure keys:', Object.keys(document));
+    console.log('🔍 Document tabs:', document.tabs ? 'exists' : 'missing');
     
+    if (document.tabs) {
+      console.log('🔍 Number of tabs found:', document.tabs.length);
+      document.tabs.forEach((tab, index) => {
+        console.log(`🔍 Tab ${index}:`, {
+          tabProperties: tab.tabProperties,
+          hasDocumentTab: !!tab.documentTab,
+          keys: Object.keys(tab)
+        });
+      });
+      
+      const tab = document.tabs.find(t => 
+        t.tabProperties?.title?.toLowerCase() === tabName.toLowerCase()
+      );
+      
+      if (tab) {
+        console.log('✅ Found matching tab:', tab.tabProperties?.title);
+        if (tab.documentTab) {
+          return tab.documentTab.body?.content || [];
+        } else {
+          console.warn('❌ Tab found but no documentTab property');
+        }
+      } else {
+        console.warn(`❌ Tab "${tabName}" not found. Available tabs:`, 
+          document.tabs.map(t => t.tabProperties?.title).filter(Boolean)
+        );
+      }
+    } else {
+      console.warn('❌ No tabs structure found in document');
+    }
+    
+    // Fallback: if no tabs structure, assume single document
+    console.warn(`Tab "${tabName}" not found, using main document body`);
+    return document.body?.content || [];
+  }
+
+  /**
+   * Extract content for a specific day from tab content
+   * @param {Array} content - Content elements from a tab
+   * @param {number} dayNumber - Day number to extract (1, 2, 3, etc.)
+   * @returns {Array} - Content elements for the specified day
+   */
+  extractDayContent(content, dayNumber) {
+    const dayContent = [];
+    let currentDay = null;
+    let capturing = false;
+
+    for (const element of content) {
+      if (element.paragraph) {
+        const text = this.extractTextFromParagraph(element.paragraph);
+        
+        // Check if this is a day header: "Day X - Title"
+        const dayMatch = text.match(/^Day\s+(\d+)\s*-\s*(.+)$/i);
+        
+        if (dayMatch) {
+          const foundDayNum = parseInt(dayMatch[1]);
+          
+          if (foundDayNum === dayNumber) {
+            // Start capturing content for this day
+            capturing = true;
+            currentDay = foundDayNum;
+            dayContent.push(element);
+          } else if (capturing && foundDayNum > dayNumber) {
+            // We've hit the next day, stop capturing
+            break;
+          } else if (capturing) {
+            // We've hit a different day, stop capturing
+            break;
+          }
+        } else if (capturing) {
+          // We're in the right day, capture this content
+          dayContent.push(element);
+        }
+      } else if (capturing) {
+        // Capture non-paragraph elements too (tables, etc.)
+        dayContent.push(element);
+      }
+    }
+
+    return dayContent;
+  }
+
+  /**
+   * Extract day title from "Day X - Title" format
+   * @param {Array} content - Day content elements
+   * @param {number} dayNumber - Day number
+   * @returns {string|null} - Extracted title or null
+   */
+  extractDayTitle(content, dayNumber) {
+    for (const element of content) {
+      if (element.paragraph) {
+        const text = this.extractTextFromParagraph(element.paragraph);
+        const dayMatch = text.match(/^Day\s+(\d+)\s*-\s*(.+)$/i);
+        
+        if (dayMatch && parseInt(dayMatch[1]) === dayNumber) {
+          return dayMatch[2].trim();
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Extract text content from a paragraph element
+   * @param {Object} paragraph - Paragraph element
+   * @returns {string} - Extracted text
+   */
+  extractTextFromParagraph(paragraph) {
+    let text = '';
+    const elements = paragraph.elements || [];
+    
+    elements.forEach(element => {
+      if (element.textRun) {
+        text += element.textRun.content || '';
+      }
+    });
+    
+    return text.trim();
+  }
+
+  /**
+   * Parse content elements (abstracted from main parsing logic)
+   * @param {Array} content - Content elements to parse
+   */
+  parseContent(content) {
     content.forEach(element => {
       if (element.paragraph) {
         this.parseParagraph(element.paragraph);
       }
     });
-
-    this.parsedContent.metadata.totalSections = Object.keys(this.parsedContent.sections).length;
-    return this.parsedContent;
   }
 
   /**
@@ -192,9 +358,12 @@ class DocumentParser {
   formatForJobModule() {
     return {
       moduleType: 'job',
-      title: this.parsedContent.title,
+      title: this.parsedContent.dayTitle || this.parsedContent.title,
       sections: this.parsedContent.sections,
-      lastUpdated: this.parsedContent.metadata.lastModified
+      lastUpdated: this.parsedContent.metadata.lastModified,
+      tab: this.parsedContent.metadata.tab,
+      day: this.parsedContent.metadata.day,
+      dayTitle: this.parsedContent.dayTitle
     };
   }
 
@@ -205,10 +374,66 @@ class DocumentParser {
   formatForMistakesModule() {
     return {
       moduleType: 'mistakes',
-      title: this.parsedContent.title,
+      title: this.parsedContent.dayTitle || this.parsedContent.title,
       sections: this.parsedContent.sections,
-      lastUpdated: this.parsedContent.metadata.lastModified
+      lastUpdated: this.parsedContent.metadata.lastModified,
+      tab: this.parsedContent.metadata.tab,
+      day: this.parsedContent.metadata.day,
+      dayTitle: this.parsedContent.dayTitle
     };
+  }
+
+  /**
+   * Extract available tabs from document
+   * @param {Object} document - Google Docs document
+   * @returns {Array} - Array of tab names
+   */
+  extractTabs(document) {
+    console.log('🔍 Extracting tabs from document');
+    console.log('🔍 Document has tabs property:', !!document.tabs);
+    
+    if (document.tabs) {
+      console.log('🔍 Found', document.tabs.length, 'tabs');
+      const tabNames = document.tabs.map(tab => {
+        const title = tab.tabProperties?.title;
+        console.log('🔍 Tab title:', title);
+        return title;
+      }).filter(Boolean);
+      
+      console.log('🔍 Extracted tab names:', tabNames);
+      return tabNames;
+    }
+    
+    console.log('🔍 No tabs found, returning fallback');
+    return ['Main Document']; // Fallback for documents without tabs
+  }
+
+  /**
+   * Extract available days from a specific tab
+   * @param {Object} document - Google Docs document
+   * @param {string} tabName - Tab name to search in
+   * @returns {Array} - Array of day objects { day: number, title: string }
+   */
+  extractDaysFromTab(document, tabName) {
+    const tabContent = this.extractTabContent(document, tabName);
+    const days = [];
+
+    for (const element of tabContent) {
+      if (element.paragraph) {
+        const text = this.extractTextFromParagraph(element.paragraph);
+        const dayMatch = text.match(/^Day\s+(\d+)\s*-\s*(.+)$/i);
+        
+        if (dayMatch) {
+          days.push({
+            day: parseInt(dayMatch[1]),
+            title: dayMatch[2].trim(),
+            fullTitle: text.trim()
+          });
+        }
+      }
+    }
+
+    return days.sort((a, b) => a.day - b.day);
   }
 }
 

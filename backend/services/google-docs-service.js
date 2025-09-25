@@ -15,21 +15,33 @@ class GoogleDocsService {
    * Fetch and parse a Google Docs document
    * @param {string} documentId - Google Docs document ID
    * @param {string} format - Output format ('job', 'mistakes', 'raw')
+   * @param {Object} options - Additional options { tab, day }
    * @returns {Object} - Parsed document content
    */
-  async getDocument(documentId, format = 'raw') {
+  async getDocument(documentId, format = 'raw', options = {}) {
     try {
-      console.log(`📄 Fetching document: ${documentId}`);
+      console.log(`📄 Fetching document: ${documentId}${options.tab ? ` (tab: ${options.tab})` : ''}${options.day ? ` (day: ${options.day})` : ''}`);
       
       const docs = this.authClient.getDocsClient();
+      
+      // Get document with tabs content included
       const response = await docs.documents.get({
-        documentId: documentId
+        documentId: documentId,
+        includeTabsContent: true
       });
+      
+      // Debug: Log what we're actually getting from the API
+      console.log('🔍 Full API Response Keys:', Object.keys(response.data));
+      if (response.data.tabs) {
+        console.log('🔍 TABS FOUND:', response.data.tabs.length);
+      } else {
+        console.log('🔍 NO TABS in API response');
+      }
 
       console.log(`✅ Document fetched successfully: "${response.data.title}"`);
       
-      // Parse the document
-      const parsedContent = this.parser.parseDocument(response.data);
+      // Parse the document with tab and day filtering
+      const parsedContent = this.parser.parseDocument(response.data, options);
       
       // Return formatted output
       return this.parser.getFormattedOutput(format);
@@ -51,14 +63,15 @@ class GoogleDocsService {
    * Get multiple documents at once
    * @param {Array} documentIds - Array of document IDs
    * @param {string} format - Output format
+   * @param {Object} options - Additional options { tab, day }
    * @returns {Object} - Object with document IDs as keys and parsed content as values
    */
-  async getMultipleDocuments(documentIds, format = 'raw') {
+  async getMultipleDocuments(documentIds, format = 'raw', options = {}) {
     const results = {};
     
     for (const docId of documentIds) {
       try {
-        results[docId] = await this.getDocument(docId, format);
+        results[docId] = await this.getDocument(docId, format, options);
       } catch (error) {
         console.error(`Failed to fetch document ${docId}:`, error.message);
         results[docId] = { error: error.message };
@@ -66,6 +79,53 @@ class GoogleDocsService {
     }
     
     return results;
+  }
+
+  /**
+   * Get available tabs from a Google Docs document
+   * @param {string} documentId - Document ID
+   * @returns {Array} - Array of tab names
+   */
+  async getDocumentTabs(documentId) {
+    try {
+      const docs = this.authClient.getDocsClient();
+      const response = await docs.documents.get({
+        documentId: documentId,
+        includeTabsContent: true
+      });
+
+      // Extract tab information from document
+      const tabs = this.parser.extractTabs(response.data);
+      return tabs;
+      
+    } catch (error) {
+      console.error('❌ Error fetching document tabs:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get available days from a specific tab
+   * @param {string} documentId - Document ID
+   * @param {string} tabName - Tab name
+   * @returns {Array} - Array of day objects { day: number, title: string }
+   */
+  async getTabDays(documentId, tabName) {
+    try {
+      const docs = this.authClient.getDocsClient();
+      const response = await docs.documents.get({
+        documentId: documentId,
+        includeTabsContent: true
+      });
+
+      // Extract day information from specific tab
+      const days = this.parser.extractDaysFromTab(response.data, tabName);
+      return days;
+      
+    } catch (error) {
+      console.error('❌ Error fetching tab days:', error.message);
+      throw error;
+    }
   }
 
   /**
