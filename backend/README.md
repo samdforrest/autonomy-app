@@ -34,6 +34,7 @@ GOOGLE_SERVICE_ACCOUNT_EMAIL=your-service-account@project.iam.gserviceaccount.co
 GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYour private key here\n-----END PRIVATE KEY-----"
 GOOGLE_PROJECT_ID=your-google-cloud-project-id
 PORT=3001
+MAIN_PROJECT_ID=your-document-id
 ```
 
 ### 3. Set Up Google Service Account

@@ -32,7 +32,32 @@ class ApiService {
 
   constructor() {
     // Update this URL to match your backend server
-    this.baseUrl = 'http://localhost:3001/api';
+    console.log('🔍 Debug - process.env.EXPO_PUBLIC_API_URL:', process.env.EXPO_PUBLIC_API_URL);
+    
+    const isDev = __DEV__;
+    const isWeb = typeof window !== 'undefined';
+    
+    console.log('🔍 Platform detection - isDev:', isDev, 'isWeb:', isWeb);
+    console.log('🔍 typeof window:', typeof window);
+    console.log('🔍 window exists:', typeof window !== 'undefined');
+    
+    if (isDev) {
+      if (isWeb) {
+        // Web can always use localhost
+        this.baseUrl = 'http://localhost:3001/api';
+        console.log('🔍 Using web config: localhost');
+      } else {
+        // iOS simulator sometimes has issues with localhost, try 127.0.0.1 first
+        this.baseUrl = 'http://127.0.0.1:3001/api';
+        console.log('🔍 Using iOS config: 127.0.0.1');
+      }
+    } else {
+      // For production - use environment variable or default
+      this.baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
+    }
+    
+    console.log('🔗 API Service initialized with URL:', this.baseUrl);
+    console.log('🔍 Platform - isDev:', isDev, 'isWeb:', isWeb);
   }
 
   /**
@@ -285,11 +310,72 @@ class ApiService {
   }
 
   /**
+   * Auto-detect working backend URL for iOS simulator
+   * @returns Promise that resolves when a working URL is found
+   */
+  async autoDetectBackendUrl(): Promise<void> {
+    const isDev = __DEV__;
+    const isWeb = typeof window !== 'undefined';
+    
+    // Only auto-detect for iOS simulator in development
+    if (!isDev) {
+      console.log('🔍 Skipping auto-detection - not in development mode');
+      return;
+    }
+    
+    if (isWeb) {
+      console.log('🔍 Detected as web, but will still try auto-detection for debugging...');
+    }
+    
+    const urlsToTry = [
+      'http://127.0.0.1:3001/api',
+      'http://localhost:3001/api',
+      process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api'
+    ];
+    
+    console.log('🔍 Auto-detecting backend URL for iOS...');
+    console.log('🔍 Current baseUrl before detection:', this.baseUrl);
+    
+    for (const url of urlsToTry) {
+      try {
+        console.log(`🔍 Trying ${url}...`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        
+        const response = await fetch(`${url.replace('/api', '')}/health`, { 
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          console.log(`✅ Found working backend URL: ${url}`);
+          this.baseUrl = url;
+          return;
+        } else {
+          console.log(`❌ ${url} responded with status: ${response.status}`);
+        }
+      } catch (error) {
+        console.log(`❌ Failed to connect to ${url}:`, error.message);
+      }
+    }
+    
+    console.warn('⚠️ Could not find working backend URL, keeping current:', this.baseUrl);
+  }
+
+  /**
    * Update base URL (useful for development/production environments)
    * @param url - New base URL
    */
   setBaseUrl(url: string) {
     this.baseUrl = url;
+  }
+
+  /**
+   * Get current base URL (for debugging)
+   */
+  getBaseUrl(): string {
+    return this.baseUrl;
   }
 }
 
