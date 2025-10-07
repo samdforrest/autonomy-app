@@ -144,8 +144,8 @@ class DocumentParser {
       if (element.paragraph) {
         const text = this.extractTextFromParagraph(element.paragraph);
         
-        // Check if this is a day header: "Day X - Title"
-        const dayMatch = text.match(/^Day\s+(\d+)\s*-\s*(.+)$/i);
+        // Check if this is a day header: "Day X - Title", "Day X:", or "Day X"
+        const dayMatch = text.match(/^Day\s+(\d+)(?:\s*[-:]\s*(.+)?)?$/i);
         
         if (dayMatch) {
           const foundDayNum = parseInt(dayMatch[1]);
@@ -155,11 +155,10 @@ class DocumentParser {
             capturing = true;
             currentDay = foundDayNum;
             dayContent.push(element);
-          } else if (capturing && foundDayNum > dayNumber) {
-            // We've hit the next day, stop capturing
-            break;
+            console.log(`🔖 Found Day ${dayNumber} delimiter, starting capture`);
           } else if (capturing) {
-            // We've hit a different day, stop capturing
+            // We've hit a different day marker, stop capturing
+            console.log(`🔖 Found Day ${foundDayNum} delimiter, stopping capture for Day ${dayNumber}`);
             break;
           }
         } else if (capturing) {
@@ -172,6 +171,7 @@ class DocumentParser {
       }
     }
 
+    console.log(`📋 Captured ${dayContent.length} elements for Day ${dayNumber}`);
     return dayContent;
   }
 
@@ -269,6 +269,13 @@ class DocumentParser {
     // Clean up text
     text = text.trim();
     if (!text) return;
+
+    // Check if this is a day delimiter (e.g., "Day 1 - Lesson and Goal Set", "Day 2:", "Day 3")
+    const dayDelimiterMatch = text.match(/^Day\s+(\d+)(?:\s*[-:]\s*.*)?$/i);
+    if (dayDelimiterMatch) {
+      console.log('🔖 Day delimiter detected (skipping from content):', text);
+      return; // Skip day delimiters - they're not part of the content
+    }
 
     // Determine content type and process accordingly
     const isHeaderDetected = this.isHeader(text, paragraph, isHeader);
