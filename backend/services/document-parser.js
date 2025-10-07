@@ -19,6 +19,7 @@ class DocumentParser {
     this.parsedContent = {
       title: document.title || 'Untitled Document',
       sections: {},
+      contentBlocks: [], // New: Array of content blocks for bubble display
       metadata: {
         documentId: document.documentId,
         lastModified: new Date().toISOString(),
@@ -27,6 +28,7 @@ class DocumentParser {
         day: options.day || null
       }
     };
+    this.currentBlock = null; // Track current content block
 
     // If tab is specified, try to find and parse that tab
     if (options.tab) {
@@ -58,6 +60,13 @@ class DocumentParser {
     }
 
     this.parsedContent.metadata.totalSections = Object.keys(this.parsedContent.sections).length;
+    
+    // Log content blocks summary
+    console.log('📦 Total content blocks created:', this.parsedContent.contentBlocks.length);
+    this.parsedContent.contentBlocks.forEach((block, index) => {
+      console.log(`   Block ${index + 1}: "${block.header}" (${block.content.length} items)`);
+    });
+    
     return this.parsedContent;
   }
 
@@ -89,9 +98,22 @@ class DocumentParser {
       if (tab) {
         console.log('✅ Found matching tab:', tab.tabProperties?.title);
         if (tab.documentTab) {
-          return tab.documentTab.body?.content || [];
+          console.log('🔍 Tab documentTab exists');
+          console.log('🔍 Tab documentTab.body exists:', !!tab.documentTab.body);
+          console.log('🔍 Tab documentTab.body.content exists:', !!tab.documentTab.body?.content);
+          
+          if (tab.documentTab.body && tab.documentTab.body.content) {
+            return tab.documentTab.body.content;
+          } else if (tab.documentTab.body) {
+            console.warn('❌ Tab body exists but no content property');
+            return [];
+          } else {
+            console.warn('❌ Tab documentTab exists but no body property');
+            return [];
+          }
         } else {
           console.warn('❌ Tab found but no documentTab property');
+          return [];
         }
       } else {
         console.warn(`❌ Tab "${tabName}" not found. Available tabs:`, 
@@ -179,12 +201,16 @@ class DocumentParser {
    * @returns {string} - Extracted text
    */
   extractTextFromParagraph(paragraph) {
+    if (!paragraph) {
+      return '';
+    }
+    
     let text = '';
     const elements = paragraph.elements || [];
     
     elements.forEach(element => {
-      if (element.textRun) {
-        text += element.textRun.content || '';
+      if (element && element.textRun && element.textRun.content) {
+        text += element.textRun.content;
       }
     });
     
@@ -196,9 +222,19 @@ class DocumentParser {
    * @param {Array} content - Content elements to parse
    */
   parseContent(content) {
-    content.forEach(element => {
-      if (element.paragraph) {
-        this.parseParagraph(element.paragraph);
+    if (!content || !Array.isArray(content)) {
+      console.warn('⚠️ parseContent called with invalid content:', typeof content);
+      return;
+    }
+    
+    content.forEach((element, index) => {
+      try {
+        if (element && element.paragraph) {
+          this.parseParagraph(element.paragraph);
+        }
+      } catch (error) {
+        console.error(`❌ Error parsing element at index ${index}:`, error.message);
+        console.error('Element keys:', element ? Object.keys(element) : 'element is null/undefined');
       }
     });
   }
@@ -208,13 +244,18 @@ class DocumentParser {
    * @param {Object} paragraph - Paragraph element from Google Docs
    */
   parseParagraph(paragraph) {
+    if (!paragraph) {
+      console.warn('⚠️ parseParagraph called with undefined paragraph');
+      return;
+    }
+    
     const elements = paragraph.elements || [];
     let text = '';
     let isHeader = false;
 
     // Extract text and check formatting
     elements.forEach(element => {
-      if (element.textRun) {
+      if (element && element.textRun) {
         text += element.textRun.content || '';
         
         // Check if this is a header (bold, larger font, etc.)
@@ -230,7 +271,10 @@ class DocumentParser {
     if (!text) return;
 
     // Determine content type and process accordingly
-    if (this.isHeader(text, paragraph, isHeader)) {
+    const isHeaderDetected = this.isHeader(text, paragraph, isHeader);
+    
+    if (isHeaderDetected) {
+      console.log('✅ Header detected:', text.substring(0, 60) + (text.length > 60 ? '...' : ''));
       this.processHeader(text);
     } else if (this.isBulletPoint(text)) {
       this.processBulletPoint(text);
@@ -257,9 +301,34 @@ class DocumentParser {
       'HEADING_4', 'HEADING_5', 'HEADING_6'
     ];
     
-    return headingStyles.includes(namedStyleType) || 
-           (isStyleHeader && !this.isBulletPoint(text)) ||
-           (text.length < 50 && !text.includes('-') && text.endsWith(':') === false);
+    // Check if it's a Google Docs heading style
+    if (headingStyles.includes(namedStyleType)) {
+      return true;
+    }
+    
+    // Check if text ends with colon (common header pattern like "Discuss:", "Read the Purpose Together:")
+    if (text.endsWith(':')) {
+      return true;
+    }
+    
+    // Check if it's bold/styled text that's reasonably short and not a bullet point
+    if (isStyleHeader && !this.isBulletPoint(text) && text.length < 100) {
+      return true;
+    }
+    
+    // Check for common header patterns
+    const headerPatterns = [
+      /^Read the Purpose Together/i,
+      /^Discuss/i,
+      /^ANSWER:/i,
+      /^Activity/i,
+      /^Instructions/i,
+      /^Think Together/i,
+      /^Remember/i,
+      /^Closing Conversation/i
+    ];
+    
+    return headerPatterns.some(pattern => pattern.test(text));
   }
 
   /**
@@ -276,8 +345,10 @@ class DocumentParser {
    * @param {string} text - Header text
    */
   processHeader(text) {
-    // Clean header text
-    const headerText = text.replace(/[:\s]*$/, '').trim();
+    // Clean header text (but preserve the colon for display)
+    const headerText = text.trim();
+    
+    console.log('📌 Creating new content block with header:', headerText);
     
     this.currentSection = this.sanitizeKey(headerText);
     this.parsedContent.sections[this.currentSection] = {
@@ -286,6 +357,15 @@ class DocumentParser {
       items: [],
       content: ''
     };
+    
+    // Create a new content block for bubble display
+    this.currentBlock = {
+      id: this.parsedContent.contentBlocks.length + 1,
+      header: headerText,
+      content: [],
+      type: 'text'
+    };
+    this.parsedContent.contentBlocks.push(this.currentBlock);
   }
 
   /**
@@ -308,6 +388,14 @@ class DocumentParser {
         content: ''
       };
     }
+    
+    // Add to current content block
+    if (this.currentBlock) {
+      this.currentBlock.content.push({
+        type: 'bullet',
+        text: bulletText
+      });
+    }
   }
 
   /**
@@ -319,6 +407,26 @@ class DocumentParser {
       const existingContent = this.parsedContent.sections[this.currentSection].content;
       this.parsedContent.sections[this.currentSection].content = 
         existingContent ? `${existingContent}\n${text}` : text;
+    }
+    
+    // Add to current content block
+    if (this.currentBlock) {
+      this.currentBlock.content.push({
+        type: 'text',
+        text: text
+      });
+    } else {
+      // If no current block exists, create one for orphan content
+      this.currentBlock = {
+        id: this.parsedContent.contentBlocks.length + 1,
+        header: null,
+        content: [{
+          type: 'text',
+          text: text
+        }],
+        type: 'text'
+      };
+      this.parsedContent.contentBlocks.push(this.currentBlock);
     }
   }
 
@@ -347,7 +455,11 @@ class DocumentParser {
       case 'mistakes':
         return this.formatForMistakesModule();
       default:
-        return this.parsedContent;
+        // Raw format also includes contentBlocks
+        return {
+          ...this.parsedContent,
+          contentBlocks: this.parsedContent.contentBlocks
+        };
     }
   }
 
@@ -376,10 +488,12 @@ class DocumentParser {
       moduleType: 'mistakes',
       title: this.parsedContent.dayTitle || this.parsedContent.title,
       sections: this.parsedContent.sections,
+      contentBlocks: this.parsedContent.contentBlocks, // New: Include content blocks
       lastUpdated: this.parsedContent.metadata.lastModified,
       tab: this.parsedContent.metadata.tab,
       day: this.parsedContent.metadata.day,
-      dayTitle: this.parsedContent.dayTitle
+      dayTitle: this.parsedContent.dayTitle,
+      metadata: this.parsedContent.metadata
     };
   }
 

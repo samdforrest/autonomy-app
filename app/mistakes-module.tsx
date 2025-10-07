@@ -1,7 +1,10 @@
+import CollapsibleDayCard from '@/components/CollapsibleDayCard';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { router } from 'expo-router';
-import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { useGoogleDocsContent } from '../hooks/useGoogleDocsContent';
+import { DOCUMENT_REFS } from '../services/api';
 
 interface DayModule {
   id: string;
@@ -16,6 +19,15 @@ interface DayModule {
 }
 
 export default function MistakesModuleScreen() {
+  const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  
+  // Google Docs content for Day 1
+  const { content, loading, error, refetch } = useGoogleDocsContent(
+    DOCUMENT_REFS.MAIN_DOCUMENT,
+    'mistakes',
+    { tab: 'Mistakes', day: 1 }
+  );
+
   const dayModules: DayModule[] = [
     {
       id: 'day1',
@@ -74,70 +86,154 @@ export default function MistakesModuleScreen() {
     }
   ];
 
-  const handleDayPress = (day: DayModule) => {
-    if (day.isLocked) {
-      console.log(`Day ${day.dayNumber} is locked`);
-      return;
+  const handleDayToggle = (dayId: string) => {
+    setExpandedDay(expandedDay === dayId ? null : dayId);
+  };
+
+  const renderContentBlock = (block: any, index: number) => (
+    <ThemedView key={block.id || index} style={styles.bubble}>
+      {/* Header/Label */}
+      {block.header && (
+        <ThemedText style={styles.bubbleHeader}>{block.header}</ThemedText>
+      )}
+      
+      {/* Content */}
+      <ThemedView style={styles.bubbleContent}>
+        {block.content && block.content.map((item: any, idx: number) => {
+          if (item.type === 'bullet') {
+            return (
+              <ThemedText key={idx} style={styles.bulletPoint}>
+                • {item.text}
+              </ThemedText>
+            );
+          } else if (item.type === 'text') {
+            return (
+              <ThemedText key={idx} style={styles.bubbleText}>
+                {item.text}
+              </ThemedText>
+            );
+          }
+          return null;
+        })}
+      </ThemedView>
+    </ThemedView>
+  );
+
+  const renderSection = (sectionKey: string, section: any, defaultIcon: string) => (
+    <ThemedView key={sectionKey} style={styles.section}>
+      <ThemedText style={styles.sectionTitle}>
+        {defaultIcon} {section.title}
+      </ThemedText>
+      
+      {/* Render bullet points */}
+      {section.items && section.items.length > 0 && (
+        <ThemedView style={styles.bulletContainer}>
+          {section.items.map((item: string, index: number) => (
+            <ThemedText key={index} style={styles.bulletPoint}>
+              • {item}
+            </ThemedText>
+          ))}
+        </ThemedView>
+      )}
+      
+      {/* Render additional content */}
+      {section.content && (
+        <ThemedText style={styles.contentText}>
+          {section.content}
+        </ThemedText>
+      )}
+    </ThemedView>
+  );
+
+  const getSectionIcon = (sectionKey: string): string => {
+    const iconMap: Record<string, string> = {
+      rules: '📋',
+      instructions: '💭', 
+      activities: '🎯',
+      what_are_mistakes: '🤔',
+      think_together: '💭',
+      todays_activities: '🎯',
+    };
+    return iconMap[sectionKey] || '📝';
+  };
+
+  const renderDayContent = (day: DayModule) => {
+    if (day.dayNumber === 1) {
+      // Loading state
+      if (loading) {
+        return (
+          <ThemedView style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#E74C3C" />
+            <ThemedText style={styles.loadingText}>Loading content from Google Docs...</ThemedText>
+          </ThemedView>
+        );
+      }
+
+      // Error state
+      if (error) {
+        return (
+          <ThemedView style={styles.errorContainer}>
+            <ThemedText style={styles.errorTitle}>⚠️ Content Unavailable</ThemedText>
+            <ThemedText style={styles.errorText}>{error}</ThemedText>
+            <TouchableOpacity style={styles.retryButton} onPress={refetch}>
+              <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
+        );
+      }
+
+      // Content state
+      return (
+        <ThemedView>
+          {/* Refresh button */}
+          <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
+            <ThemedText style={styles.refreshButtonText}>🔄 Refresh Content</ThemedText>
+          </TouchableOpacity>
+
+          {content?.contentBlocks && content.contentBlocks.length > 0 ? (
+            // Render content blocks as separate bubbles
+            content.contentBlocks.map((block: any, index: number) =>
+              renderContentBlock(block, index)
+            )
+          ) : content?.sections ? (
+            // Fallback: Render old sections format
+            Object.entries(content.sections).map(([sectionKey, section]) =>
+              renderSection(sectionKey, section, getSectionIcon(sectionKey))
+            )
+          ) : (
+            // Fallback content if no Google Docs content is available
+            <ThemedView style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>🤔 What Are Mistakes?</ThemedText>
+              <ThemedText style={styles.contentText}>
+                Content is loading from Google Docs...
+              </ThemedText>
+            </ThemedView>
+          )}
+          
+          {/* Content metadata */}
+          {content?.metadata && (
+            <ThemedView style={styles.metadataContainer}>
+              <ThemedText style={styles.metadataText}>
+                Last updated: {new Date(content.metadata.lastModified).toLocaleDateString()}
+              </ThemedText>
+              <ThemedText style={styles.metadataText}>
+                Sections: {content.metadata.totalSections}
+              </ThemedText>
+            </ThemedView>
+          )}
+        </ThemedView>
+      );
     }
     
-    // Navigate to specific day
-    if (day.dayNumber === 1) {
-      router.push('/mistakes-day-1');
-    } else {
-      console.log(`Day ${day.dayNumber} component coming soon`);
-    }
-  };
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'collaborative':
-        return 'Parent + Child';
-      case 'independent':
-        return 'Child Only';
-      case 'evaluation':
-        return 'Review Together';
-      default:
-        return '';
-    }
-  };
-
-  const renderDayCard = (day: DayModule) => (
-    <TouchableOpacity
-      key={day.id}
-      style={[
-        styles.dayCard,
-        { backgroundColor: day.color },
-        day.isLocked && styles.dayCardLocked
-      ]}
-      onPress={() => handleDayPress(day)}
-      disabled={day.isLocked}
-    >
-      <ThemedView style={styles.dayCardContent}>
-        <ThemedView style={styles.dayHeader}>
-          <ThemedText style={styles.dayNumber}>Day {day.dayNumber}</ThemedText>
-          <ThemedText style={styles.typeLabel}>{getTypeLabel(day.type)}</ThemedText>
-        </ThemedView>
-        
-        <ThemedView style={styles.dayBody}>
-          <ThemedText style={styles.dayIcon}>{day.icon}</ThemedText>
-          <ThemedText style={styles.dayTitle}>{day.title}</ThemedText>
-          <ThemedText style={styles.dayDescription}>{day.description}</ThemedText>
-        </ThemedView>
-
-        {day.isCompleted && (
-          <ThemedView style={styles.completedBadge}>
-            <ThemedText style={styles.completedText}>✓</ThemedText>
-          </ThemedView>
-        )}
-
-        {day.isLocked && (
-          <ThemedView style={styles.lockedOverlay}>
-            <ThemedText style={styles.lockedIcon}>🔒</ThemedText>
-          </ThemedView>
-        )}
+    return (
+      <ThemedView>
+        <ThemedText style={styles.contentTitle}>🚀 Coming Soon!</ThemedText>
+        <ThemedText style={styles.contentText}>
+          Day {day.dayNumber} content is being prepared...
+        </ThemedText>
       </ThemedView>
-    </TouchableOpacity>
-  );
+    );
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -153,7 +249,16 @@ export default function MistakesModuleScreen() {
         contentContainerStyle={styles.daysContainer}
         showsVerticalScrollIndicator={false}
       >
-        {dayModules.map(renderDayCard)}
+        {dayModules.map((day) => (
+          <CollapsibleDayCard
+            key={day.id}
+            day={day}
+            isExpanded={expandedDay === day.id}
+            onToggle={handleDayToggle}
+          >
+            {renderDayContent(day)}
+          </CollapsibleDayCard>
+        ))}
       </ScrollView>
     </ThemedView>
   );
@@ -188,100 +293,131 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 10,
   },
-  dayCard: {
-    borderRadius: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    position: 'relative',
-  },
-  dayCardLocked: {
-    opacity: 0.6,
-  },
-  dayCardContent: {
-    padding: 20,
-    backgroundColor: 'transparent',
-  },
-  dayHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    backgroundColor: 'transparent',
-  },
-  dayNumber: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: 'white',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  typeLabel: {
-    fontSize: 12,
-    color: 'white',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  dayBody: {
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  dayIcon: {
-    fontSize: 40,
-    marginBottom: 8,
-  },
-  dayTitle: {
+  contentTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: 'white',
+    marginBottom: 12,
+    color: '#333',
+  },
+  contentText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#666',
+    marginBottom: 16,
+  },
+  section: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  bulletContainer: {
+    marginTop: 8,
+  },
+  bulletPoint: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#666',
     marginBottom: 4,
-    textAlign: 'center',
   },
-  dayDescription: {
-    fontSize: 14,
-    color: 'white',
-    opacity: 0.9,
-    textAlign: 'center',
-  },
-  completedBadge: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 20,
-    width: 30,
-    height: 30,
+  loadingContainer: {
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 40,
   },
-  completedText: {
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  errorContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#E74C3C',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#E74C3C',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  lockedOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 16,
+  refreshButton: {
+    backgroundColor: '#f8f9fa',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    alignSelf: 'flex-end',
+    marginBottom: 16,
   },
-  lockedIcon: {
-    fontSize: 24,
-    opacity: 0.8,
+  refreshButtonText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  metadataContainer: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 20,
+  },
+  metadataText: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  bubble: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  bubbleHeader: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 8,
+  },
+  bubbleContent: {
+    backgroundColor: 'transparent',
+  },
+  bubbleText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#333',
+    marginBottom: 8,
   },
 });
