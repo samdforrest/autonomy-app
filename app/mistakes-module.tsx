@@ -20,12 +20,13 @@ interface DayModule {
 
 export default function MistakesModuleScreen() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const [currentDay, setCurrentDay] = useState<number>(1);
   
-  // Google Docs content for Day 1
+  // Google Docs content for the currently active day
   const { content, loading, error, refetch } = useGoogleDocsContent(
     DOCUMENT_REFS.MAIN_DOCUMENT,
     'mistakes',
-    { tab: 'Mistakes', day: 1 }
+    { tab: 'Mistakes', day: currentDay }
   );
 
   const dayModules: DayModule[] = [
@@ -46,7 +47,7 @@ export default function MistakesModuleScreen() {
       description: 'Taking responsibility and accountability',
       dayNumber: 2,
       isCompleted: false,
-      isLocked: true,
+      isLocked: false,
       color: '#F39C12',
       icon: '🙋‍♂️',
       type: 'collaborative'
@@ -57,7 +58,7 @@ export default function MistakesModuleScreen() {
       description: 'Turning mistakes into learning opportunities',
       dayNumber: 3,
       isCompleted: false,
-      isLocked: true,
+      isLocked: false,
       color: '#3498DB',
       icon: '💡',
       type: 'independent'
@@ -68,7 +69,7 @@ export default function MistakesModuleScreen() {
       description: 'Fixing mistakes and moving forward',
       dayNumber: 4,
       isCompleted: false,
-      isLocked: true,
+      isLocked: false,
       color: '#2ECC71',
       icon: '🔧',
       type: 'independent'
@@ -79,7 +80,7 @@ export default function MistakesModuleScreen() {
       description: 'Building resilience and confidence',
       dayNumber: 5,
       isCompleted: false,
-      isLocked: true,
+      isLocked: false,
       color: '#9B59B6',
       icon: '🌟',
       type: 'evaluation'
@@ -87,7 +88,16 @@ export default function MistakesModuleScreen() {
   ];
 
   const handleDayToggle = (dayId: string) => {
-    setExpandedDay(expandedDay === dayId ? null : dayId);
+    const dayNumber = parseInt(dayId.replace('day', ''));
+    
+    // If clicking the same day, collapse it
+    if (expandedDay === dayId) {
+      setExpandedDay(null);
+    } else {
+      // Expanding a new day - set it as current and load its content
+      setCurrentDay(dayNumber);
+      setExpandedDay(dayId);
+    }
   };
 
   const renderContentBlock = (block: any, index: number) => (
@@ -158,13 +168,19 @@ export default function MistakesModuleScreen() {
   };
 
   const renderDayContent = (day: DayModule) => {
-    if (day.dayNumber === 1) {
+    // Only render content for the currently expanded day
+    if (expandedDay !== day.id) {
+      return null;
+    }
+
+    // Check if this is the day we're currently loading content for
+    if (day.dayNumber === currentDay) {
       // Loading state
       if (loading) {
         return (
           <ThemedView style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#E74C3C" />
-            <ThemedText style={styles.loadingText}>Loading content from Google Docs...</ThemedText>
+            <ActivityIndicator size="large" color={day.color} />
+            <ThemedText style={styles.loadingText}>Loading Day {day.dayNumber} content from Google Docs...</ThemedText>
           </ThemedView>
         );
       }
@@ -182,7 +198,7 @@ export default function MistakesModuleScreen() {
         );
       }
 
-      // Content state
+      // Content state - render dynamic content for any day
       return (
         <ThemedView>
           {/* Refresh button */}
@@ -190,20 +206,15 @@ export default function MistakesModuleScreen() {
             <ThemedText style={styles.refreshButtonText}>🔄 Refresh Content</ThemedText>
           </TouchableOpacity>
 
-          {content?.contentBlocks && content.contentBlocks.length > 0 ? (
-            // Render content blocks as separate bubbles
-            content.contentBlocks.map((block: any, index: number) =>
-              renderContentBlock(block, index)
-            )
-          ) : content?.sections ? (
-            // Fallback: Render old sections format
+          {content?.sections ? (
+            // Render sections from Google Docs
             Object.entries(content.sections).map(([sectionKey, section]) =>
               renderSection(sectionKey, section, getSectionIcon(sectionKey))
             )
           ) : (
             // Fallback content if no Google Docs content is available
             <ThemedView style={styles.section}>
-              <ThemedText style={styles.sectionTitle}>🤔 What Are Mistakes?</ThemedText>
+              <ThemedText style={styles.sectionTitle}>📝 Day {day.dayNumber} Content</ThemedText>
               <ThemedText style={styles.contentText}>
                 Content is loading from Google Docs...
               </ThemedText>
@@ -225,11 +236,12 @@ export default function MistakesModuleScreen() {
       );
     }
     
+    // This shouldn't happen with our new logic, but keeping as fallback
     return (
       <ThemedView>
-        <ThemedText style={styles.contentTitle}>🚀 Coming Soon!</ThemedText>
+        <ThemedText style={styles.contentTitle}>🚀 Loading...</ThemedText>
         <ThemedText style={styles.contentText}>
-          Day {day.dayNumber} content is being prepared...
+          Preparing Day {day.dayNumber} content...
         </ThemedText>
       </ThemedView>
     );
