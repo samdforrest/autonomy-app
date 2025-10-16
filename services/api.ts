@@ -35,11 +35,14 @@ class ApiService {
     console.log('🔍 Debug - process.env.EXPO_PUBLIC_API_URL:', process.env.EXPO_PUBLIC_API_URL);
     
     const isDev = __DEV__;
-    const isWeb = typeof window !== 'undefined';
+    // Proper platform detection: React Native has navigator.product === 'ReactNative'
+    const isWeb = typeof window !== 'undefined' && 
+                  typeof navigator !== 'undefined' && 
+                  navigator.product !== 'ReactNative';
     
     console.log('🔍 Platform detection - isDev:', isDev, 'isWeb:', isWeb);
     console.log('🔍 typeof window:', typeof window);
-    console.log('🔍 window exists:', typeof window !== 'undefined');
+    console.log('🔍 navigator.product:', typeof navigator !== 'undefined' ? navigator.product : 'undefined');
     
     if (isDev) {
       if (isWeb) {
@@ -47,9 +50,16 @@ class ApiService {
         this.baseUrl = 'http://localhost:3001/api';
         console.log('🔍 Using web config: localhost');
       } else {
-        // iOS simulator sometimes has issues with localhost, try 127.0.0.1 first
-        this.baseUrl = 'http://127.0.0.1:3001/api';
-        console.log('🔍 Using iOS config: 127.0.0.1');
+        // For mobile devices (iOS/Android), prioritize environment variable
+        // If no env var, use localhost as default (works with tunnel mode)
+        this.baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
+        console.log('🔍 Using mobile config - will auto-detect if needed');
+        console.log('🔍 Initial mobile URL:', this.baseUrl);
+        
+        // Auto-detect working URL on mobile (runs in background)
+        this.autoDetectBackendUrl().catch(err => {
+          console.warn('🔍 Auto-detection failed:', err.message);
+        });
       }
     } else {
       // For production - use environment variable or default
@@ -328,8 +338,9 @@ class ApiService {
     }
     
     const urlsToTry = [
-      'http://127.0.0.1:3001/api',
-      'http://localhost:3001/api',
+      'http://localhost:3001/api',     // Works with tunnel mode and simulators
+      'http://127.0.0.1:3001/api',     // iOS simulator fallback
+      'http://10.0.2.2:3001/api',      // Android emulator host mapping
       process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api'
     ];
     
