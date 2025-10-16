@@ -1,6 +1,7 @@
 import CollapsibleDayCard from '@/components/CollapsibleDayCard';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { YouTubePlayer } from '@/components/YouTubePlayer';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useGoogleDocsContent } from '../hooks/useGoogleDocsContent';
@@ -16,6 +17,7 @@ interface DayModule {
   color: string;
   icon: string;
   type: 'collaborative' | 'independent' | 'evaluation';
+  videoUrl?: string; // Optional YouTube video for each day
 }
 
 export default function MistakesModuleScreen() {
@@ -39,7 +41,8 @@ export default function MistakesModuleScreen() {
       isLocked: false,
       color: '#E74C3C',
       icon: '🤔',
-      type: 'collaborative'
+      type: 'collaborative',
+      videoUrl: 'https://www.youtube.com/shorts/RO4ZzfoVyWQ?feature=share'
     },
     {
       id: 'day2',
@@ -50,7 +53,8 @@ export default function MistakesModuleScreen() {
       isLocked: false,
       color: '#F39C12',
       icon: '🙋‍♂️',
-      type: 'collaborative'
+      type: 'collaborative',
+      videoUrl: 'https://youtube.com/shorts/ZmpeyPHTdwU?si=7WR3U5DUaJt2x8ZQ'
     },
     {
       id: 'day3',
@@ -62,6 +66,7 @@ export default function MistakesModuleScreen() {
       color: '#3498DB',
       icon: '💡',
       type: 'independent'
+      // No video for day 3 to show optional behavior
     },
     {
       id: 'day4',
@@ -73,6 +78,7 @@ export default function MistakesModuleScreen() {
       color: '#2ECC71',
       icon: '🔧',
       type: 'independent'
+      // No video for day 4
     },
     {
       id: 'day5',
@@ -84,6 +90,7 @@ export default function MistakesModuleScreen() {
       color: '#9B59B6',
       icon: '🌟',
       type: 'evaluation'
+      // No video for day 5
     }
   ];
 
@@ -218,6 +225,22 @@ export default function MistakesModuleScreen() {
               <ThemedText style={styles.contentText}>
                 Content is loading from Google Docs...
               </ThemedText>
+            </ThemedView>
+          )}
+
+          {/* YouTube Video Section */}
+          {day.videoUrl && (
+            <ThemedView style={styles.videoSection}>
+              <ThemedText style={styles.videoSectionTitle}>🎥 Watch & Learn</ThemedText>
+              <ThemedText style={styles.videoDescription}>
+                This video complements today's lesson on {day.title.toLowerCase()}
+              </ThemedText>
+              <YouTubePlayer
+                url={day.videoUrl}
+                height={200}
+                style={styles.videoPlayer}
+                showThumbnail={true}
+              />
             </ThemedView>
           )}
           
@@ -431,5 +454,30 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: '#333',
     marginBottom: 8,
+  },
+  videoSection: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  videoSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  videoDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  videoPlayer: {
+    borderRadius: 8,
+    overflow: 'hidden',
   },
 });
