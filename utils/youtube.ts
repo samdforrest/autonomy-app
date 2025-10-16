@@ -108,3 +108,46 @@ export function getYouTubeThumbnail(url: string, quality: 'default' | 'medium' |
 
   return `https://img.youtube.com/vi/${videoId}/${qualityMap[quality]}.jpg`;
 }
+
+/**
+ * Extracts all YouTube URLs from a text string
+ */
+export function extractYouTubeUrls(text: string): string[] {
+  if (!text || typeof text !== 'string') {
+    return [];
+  }
+
+  // Comprehensive regex to match various YouTube URL formats
+  const youtubeRegex = /https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/|m\.youtube\.com\/watch\?v=)[a-zA-Z0-9_-]{11}(?:[^\s]*)?/g;
+  
+  const matches = text.match(youtubeRegex);
+  return matches ? matches.filter(url => isYouTubeUrl(url)) : [];
+}
+
+/**
+ * Splits text into parts, separating YouTube URLs from regular text
+ * Returns array of objects with type 'text' or 'youtube' and content
+ */
+export function parseTextWithYouTube(text: string): Array<{type: 'text' | 'youtube', content: string}> {
+  if (!text || typeof text !== 'string') {
+    return [{type: 'text', content: text || ''}];
+  }
+
+  // Split text by YouTube URLs while keeping the URLs
+  const youtubeRegex = /(https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/|m\.youtube\.com\/watch\?v=)[a-zA-Z0-9_-]{11}(?:[^\s]*)?)/g;
+  
+  const parts = text.split(youtubeRegex);
+  const result: Array<{type: 'text' | 'youtube', content: string}> = [];
+
+  parts.forEach(part => {
+    if (part && part.trim()) {
+      if (isYouTubeUrl(part)) {
+        result.push({type: 'youtube', content: part.trim()});
+      } else {
+        result.push({type: 'text', content: part});
+      }
+    }
+  });
+
+  return result.length > 0 ? result : [{type: 'text', content: text}];
+}
