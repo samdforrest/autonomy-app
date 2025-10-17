@@ -127,11 +127,44 @@ export default function MistakesModuleScreen() {
     }
   };
 
+  // Get bubble style based on header content
+  const getBubbleStyle = (header: string) => {
+    if (!header) return {};
+    
+    const lowerHeader = header.toLowerCase();
+    if (lowerHeader.includes('activity:')) {
+      return styles.bubbleOrange;
+    } else if (lowerHeader.includes('learning:')) {
+      return styles.bubbleBlue;
+    } else if (lowerHeader.includes('opener:')) {
+      return styles.bubbleGreen;
+    } else if (lowerHeader.includes('closing conversation:')) {
+      return styles.bubblePurple;
+    }
+    return {};
+  };
+
+  // Check if header should be bold
+  const shouldBoldHeader = (header: string) => {
+    if (!header) return false;
+    
+    const lowerHeader = header.toLowerCase();
+    return lowerHeader.includes('activity:') || 
+           lowerHeader.includes('learning:') || 
+           lowerHeader.includes('opener:') || 
+           lowerHeader.includes('closing conversation:');
+  };
+
   const renderContentBlock = (block: any, index: number) => (
-    <ThemedView key={block.id || index} style={styles.bubble}>
+    <ThemedView key={block.id || index} style={[styles.bubble, getBubbleStyle(block.header)]}>
       {/* Header/Label */}
       {block.header && (
-        <ThemedText style={styles.bubbleHeader}>{block.header}</ThemedText>
+        <ThemedText style={[
+          styles.bubbleHeader, 
+          shouldBoldHeader(block.header) && styles.bubbleHeaderBold
+        ]}>
+          {block.header}
+        </ThemedText>
       )}
       
       {/* Content */}
@@ -489,5 +522,31 @@ const styles = StyleSheet.create({
   bubbleImage: {
     marginVertical: 8,
     alignSelf: 'center',
+  },
+  // Color-coded bubble styles
+  bubbleOrange: {
+    backgroundColor: '#FFF3E0', // Light orange background
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF9800', // Orange border
+  },
+  bubbleBlue: {
+    backgroundColor: '#E3F2FD', // Light blue background
+    borderLeftWidth: 4,
+    borderLeftColor: '#2196F3', // Blue border
+  },
+  bubbleGreen: {
+    backgroundColor: '#E8F5E8', // Light green background
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50', // Green border
+  },
+  bubblePurple: {
+    backgroundColor: '#F3E5F5', // Light purple background
+    borderLeftWidth: 4,
+    borderLeftColor: '#9C27B0', // Purple border
+  },
+  // Bold header style
+  bubbleHeaderBold: {
+    fontWeight: 'bold',
+    fontSize: 15,
   },
 });
