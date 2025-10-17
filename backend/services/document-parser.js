@@ -29,6 +29,23 @@ class DocumentParser {
       }
     };
     this.currentBlock = null; // Track current content block
+    this.inlineObjects = document.inlineObjects || {}; // Store inline objects (images) for reference
+    
+    // Debug: Log inline objects found in document
+    const inlineObjectCount = Object.keys(this.inlineObjects).length;
+    console.log(`🔍 Found ${inlineObjectCount} inline objects in document`);
+    if (inlineObjectCount > 0) {
+      Object.keys(this.inlineObjects).forEach(id => {
+        const obj = this.inlineObjects[id];
+        const hasImage = obj.objectProperties?.embeddedObject?.imageProperties;
+        console.log(`   - ${id}: ${hasImage ? 'IMAGE' : 'OTHER'}`);
+        if (hasImage) {
+          const contentUri = obj.objectProperties.embeddedObject.imageProperties.contentUri;
+          const isDataUrl = contentUri && contentUri.startsWith('data:');
+          console.log(`     URI type: ${isDataUrl ? 'DATA URL (base64)' : 'EXTERNAL URL'}`);
+        }
+      });
+    }
 
     // If tab is specified, try to find and parse that tab
     if (options.tab) {
@@ -101,6 +118,12 @@ class DocumentParser {
           console.log('🔍 Tab documentTab exists');
           console.log('🔍 Tab documentTab.body exists:', !!tab.documentTab.body);
           console.log('🔍 Tab documentTab.body.content exists:', !!tab.documentTab.body?.content);
+          
+          // Store inline objects from the tab for image processing
+          if (tab.documentTab.inlineObjects) {
+            console.log('🔍 Found inline objects in tab:', Object.keys(tab.documentTab.inlineObjects).length);
+            this.inlineObjects = { ...this.inlineObjects, ...tab.documentTab.inlineObjects };
+          }
           
           if (tab.documentTab.body && tab.documentTab.body.content) {
             return tab.documentTab.body.content;
@@ -253,7 +276,7 @@ class DocumentParser {
     let text = '';
     let isHeader = false;
 
-    // Extract text and check formatting
+    // Extract text and check formatting, also handle inline objects (images)
     elements.forEach(element => {
       if (element && element.textRun) {
         text += element.textRun.content || '';
@@ -263,6 +286,10 @@ class DocumentParser {
         if (textStyle.bold || textStyle.fontSize?.magnitude > 12) {
           isHeader = true;
         }
+      } else if (element && element.inlineObjectElement) {
+        // Handle inline objects (images)
+        console.log('🔍 Found inlineObjectElement:', element.inlineObjectElement.inlineObjectId);
+        this.processInlineObject(element.inlineObjectElement);
       }
     });
 
@@ -432,6 +459,78 @@ class DocumentParser {
           text: text
         }],
         type: 'text'
+      };
+      this.parsedContent.contentBlocks.push(this.currentBlock);
+    }
+  }
+
+  /**
+   * Process inline objects (images) - optimized for copied/pasted images
+   * @param {Object} inlineObjectElement - Inline object element from Google Docs
+   */
+  processInlineObject(inlineObjectElement) {
+    const inlineObjectId = inlineObjectElement.inlineObjectId;
+    
+    if (!inlineObjectId || !this.inlineObjects[inlineObjectId]) {
+      console.warn('⚠️ Inline object not found:', inlineObjectId);
+      return;
+    }
+    
+    // Debug: Uncomment to see full object structure
+    // console.log('🔍 Full inline object structure for', inlineObjectId, ':', JSON.stringify(this.inlineObjects[inlineObjectId], null, 2));
+    
+    const inlineObject = this.inlineObjects[inlineObjectId];
+    const embeddedObject = inlineObject.inlineObjectProperties?.embeddedObject;
+    
+    if (!embeddedObject || !embeddedObject.imageProperties) {
+      console.warn('⚠️ Inline object is not an image:', inlineObjectId);
+      console.warn('   Object type:', embeddedObject ? Object.keys(embeddedObject) : 'No embeddedObject');
+      if (embeddedObject) {
+        console.warn('   Available properties:', Object.keys(embeddedObject));
+        if (embeddedObject.table) console.warn('   -> This is a TABLE');
+        if (embeddedObject.drawing) console.warn('   -> This is a DRAWING');
+        if (embeddedObject.chart) console.warn('   -> This is a CHART');
+      }
+      return;
+    }
+    
+    const imageProperties = embeddedObject.imageProperties;
+    const contentUri = imageProperties.contentUri || imageProperties.sourceUri;
+    
+    if (!contentUri) {
+      console.warn('⚠️ Image has no contentUri or sourceUri:', inlineObjectId);
+      return;
+    }
+    
+    // Check if this is a data URL (copied/pasted image) or external URL
+    const isDataUrl = contentUri.startsWith('data:');
+    const isGoogleUrl = contentUri.includes('googleusercontent.com') || contentUri.includes('drive.google.com');
+    
+    const imageData = {
+      type: 'image',
+      uri: contentUri,
+      alt: embeddedObject.title || embeddedObject.description || 'Image from Google Doc',
+      width: imageProperties.cropProperties?.width?.magnitude || null,
+      height: imageProperties.cropProperties?.height?.magnitude || null,
+    };
+    
+    console.log('🖼️ Found image:', {
+      alt: imageData.alt,
+      uriType: isDataUrl ? 'DATA URL (base64)' : isGoogleUrl ? 'GOOGLE URL' : 'OTHER URL',
+      hasUri: !!imageData.uri,
+      dimensions: imageData.width && imageData.height ? `${imageData.width}x${imageData.height}` : 'unknown'
+    });
+    
+    // Add to current content block
+    if (this.currentBlock) {
+      this.currentBlock.content.push(imageData);
+    } else {
+      // Create a new block for orphan images
+      this.currentBlock = {
+        id: this.parsedContent.contentBlocks.length + 1,
+        header: null,
+        content: [imageData],
+        type: 'image'
       };
       this.parsedContent.contentBlocks.push(this.currentBlock);
     }

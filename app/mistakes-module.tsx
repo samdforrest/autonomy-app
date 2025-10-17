@@ -1,8 +1,9 @@
 import CollapsibleDayCard from '@/components/CollapsibleDayCard';
+import { ImageViewer } from '@/components/ImageViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useGoogleDocsContent } from '../hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '../services/api';
@@ -29,6 +30,31 @@ export default function MistakesModuleScreen() {
     'mistakes',
     { tab: 'Mistakes', day: currentDay }
   );
+
+  // Debug: Log content structure to help troubleshoot images
+  React.useEffect(() => {
+    if (content) {
+      console.log('📄 Content loaded:', {
+        hasContentBlocks: !!content.contentBlocks,
+        contentBlocksLength: content.contentBlocks?.length || 0,
+        hasSections: !!content.sections,
+        sectionsCount: content.sections ? Object.keys(content.sections).length : 0
+      });
+      
+      if (content.contentBlocks) {
+        content.contentBlocks.forEach((block, index) => {
+          const imageCount = block.content?.filter(item => item.type === 'image').length || 0;
+          if (imageCount > 0) {
+            console.log(`🖼️ Block ${index + 1} has ${imageCount} images`);
+            block.content?.filter(item => item.type === 'image').forEach((img, imgIndex) => {
+              const isDataUrl = img.uri?.startsWith('data:');
+              console.log(`   Image ${imgIndex + 1}: ${isDataUrl ? 'DATA URL' : 'EXTERNAL URL'} - ${img.alt}`);
+            });
+          }
+        });
+      }
+    }
+  }, [content]);
 
   const dayModules: DayModule[] = [
     {
@@ -129,6 +155,18 @@ export default function MistakesModuleScreen() {
                 videoHeight={200}
               />
             );
+          } else if (item.type === 'image') {
+            // console.log('🖼️ Rendering ImageViewer with:', { uri: item.uri, alt: item.alt });
+            return (
+              <ImageViewer
+                key={idx}
+                uri={item.uri}
+                alt={item.alt}
+                style={styles.bubbleImage}
+                maxHeight={250}
+                allowFullScreen={true}
+              />
+            );
           }
           return null;
         })}
@@ -218,8 +256,11 @@ export default function MistakesModuleScreen() {
             <ThemedText style={styles.refreshButtonText}>🔄 Refresh Content</ThemedText>
           </TouchableOpacity>
 
-          {content?.sections ? (
-            // Render sections from Google Docs
+          {content?.contentBlocks && content.contentBlocks.length > 0 ? (
+            // Render content blocks from Google Docs (includes images)
+            content.contentBlocks.map((block, index) => renderContentBlock(block, index))
+          ) : content?.sections ? (
+            // Fallback: Render sections from Google Docs (old format)
             Object.entries(content.sections).map(([sectionKey, section]) =>
               renderSection(sectionKey, section, getSectionIcon(sectionKey))
             )
@@ -444,5 +485,9 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: '#333',
     marginBottom: 8,
+  },
+  bubbleImage: {
+    marginVertical: 8,
+    alignSelf: 'center',
   },
 });

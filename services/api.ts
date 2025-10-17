@@ -10,9 +10,24 @@ export interface DocumentSection {
   content: string;
 }
 
+export interface ContentBlock {
+  id: number;
+  header: string | null;
+  content: Array<{
+    type: 'text' | 'bullet' | 'image';
+    text?: string;
+    uri?: string; // For copied/pasted images, this will be a data URL (base64)
+    alt?: string;
+    width?: number | null;
+    height?: number | null;
+  }>;
+  type: string;
+}
+
 export interface DocumentResponse {
   title: string;
   sections: Record<string, DocumentSection>;
+  contentBlocks?: ContentBlock[]; // Array of content blocks for bubble display
   metadata: {
     documentId: string;
     lastModified: string;
@@ -367,7 +382,7 @@ class ApiService {
           console.log(`❌ ${url} responded with status: ${response.status}`);
         }
       } catch (error) {
-        console.log(`❌ Failed to connect to ${url}:`, error.message);
+        console.log(`❌ Failed to connect to ${url}:`, error instanceof Error ? error.message : 'Unknown error');
       }
     }
     
