@@ -354,12 +354,12 @@ class DocumentParser {
     const headerPatterns = [
       /^Read the Purpose Together/i,
       /^Discuss/i,
-      /^ANSWER:/i,
       /^Activity/i,
       /^Instructions/i,
       /^Think Together/i,
       /^Remember/i,
-      /^Closing Conversation/i
+      /^Closing Conversation/i,
+      /^Scenario:/i
     ];
     
     return headerPatterns.some(pattern => pattern.test(text));

@@ -23,6 +23,7 @@ interface DayModule {
 export default function MistakesModuleScreen() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [currentDay, setCurrentDay] = useState<number>(1);
+  const [revealedAnswers, setRevealedAnswers] = useState<Set<number>>(new Set());
   
   // Google Docs content for the currently active day
   const { content, loading, error, refetch } = useGoogleDocsContent(
@@ -60,7 +61,7 @@ export default function MistakesModuleScreen() {
     {
       id: 'day1',
       title: 'Understanding Mistakes',
-      description: 'What mistakes are and why they happen',
+      description: 'What can I learn from mistakes?',
       dayNumber: 1,
       isCompleted: false,
       isLocked: false,
@@ -88,7 +89,7 @@ export default function MistakesModuleScreen() {
       isLocked: false,
       color: '#3498DB',
       icon: '💡',
-      type: 'independent'
+      type: 'collaborative'
     },
     {
       id: 'day4',
@@ -99,7 +100,7 @@ export default function MistakesModuleScreen() {
       isLocked: false,
       color: '#2ECC71',
       icon: '🔧',
-      type: 'independent'
+      type: 'collaborative'
     },
     {
       id: 'day5',
@@ -127,6 +128,22 @@ export default function MistakesModuleScreen() {
     }
   };
 
+  const toggleRevealAnswer = (blockId: number) => {
+    console.log('🔄 Toggle Answer for block:', blockId);
+    setRevealedAnswers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(blockId)) {
+        console.log('➖ Hiding answer for block:', blockId);
+        newSet.delete(blockId);
+      } else {
+        console.log('➕ Revealing answer for block:', blockId);
+        newSet.add(blockId);
+      }
+      console.log('📊 Updated revealed answers:', Array.from(newSet));
+      return newSet;
+    });
+  };
+
   // Get bubble style based on header content
   const getBubbleStyle = (header: string) => {
     if (!header) return {};
@@ -140,6 +157,10 @@ export default function MistakesModuleScreen() {
       return styles.bubbleGreen;
     } else if (lowerHeader.includes('closing conversation:')) {
       return styles.bubblePurple;
+    } else if (lowerHeader.includes('read the purpose together:')) {
+      return styles.bubbleYellow;
+    } else if (lowerHeader.includes('scenario:')) {
+      return styles.bubbleTeal;
     }
     return {};
   };
@@ -152,60 +173,132 @@ export default function MistakesModuleScreen() {
     return lowerHeader.includes('activity:') || 
            lowerHeader.includes('learning:') || 
            lowerHeader.includes('opener:') || 
-           lowerHeader.includes('closing conversation:');
+           lowerHeader.includes('closing conversation:') ||
+           lowerHeader.includes('read the purpose together:') ||
+           lowerHeader.includes('scenario:') ||
+           lowerHeader.includes('answer:');
   };
 
-  const renderContentBlock = (block: any, index: number) => (
-    <ThemedView key={block.id || index} style={[styles.bubble, getBubbleStyle(block.header)]}>
-      {/* Header/Label */}
-      {block.header && (
-        <ThemedText style={[
-          styles.bubbleHeader, 
-          shouldBoldHeader(block.header) && styles.bubbleHeaderBold
-        ]}>
-          {block.header}
-        </ThemedText>
-      )}
+  const renderContentBlock = (block: any, index: number) => {
+    const isScenario = block.header && block.header.toLowerCase().includes('scenario:');
+    const isAnswerRevealed = revealedAnswers.has(block.id);
+    
+    // Debug logging
+    if (isScenario) {
+      console.log('🔍 Scenario Block Debug:', {
+        blockId: block.id,
+        header: block.header,
+        isAnswerRevealed,
+        contentItems: block.content?.length || 0,
+        contentPreview: block.content?.map((item: any) => ({
+          type: item.type,
+          textPreview: item.text?.substring(0, 50) + '...'
+        }))
+      });
+    }
+    
+    // Find the corresponding answer text for this scenario
+    const findAnswerText = () => {
+      if (!isScenario || !block.content) return null;
       
-      {/* Content */}
-      <ThemedView style={styles.bubbleContent}>
-        {block.content && block.content.map((item: any, idx: number) => {
-          if (item.type === 'bullet') {
-            return (
-              <TextWithYouTube 
-                key={idx} 
-                text={`• ${item.text}`}
-                textStyle={styles.bulletPoint}
-                videoHeight={180}
-              />
-            );
-          } else if (item.type === 'text') {
-            return (
-              <TextWithYouTube 
-                key={idx} 
-                text={item.text}
-                textStyle={styles.bubbleText}
-                videoHeight={200}
-              />
-            );
-          } else if (item.type === 'image') {
-            // console.log('🖼️ Rendering ImageViewer with:', { uri: item.uri, alt: item.alt });
-            return (
-              <ImageViewer
-                key={idx}
-                uri={item.uri}
-                alt={item.alt}
-                style={styles.bubbleImage}
-                maxHeight={250}
-                allowFullScreen={true}
-              />
-            );
-          }
-          return null;
-        })}
+      const answerItem = block.content.find((item: any) => 
+        item.text && item.text.toLowerCase().includes('answer:')
+      );
+      
+      console.log('🔍 Answer Search Result:', {
+        found: !!answerItem,
+        answerText: answerItem?.text?.substring(0, 100) + '...'
+      });
+      
+      return answerItem ? answerItem.text : null;
+    };
+
+    const answerText = findAnswerText();
+    
+    // Determine what header to display
+    const displayHeader = isScenario && isAnswerRevealed && answerText 
+      ? answerText 
+      : block.header;
+    
+    // Debug the header decision
+    if (isScenario) {
+      console.log('🔍 Header Decision:', {
+        originalHeader: block.header,
+        displayHeader,
+        isAnswerRevealed,
+        hasAnswerText: !!answerText
+      });
+    }
+    
+    // Filter content - when answer is revealed, hide the answer text from content since it's now the header
+    const filteredContent = isScenario 
+      ? block.content?.filter((item: any) => !item.text?.toLowerCase().includes('answer:'))
+      : block.content;
+
+    return (
+      <ThemedView key={block.id || index} style={[styles.bubble, getBubbleStyle(block.header)]}>
+        {/* Header/Label - shows Scenario or Answer based on reveal state */}
+        {displayHeader && (
+          <ThemedText style={[
+            styles.bubbleHeader, 
+            shouldBoldHeader(displayHeader) && styles.bubbleHeaderBold
+          ]}>
+            {displayHeader}
+          </ThemedText>
+        )}
+        
+        {/* Reveal Answer Button for Scenarios */}
+        {isScenario && (
+          <TouchableOpacity 
+            style={styles.revealButton} 
+            onPress={() => toggleRevealAnswer(block.id)}
+          >
+            <ThemedText style={styles.revealButtonText}>
+              {isAnswerRevealed ? 'Show Scenario' : 'Reveal Answer'}
+            </ThemedText>
+          </TouchableOpacity>
+        )}
+        
+        {/* Content */}
+        <ThemedView style={styles.bubbleContent}>
+          {filteredContent && filteredContent.map((item: any, idx: number) => {
+            if (item.type === 'bullet') {
+              return (
+                <TextWithYouTube 
+                  key={idx} 
+                  text={`• ${item.text}`}
+                  textStyle={styles.bulletPoint}
+                  videoHeight={180}
+                />
+              );
+            } else if (item.type === 'text') {
+              return (
+                <TextWithYouTube 
+                  key={idx} 
+                  text={item.text}
+                  textStyle={styles.bubbleText}
+                  videoHeight={200}
+                />
+              );
+            } else if (item.type === 'image') {
+              // console.log('🖼️ Rendering ImageViewer with:', { uri: item.uri, alt: item.alt });
+              return (
+                <ImageViewer
+                  key={idx}
+                  uri={item.uri}
+                  alt={item.alt}
+                  style={styles.bubbleImage}
+                  maxHeight={250}
+                  allowFullScreen={true}
+                />
+              );
+            }
+            return null;
+          })}
+        </ThemedView>
       </ThemedView>
-    </ThemedView>
-  );
+    );
+  };
 
   const renderSection = (sectionKey: string, section: any, defaultIcon: string) => (
     <ThemedView key={sectionKey} style={styles.section}>
@@ -339,7 +432,7 @@ export default function MistakesModuleScreen() {
       <ThemedView style={styles.header}>
         <ThemedText type="title" style={styles.moduleTitle}>Mistakes & Learning</ThemedText>
         <ThemedText style={styles.moduleSubtitle}>
-          Transform mistakes into growth opportunities through 5 focused days
+          Transform mistakes into growth opportunities through 5 focused days...
         </ThemedText>
       </ThemedView>
 
@@ -544,9 +637,44 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: '#9C27B0', // Purple border
   },
+  bubbleYellow: {
+    backgroundColor: '#FFFDE7', // Light yellow background
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFC107', // Yellow border
+  },
+  bubbleTeal: {
+    backgroundColor: '#E0F2F1', // Light teal background
+    borderLeftWidth: 4,
+    borderLeftColor: '#009688', // Teal border
+  },
   // Bold header style
   bubbleHeaderBold: {
     fontWeight: 'bold',
     fontSize: 15,
+  },
+  // Reveal Answer Button styles
+  revealButton: {
+    backgroundColor: '#2196F3', // Blue background
+    borderRadius: 25, // Rounded corners like in the image
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    marginTop: 8,
+    marginBottom: 12,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8, // Android shadow
+  },
+  revealButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    letterSpacing: 0.5,
   },
 });
