@@ -46,3 +46,6 @@ app-example
 personalnotes.txt
 
 android/
+
+.firebase/hosting.ZGlzdA.cache
+.firebaserc

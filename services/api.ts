@@ -77,8 +77,9 @@ class ApiService {
         });
       }
     } else {
-      // For production - use environment variable or default
-      this.baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
+      // For production - always use Firebase Functions URL (ignore env var for production)
+      this.baseUrl = 'https://us-central1-autonomy-app-4baf6.cloudfunctions.net/api';
+      console.log('🔍 Production mode: forcing Firebase Functions URL');
     }
     
     console.log('🔗 API Service initialized with URL:', this.baseUrl);
