@@ -31,7 +31,12 @@ yarn-error.*
 *.pem
 
 # local env files
+!.env.example
+.env
 .env*.local
+backend/.env
+backend/.env.local
+!backend/.env.example
 
 # typescript
 *.tsbuildinfo
@@ -39,3 +44,8 @@ yarn-error.*
 app-example
 
 personalnotes.txt
+
+android/
+
+.firebase/hosting.ZGlzdA.cache
+.firebaserc

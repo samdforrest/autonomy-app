@@ -1,7 +1,8 @@
+import CollapsibleDayCard from '@/components/CollapsibleDayCard';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { router } from 'expo-router';
-import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
+import { ScrollView, StyleSheet } from 'react-native';
 
 interface DayModule {
   id: string;
@@ -16,6 +17,8 @@ interface DayModule {
 }
 
 export default function JobModuleScreen() {
+  const [expandedDay, setExpandedDay] = useState<string | null>(null);
+
   const dayModules: DayModule[] = [
     {
       id: 'day1',
@@ -74,70 +77,40 @@ export default function JobModuleScreen() {
     }
   ];
 
-  const handleDayPress = (day: DayModule) => {
-    if (day.isLocked) {
-      console.log(`Day ${day.dayNumber} is locked`);
-      return;
+  const handleDayToggle = (dayId: string) => {
+    setExpandedDay(expandedDay === dayId ? null : dayId);
+  };
+
+  const renderDayContent = (day: DayModule) => {
+    if (day.dayNumber === 1) {
+      return (
+        <ThemedView>
+          <ThemedText style={styles.contentTitle}>🚀 Welcome to Job Skills!</ThemedText>
+          <ThemedText style={styles.contentText}>
+            [Content placeholder for Day 1]
+            {'\n\n'}This is where the collaborative content will go.
+            {'\n\n'}• Parent instructions
+            {'\n'}• Child activities  
+            {'\n'}• Discussion prompts
+            {'\n'}• Shared exercises
+          </ThemedText>
+          <ThemedText style={styles.contentTitle}>📋 Today's Activities</ThemedText>
+          <ThemedText style={styles.contentText}>
+            Activity placeholders will go here...
+          </ThemedText>
+        </ThemedView>
+      );
     }
     
-    // Navigate to specific day
-    if (day.dayNumber === 1) {
-      router.push('/job-day-1');
-    } else {
-      console.log(`Day ${day.dayNumber} component coming soon`);
-    }
-  };
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'collaborative':
-        return 'Parent + Child';
-      case 'independent':
-        return 'Child Only';
-      case 'evaluation':
-        return 'Review Together';
-      default:
-        return '';
-    }
-  };
-
-  const renderDayCard = (day: DayModule) => (
-    <TouchableOpacity
-      key={day.id}
-      style={[
-        styles.dayCard,
-        { backgroundColor: day.color },
-        day.isLocked && styles.dayCardLocked
-      ]}
-      onPress={() => handleDayPress(day)}
-      disabled={day.isLocked}
-    >
-      <ThemedView style={styles.dayCardContent}>
-        <ThemedView style={styles.dayHeader}>
-          <ThemedText style={styles.dayNumber}>Day {day.dayNumber}</ThemedText>
-          <ThemedText style={styles.typeLabel}>{getTypeLabel(day.type)}</ThemedText>
-        </ThemedView>
-        
-        <ThemedView style={styles.dayBody}>
-          <ThemedText style={styles.dayIcon}>{day.icon}</ThemedText>
-          <ThemedText style={styles.dayTitle}>{day.title}</ThemedText>
-          <ThemedText style={styles.dayDescription}>{day.description}</ThemedText>
-        </ThemedView>
-
-        {day.isCompleted && (
-          <ThemedView style={styles.completedBadge}>
-            <ThemedText style={styles.completedText}>✓</ThemedText>
-          </ThemedView>
-        )}
-
-        {day.isLocked && (
-          <ThemedView style={styles.lockedOverlay}>
-            <ThemedText style={styles.lockedIcon}>🔒</ThemedText>
-          </ThemedView>
-        )}
+    return (
+      <ThemedView>
+        <ThemedText style={styles.contentTitle}>🚀 Coming Soon!</ThemedText>
+        <ThemedText style={styles.contentText}>
+          Day {day.dayNumber} content is being prepared...
+        </ThemedText>
       </ThemedView>
-    </TouchableOpacity>
-  );
+    );
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -153,7 +126,16 @@ export default function JobModuleScreen() {
         contentContainerStyle={styles.daysContainer}
         showsVerticalScrollIndicator={false}
       >
-        {dayModules.map(renderDayCard)}
+        {dayModules.map((day) => (
+          <CollapsibleDayCard
+            key={day.id}
+            day={day}
+            isExpanded={expandedDay === day.id}
+            onToggle={handleDayToggle}
+          >
+            {renderDayContent(day)}
+          </CollapsibleDayCard>
+        ))}
       </ScrollView>
     </ThemedView>
   );
@@ -188,100 +170,16 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 10,
   },
-  dayCard: {
-    borderRadius: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    position: 'relative',
-  },
-  dayCardLocked: {
-    opacity: 0.6,
-  },
-  dayCardContent: {
-    padding: 20,
-    backgroundColor: 'transparent',
-  },
-  dayHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    backgroundColor: 'transparent',
-  },
-  dayNumber: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: 'white',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  typeLabel: {
-    fontSize: 12,
-    color: 'white',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  dayBody: {
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  dayIcon: {
-    fontSize: 40,
-    marginBottom: 8,
-  },
-  dayTitle: {
+  contentTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 4,
-    textAlign: 'center',
+    marginBottom: 12,
+    color: '#333',
   },
-  dayDescription: {
-    fontSize: 14,
-    color: 'white',
-    opacity: 0.9,
-    textAlign: 'center',
-  },
-  completedBadge: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 20,
-    width: 30,
-    height: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  completedText: {
-    color: 'white',
+  contentText: {
     fontSize: 16,
-    fontWeight: 'bold',
-  },
-  lockedOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 16,
-  },
-  lockedIcon: {
-    fontSize: 24,
-    opacity: 0.8,
+    lineHeight: 24,
+    color: '#666',
+    marginBottom: 16,
   },
 });
