@@ -20,7 +20,7 @@ interface DayModule {
   type: 'collaborative' | 'independent' | 'evaluation';
 }
 
-export default function MistakesModuleScreen() {
+export default function RegulationModuleScreen() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [currentDay, setCurrentDay] = useState<number>(1);
   const [revealedAnswers, setRevealedAnswers] = useState<Set<number>>(new Set());
@@ -28,8 +28,8 @@ export default function MistakesModuleScreen() {
   // Google Docs content for the currently active day
   const { content, loading, error, refetch } = useGoogleDocsContent(
     DOCUMENT_REFS.MAIN_DOCUMENT,
-    'mistakes',
-    { tab: 'Mistakes', day: currentDay }
+    'regulation',
+    { tab: 'Regulation', day: currentDay }
   );
 
   // Debug: Log content structure to help troubleshoot images
@@ -60,52 +60,52 @@ export default function MistakesModuleScreen() {
   const dayModules: DayModule[] = [
     {
       id: 'day1',
-      title: 'Understanding Mistakes',
-      description: 'What can I learn from mistakes?',
+      title: 'Understanding Emotions',
+      description: 'Learning to identify and name our feelings',
       dayNumber: 1,
       isCompleted: false,
       isLocked: false,
       color: '#E74C3C',
-      icon: '🤔',
+      icon: '😊',
       type: 'collaborative'
     },
     {
       id: 'day2',
-      title: 'Owning Our Mistakes',
-      description: 'Taking responsibility and accountability',
+      title: 'Calming Strategies',
+      description: 'Tools and techniques for self-regulation',
       dayNumber: 2,
       isCompleted: false,
       isLocked: false,
       color: '#F39C12',
-      icon: '🙋‍♂️',
+      icon: '🧘',
       type: 'collaborative'
     },
     {
       id: 'day3',
-      title: 'Learning from Errors',
-      description: 'Turning mistakes into learning opportunities',
+      title: 'Recognizing Triggers',
+      description: 'Understanding what makes us feel big emotions',
       dayNumber: 3,
       isCompleted: false,
       isLocked: false,
       color: '#3498DB',
-      icon: '💡',
+      icon: '🔍',
       type: 'collaborative'
     },
     {
       id: 'day4',
-      title: 'Making It Right',
-      description: 'Fixing mistakes and moving forward',
+      title: 'Practicing Control',
+      description: 'Building skills for emotional management',
       dayNumber: 4,
       isCompleted: false,
       isLocked: false,
       color: '#2ECC71',
-      icon: '🔧',
+      icon: '💪',
       type: 'collaborative'
     },
     {
       id: 'day5',
-      title: 'Growing Stronger',
-      description: 'Building resilience and confidence',
+      title: 'Putting It Together',
+      description: 'Reflecting on growth and progress',
       dayNumber: 5,
       isCompleted: false,
       isLocked: false,
@@ -355,7 +355,7 @@ export default function MistakesModuleScreen() {
       rules: '📋',
       instructions: '💭', 
       activities: '🎯',
-      what_are_mistakes: '🤔',
+      understanding_emotions: '😊',
       think_together: '💭',
       todays_activities: '🎯',
     };
@@ -449,9 +449,9 @@ export default function MistakesModuleScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.header}>
-        <ThemedText type="title" style={styles.moduleTitle}>Mistakes & Learning</ThemedText>
+        <ThemedText type="title" style={styles.moduleTitle}>Regulation & Control</ThemedText>
         <ThemedText style={styles.moduleSubtitle}>
-          Transform mistakes into growth opportunities through 5 focused days...
+          Build emotional awareness and self-regulation skills through 5 focused days...
         </ThemedText>
       </ThemedView>
 
@@ -729,3 +729,4 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+

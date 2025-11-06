@@ -14,8 +14,9 @@ export interface ContentBlock {
   id: number;
   header: string | null;
   content: Array<{
-    type: 'text' | 'bullet' | 'image';
+    type: 'text' | 'bullet' | 'image' | 'subheader' | 'option';
     text?: string;
+    label?: string; // For options: A, B, C, etc.
     uri?: string; // For copied/pasted images, this will be a data URL (base64)
     alt?: string;
     width?: number | null;
@@ -89,13 +90,13 @@ class ApiService {
   /**
    * Fetch document content from Google Docs via backend
    * @param documentRef - Document reference key (not actual ID)
-   * @param format - Output format ('raw', 'job', 'mistakes')
+   * @param format - Output format ('raw', 'job', 'mistakes', 'regulation')
    * @param options - Additional options { tab, day }
    * @returns Parsed document content
    */
   async fetchDocument(
     documentRef: string, 
-    format: 'raw' | 'job' | 'mistakes' = 'raw',
+    format: 'raw' | 'job' | 'mistakes' | 'regulation' = 'raw',
     options: { tab?: string; day?: number } = {}
   ): Promise<DocumentResponse> {
     try {
@@ -143,7 +144,7 @@ class ApiService {
     documentRef: string,
     tabName: string,
     dayNumber: number,
-    format: 'raw' | 'job' | 'mistakes' = 'raw'
+    format: 'raw' | 'job' | 'mistakes' | 'regulation' = 'raw'
   ): Promise<DocumentResponse> {
     try {
       const response = await fetch(
@@ -182,7 +183,7 @@ class ApiService {
    */
   async fetchMultipleDocuments(
     documentIds: string[],
-    format: 'raw' | 'job' | 'mistakes' = 'raw',
+    format: 'raw' | 'job' | 'mistakes' | 'regulation' = 'raw',
     options: { tab?: string; day?: number } = {}
   ): Promise<Record<string, DocumentResponse | { error: string }>> {
     try {
