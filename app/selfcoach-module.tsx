@@ -20,7 +20,7 @@ interface DayModule {
   type: 'collaborative' | 'independent' | 'evaluation';
 }
 
-export default function JobModuleScreen() {
+export default function SelfCoachModuleScreen() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [currentDay, setCurrentDay] = useState<number>(1);
   const [revealedAnswers, setRevealedAnswers] = useState<Set<number>>(new Set());
@@ -28,8 +28,8 @@ export default function JobModuleScreen() {
   // Google Docs content for the currently active day
   const { content, loading, error, refetch } = useGoogleDocsContent(
     DOCUMENT_REFS.MAIN_DOCUMENT,
-    'job',
-    { tab: 'Job', day: currentDay }
+    'selfcoach',
+    { tab: 'Self-Coaching', day: currentDay }
   );
 
   // Debug: Log content structure to help troubleshoot images
@@ -60,57 +60,57 @@ export default function JobModuleScreen() {
   const dayModules: DayModule[] = [
     {
       id: 'day1',
-      title: 'Understanding Roles',
-      description: 'Learning about different job roles and responsibilities',
+      title: 'Self-Awareness',
+      description: 'Understanding your thoughts and feelings',
       dayNumber: 1,
       isCompleted: false,
       isLocked: false,
       color: '#E74C3C',
-      icon: '👔',
+      icon: '🪞',
       type: 'collaborative'
     },
     {
       id: 'day2',
-      title: 'Communication at Work',
-      description: 'Effective workplace communication skills',
+      title: 'Goal Setting',
+      description: 'Creating personal and meaningful goals',
       dayNumber: 2,
       isCompleted: false,
       isLocked: false,
       color: '#F39C12',
-      icon: '💬',
+      icon: '🎯',
       type: 'collaborative'
     },
     {
       id: 'day3',
-      title: 'Teamwork',
-      description: 'Working together to achieve goals',
+      title: 'Self-Talk',
+      description: 'Developing positive inner dialogue',
       dayNumber: 3,
       isCompleted: false,
       isLocked: false,
       color: '#3498DB',
-      icon: '🤝',
+      icon: '💭',
       type: 'collaborative'
     },
     {
       id: 'day4',
       title: 'Problem Solving',
-      description: 'Handling workplace challenges',
+      description: 'Finding solutions independently',
       dayNumber: 4,
       isCompleted: false,
       isLocked: false,
       color: '#2ECC71',
-      icon: '💡',
+      icon: '🧩',
       type: 'collaborative'
     },
     {
       id: 'day5',
-      title: 'Reflection',
-      description: 'Putting workplace skills into practice',
+      title: 'Reflection & Growth',
+      description: 'Celebrating progress and planning ahead',
       dayNumber: 5,
       isCompleted: false,
       isLocked: false,
       color: '#9B59B6',
-      icon: '🌟',
+      icon: '🌱',
       type: 'evaluation'
     }
   ];
@@ -339,9 +339,9 @@ export default function JobModuleScreen() {
     <ThemedView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <ThemedView style={styles.header}>
-          <ThemedText style={styles.title}>💼 My Job, Your Job Module</ThemedText>
+          <ThemedText style={styles.title}>🧘‍♂️ Self-Coaching Module</ThemedText>
           <ThemedText style={styles.subtitle}>
-            Understanding workplace roles and responsibilities
+            Building self-awareness and personal growth skills
           </ThemedText>
         </ThemedView>
 
@@ -647,3 +647,4 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+
