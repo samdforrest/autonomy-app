@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import React, { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { useColorInheritance } from '../hooks/useColorInheritance';
 import { useGoogleDocsContent } from '../hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '../services/api';
 
@@ -145,92 +146,15 @@ export default function RegulationModuleScreen() {
     });
   };
 
-  // Pre-compute color for each block based on inheritance
-  const blockColors = React.useMemo(() => {
-    if (!content?.contentBlocks) return new Map<number, string>();
-    
-    const colorMap = new Map<number, string>();
-    const colorKeywords = {
-      'read the purpose together:': 'yellow',
-      'opener:': 'green',
-      'scenario:': 'orange',
-      'activity:': 'orange',
-      'learning:': 'blue',
-      'connect and share:': 'green',
-      'closing conversation:': 'purple',
-      'instructions:': 'blue',
-      'question:': 'purple',
-      'answer:': 'green',
-      'tip:': 'teal',
-    };
-    
-    let currentColor: string | null = null;
-    
-    content.contentBlocks.forEach((block, index) => {
-      // Check if this block has a color keyword
-      if (block.header) {
-        const lowerHeader = block.header.toLowerCase();
-        for (const [keyword, color] of Object.entries(colorKeywords)) {
-          if (lowerHeader.includes(keyword)) {
-            currentColor = color;
-            break;
-          }
-        }
-      }
-      
-      // Store the color for this block (inherited or new)
-      if (currentColor) {
-        colorMap.set(block.id || index, currentColor);
-      }
-    });
-    
-    return colorMap;
-  }, [content?.contentBlocks]);
-
-  // Color inheritance logic - pure function, no side effects
-  const getContextualBubbleStyle = (header: string, blockIndex: number, blockId?: number) => {
-    // Define color keywords
-    const colorKeywords = {
-      'read the purpose together:': 'yellow',
-      'opener:': 'green',
-      'scenario:': 'orange',
-      'activity:': 'orange',
-      'learning:': 'blue',
-      'connect and share:': 'green',
-      'closing conversation:': 'purple',
-      'instructions:': 'blue',
-      'question:': 'purple',
-      'answer:': 'green',
-      'tip:': 'teal',
-    };
-
-    // Check if this block has a color keyword
-    if (header) {
-      const lowerHeader = header.toLowerCase();
-      for (const [keyword, color] of Object.entries(colorKeywords)) {
-        if (lowerHeader.includes(keyword)) {
-          return getStyleForColor(color);
-        }
-      }
-    }
-
-    // Inherit color from pre-computed map
-    const inheritedColor = blockId !== undefined ? blockColors.get(blockId) : blockColors.get(blockIndex);
-    return inheritedColor ? getStyleForColor(inheritedColor) : {};
-  };
-
-  // Helper function to convert color name to style
-  const getStyleForColor = (color: string) => {
-    const styleMap = {
-      orange: styles.bubbleOrange,
-      blue: styles.bubbleBlue,
-      green: styles.bubbleGreen,
-      purple: styles.bubblePurple,
-      yellow: styles.bubbleYellow,
-      teal: styles.bubbleTeal,
-    };
-    return styleMap[color] || {};
-  };
+  // Color inheritance hook
+  const { getBubbleStyle } = useColorInheritance(content?.contentBlocks, {
+    orange: styles.bubbleOrange,
+    blue: styles.bubbleBlue,
+    green: styles.bubbleGreen,
+    purple: styles.bubblePurple,
+    yellow: styles.bubbleYellow,
+    teal: styles.bubbleTeal,
+  });
 
   // Check if header should be bold
   const shouldBoldHeader = (header: string) => {
@@ -295,7 +219,7 @@ export default function RegulationModuleScreen() {
       : block.content;
 
     return (
-      <ThemedView key={block.id || index} style={[styles.bubble, getContextualBubbleStyle(block.header, index, block.id)]}>
+      <ThemedView key={block.id || index} style={[styles.bubble, getBubbleStyle(block.header, index, block.id)]}>
         {/* Header/Label - shows Scenario question or Answer based on reveal state */}
         {displayHeader && (
           <ThemedText style={[

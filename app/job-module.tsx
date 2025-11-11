@@ -3,10 +3,12 @@ import { ImageViewer } from '@/components/ImageViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { useColorInheritance } from '../hooks/useColorInheritance';
 import { useGoogleDocsContent } from '../hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '../services/api';
+import { getColorFromHeader } from '../utils/colorInheritance';
 
 interface DayModule {
   id: string;
@@ -23,13 +25,13 @@ interface DayModule {
 export default function JobModuleScreen() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [currentDay, setCurrentDay] = useState<number>(1);
-  const [revealedAnswers, setRevealedAnswers] = useState<Set<string>>(new Set());
+  const [revealedAnswers, setRevealedAnswers] = useState<Set<number>>(new Set());
   
   // Google Docs content for the currently active day
   const { content, loading, error, refetch } = useGoogleDocsContent(
     DOCUMENT_REFS.MAIN_DOCUMENT,
     'job',
-    { tab: 'Job', day: currentDay }
+    { tab: 'My Job, Your Job', day: currentDay }
   );
 
 
@@ -57,7 +59,6 @@ export default function JobModuleScreen() {
       }
     }
   }, [content]);
-
   const dayModules: DayModule[] = [
     {
       id: 'day1',
@@ -119,136 +120,74 @@ export default function JobModuleScreen() {
   const handleDayToggle = (dayId: string) => {
     const dayNumber = parseInt(dayId.replace('day', ''));
     
+    // If clicking the same day, collapse it
     if (expandedDay === dayId) {
       setExpandedDay(null);
     } else {
-      setExpandedDay(dayId);
+      // Expanding a new day - set it as current and load its content
       setCurrentDay(dayNumber);
+      setExpandedDay(dayId);
     }
   };
 
-  const toggleRevealAnswer = (blockId: string) => {
+  const toggleRevealAnswer = (blockId: number) => {
+    console.log('🔄 Toggle Answer for block:', blockId);
     setRevealedAnswers(prev => {
       const newSet = new Set(prev);
       if (newSet.has(blockId)) {
+        console.log('➖ Hiding answer for block:', blockId);
         newSet.delete(blockId);
       } else {
+        console.log('➕ Revealing answer for block:', blockId);
         newSet.add(blockId);
       }
+      console.log('📊 Updated revealed answers:', Array.from(newSet));
       return newSet;
     });
   };
 
-  // Helper function to determine if a header should be bold
+  // Color inheritance hook
+  const { getBubbleStyle } = useColorInheritance(content?.contentBlocks, {
+    orange: styles.bubbleOrange,
+    blue: styles.bubbleBlue,
+    green: styles.bubbleGreen,
+    purple: styles.bubblePurple,
+    yellow: styles.bubbleYellow,
+    teal: styles.bubbleTeal,
+  });
+
+  // Check if header should be bold
   const shouldBoldHeader = (header: string) => {
-    const boldPatterns = [
-      /^Activity:/i,
-      /^Scenario:/i,
-      /^Instructions:/i,
-      /^Question:/i,
-      /^Answer:/i
-    ];
-    return boldPatterns.some(pattern => pattern.test(header));
-  };
-
-  // Pre-compute color for each block based on inheritance
-  const blockColors = React.useMemo(() => {
-    if (!content?.contentBlocks) return new Map<number, string>();
+    if (!header) return false;
     
-    const colorMap = new Map<number, string>();
-    const colorKeywords = {
-      'read the purpose together:': 'yellow',
-      'opener:': 'green',
-      'scenario:': 'orange',
-      'activity:': 'orange',
-      'learning:': 'blue',
-      'connect and share:': 'green',
-      'closing conversation:': 'purple',
-      'instructions:': 'blue',
-      'question:': 'purple',
-      'answer:': 'green',
-      'tip:': 'teal',
-    };
-    
-    let currentColor: string | null = null;
-    
-    content.contentBlocks.forEach((block, index) => {
-      if (block.header) {
-        const lowerHeader = block.header.toLowerCase();
-        for (const [keyword, color] of Object.entries(colorKeywords)) {
-          if (lowerHeader.includes(keyword)) {
-            currentColor = color;
-            break;
-          }
-        }
-      }
-      
-      if (currentColor) {
-        colorMap.set(block.id || index, currentColor);
-      }
-    });
-    
-    return colorMap;
-  }, [content?.contentBlocks]);
-
-  // Color inheritance logic - pure function, no side effects
-  const getContextualBubbleStyle = (header: string, blockIndex: number, blockId?: number) => {
-    const colorKeywords = {
-      'read the purpose together:': 'yellow',
-      'opener:': 'green',
-      'scenario:': 'orange',
-      'activity:': 'orange',
-      'learning:': 'blue',
-      'connect and share:': 'green',
-      'closing conversation:': 'purple',
-      'instructions:': 'blue',
-      'question:': 'purple',
-      'answer:': 'green',
-      'tip:': 'teal',
-    };
-
-    if (header) {
-      const lowerHeader = header.toLowerCase();
-      for (const [keyword, color] of Object.entries(colorKeywords)) {
-        if (lowerHeader.includes(keyword)) {
-          return getStyleForColor(color);
-        }
-      }
-    }
-
-    const inheritedColor = blockId !== undefined ? blockColors.get(blockId) : blockColors.get(blockIndex);
-    return inheritedColor ? getStyleForColor(inheritedColor) : {};
-  };
-
-  // Helper function to convert color name to style
-  const getStyleForColor = (color: string) => {
-    const styleMap = {
-      orange: styles.bubbleOrange,
-      blue: styles.bubbleBlue,
-      green: styles.bubbleGreen,
-      purple: styles.bubblePurple,
-      yellow: styles.bubbleYellow,
-      teal: styles.bubbleTeal,
-    };
-    return styleMap[color] || {};
+    const lowerHeader = header.toLowerCase();
+    return lowerHeader.includes('activity:') || 
+           lowerHeader.includes('learning:') || 
+           lowerHeader.includes('opener:') || 
+           lowerHeader.includes('connect and share:') ||
+           lowerHeader.includes('closing conversation:') ||
+           lowerHeader.includes('read the purpose together:') ||
+           lowerHeader.includes('scenario:') ||
+           lowerHeader.includes('instructions:') ||
+           lowerHeader.includes('answer:');
   };
 
   const renderContentBlock = (block: any, index: number) => {
     if (!block || !block.content) return null;
 
-    const isScenario = block.header?.toLowerCase().includes('scenario:');
+    const isScenario = block.header && block.header.toLowerCase().includes('scenario:');
     const isAnswerRevealed = revealedAnswers.has(block.id);
     
-    // Parse scenario content if this is a scenario block
+    // For scenario blocks, separate content into question, options, and answer
     let scenarioQuestion: string | null = null;
     let scenarioOptions: any[] = [];
-    let answerText = null;
+    let answerText: string | null = null;
     let otherContent: any[] = [];
     
     if (isScenario && block.content) {
       block.content.forEach((item: any) => {
-        if (item.label && ['A', 'B', 'C', 'D'].includes(item.label)) {
-          // This is an option
+        if (item.type === 'option') {
+          // This is an A:, B:, C: option
           scenarioOptions.push(item);
         } else if (item.text && item.text.toLowerCase().includes('answer:')) {
           // This is the answer
@@ -282,7 +221,7 @@ export default function JobModuleScreen() {
       : block.content;
 
     return (
-      <ThemedView key={block.id || index} style={[styles.bubble, getContextualBubbleStyle(block.header, index, block.id)]}>
+      <ThemedView key={block.id || index} style={[styles.bubble, getBubbleStyle(block.header, index, block.id)]}>
         {/* Header/Label - shows Scenario question or Answer based on reveal state */}
         {displayHeader && (
           <ThemedText style={[
@@ -371,118 +310,199 @@ export default function JobModuleScreen() {
     );
   };
 
-  const renderSection = (sectionKey: string, section: any, defaultIcon: string) => (
-    <ThemedView key={sectionKey} style={styles.section}>
-      <ThemedText style={styles.sectionTitle}>
-        {defaultIcon} {section.title}
-      </ThemedText>
+  // Compute color inheritance for sections (similar to contentBlocks)
+  const sectionColors = useMemo(() => {
+    if (!content?.sections) return new Map<string, string>();
+    
+    const colorMap = new Map<string, string>();
+    let currentColor: string | null = null;
+    
+    // Process sections in order to build inheritance map
+    Object.entries(content.sections).forEach(([sectionKey, section]: [string, any]) => {
+      const sectionTitle = section.title || sectionKey;
+      const blockColor = getColorFromHeader(sectionTitle);
       
-      {/* Render bullet points */}
-      {section.items && section.items.length > 0 && (
-        <ThemedView style={styles.bulletContainer}>
-          {section.items.map((item: string, index: number) => (
-            <TextWithYouTube 
-              key={index} 
-              text={`• ${item}`}
-              textStyle={styles.bulletPoint}
-              videoHeight={180}
-            />
-          ))}
+      if (blockColor) {
+        currentColor = blockColor;
+      }
+      
+      // Store the color for this section (inherited or new)
+      if (currentColor) {
+        colorMap.set(sectionKey, currentColor);
+      }
+    });
+    
+    return colorMap;
+  }, [content?.sections]);
+
+  // Helper to get bubble style from color name
+  const getBubbleStyleFromColor = (color: string | null) => {
+    if (!color) return {};
+    
+    const styleMap: Record<string, any> = {
+      orange: styles.bubbleOrange,
+      blue: styles.bubbleBlue,
+      green: styles.bubbleGreen,
+      purple: styles.bubblePurple,
+      yellow: styles.bubbleYellow,
+      teal: styles.bubbleTeal,
+    };
+    
+    return styleMap[color] || {};
+  };
+
+  const renderSection = (sectionKey: string, section: any, defaultIcon: string) => {
+    // Get color from inheritance map (with fallback to direct keyword match)
+    const sectionTitle = section.title || sectionKey;
+    const inheritedColor = sectionColors.get(sectionKey);
+    const directColor = getColorFromHeader(sectionTitle);
+    const color = inheritedColor || directColor;
+    const colorStyle = getBubbleStyleFromColor(color);
+    
+    return (
+      <ThemedView key={sectionKey} style={[styles.bubble, colorStyle]}>
+        <ThemedText style={[
+          styles.bubbleHeader,
+          shouldBoldHeader(sectionTitle) && styles.bubbleHeaderBold
+        ]}>
+          {sectionTitle}
+        </ThemedText>
+        
+        {/* Render bullet points */}
+        {section.items && section.items.length > 0 && (
+          <ThemedView style={styles.bulletContainer}>
+            {section.items.map((item: string, index: number) => (
+              <TextWithYouTube 
+                key={index} 
+                text={`• ${item}`}
+                textStyle={styles.bulletPoint}
+                videoHeight={180}
+              />
+            ))}
+          </ThemedView>
+        )}
+        
+        {/* Render additional content */}
+        {section.content && (
+          <TextWithYouTube 
+            text={section.content}
+            textStyle={styles.bubbleText}
+            videoHeight={200}
+          />
+        )}
+      </ThemedView>
+    );
+  };
+
+
+  const renderDayContent = (day: DayModule) => {
+    // Only render content for the currently expanded day
+    if (expandedDay !== day.id) {
+      return null;
+    }
+
+    // Check if this is the day we're currently loading content for
+    if (day.dayNumber === currentDay) {
+      // Loading state
+      if (loading) {
+        return (
+          <ThemedView style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={day.color} />
+            <ThemedText style={styles.loadingText}>Loading Day {day.dayNumber} content from Google Docs...</ThemedText>
+          </ThemedView>
+        );
+      }
+
+      // Error state
+      if (error) {
+        return (
+          <ThemedView style={styles.errorContainer}>
+            <ThemedText style={styles.errorTitle}>⚠️ Content Unavailable</ThemedText>
+            <ThemedText style={styles.errorText}>{error}</ThemedText>
+            <TouchableOpacity style={styles.retryButton} onPress={refetch}>
+              <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
+        );
+      }
+
+      // Content state - render dynamic content for any day
+      return (
+        <ThemedView>
+          {/* Refresh button */}
+          <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
+            <ThemedText style={styles.refreshButtonText}>🔄 Refresh Content</ThemedText>
+          </TouchableOpacity>
+
+          {content?.contentBlocks && content.contentBlocks.length > 0 ? (
+            // Render content blocks from Google Docs (includes images)
+            content.contentBlocks.map((block, index) => renderContentBlock(block, index))
+          ) : content?.sections ? (
+            // Fallback: Render sections from Google Docs (old format)
+            Object.entries(content.sections).map(([sectionKey, section]) =>
+              renderSection(sectionKey, section, '')
+            )
+          ) : (
+            // Fallback content if no Google Docs content is available
+            <ThemedView style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>📝 Day {day.dayNumber} Content</ThemedText>
+              <ThemedText style={styles.contentText}>
+                Content is loading from Google Docs...
+              </ThemedText>
+            </ThemedView>
+          )}
+
+          
+          {/* Content metadata */}
+          {content?.metadata && (
+            <ThemedView style={styles.metadataContainer}>
+              <ThemedText style={styles.metadataText}>
+                Last updated: {new Date(content.metadata.lastModified).toLocaleDateString()}
+              </ThemedText>
+              <ThemedText style={styles.metadataText}>
+                Sections: {content.metadata.totalSections}
+              </ThemedText>
+            </ThemedView>
+          )}
         </ThemedView>
-      )}
-      
-      {/* Render additional content */}
-      {section.content && (
-        <TextWithYouTube 
-          text={section.content}
-          textStyle={styles.contentText}
-          videoHeight={200}
-        />
-      )}
-    </ThemedView>
-  );
+      );
+    }
+    
+    // This shouldn't happen with our new logic, but keeping as fallback
+    return (
+      <ThemedView>
+        <ThemedText style={styles.contentTitle}>🚀 Loading...</ThemedText>
+        <ThemedText style={styles.contentText}>
+          Preparing Day {day.dayNumber} content...
+        </ThemedText>
+      </ThemedView>
+    );
+  };
 
   return (
     <ThemedView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <ThemedView style={styles.header}>
-          <ThemedText style={styles.title}>💼 My Job, Your Job Module</ThemedText>
-          <ThemedText style={styles.subtitle}>
-            Understanding workplace roles and responsibilities
-          </ThemedText>
-        </ThemedView>
+      <ThemedView style={styles.header}>
+        <ThemedText type="title" style={styles.moduleTitle}>💼 My Job, Your Job</ThemedText>
+        <ThemedText style={styles.moduleSubtitle}>
+          Understanding workplace roles and responsibilities through 5 focused days...
+        </ThemedText>
+      </ThemedView>
 
-        <ThemedView style={styles.daysContainer}>
-          {dayModules.map((day) => (
-            <CollapsibleDayCard
-              key={day.id}
-              day={day}
-              isExpanded={expandedDay === day.id}
-              onToggle={() => handleDayToggle(day.id)}
-            >
-              {/* Content for the expanded day */}
-              {expandedDay === day.id && (
-                <ThemedView style={styles.dayContent}>
-                  {loading && (
-                    <ThemedView style={styles.loadingContainer}>
-                      <ActivityIndicator size="large" color="#0a7ea4" />
-                      <ThemedText style={styles.loadingText}>Loading content...</ThemedText>
-                    </ThemedView>
-                  )}
-
-                  {error && (
-                    <ThemedView style={styles.errorContainer}>
-                      <ThemedText style={styles.errorText}>⚠️ {error}</ThemedText>
-                      <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
-                        <ThemedText style={styles.refreshButtonText}>🔄 Retry</ThemedText>
-                      </TouchableOpacity>
-                    </ThemedView>
-                  )}
-
-                  {!loading && !error && content && (
-                    <ThemedView>
-                      {/* Render content blocks (new bubble-based format) */}
-                      {content.contentBlocks && content.contentBlocks.length > 0 && (
-                        <ThemedView style={styles.contentBlocksContainer}>
-                          {content.contentBlocks.map((block: any, index: number) => 
-                            renderContentBlock(block, index)
-                          )}
-                        </ThemedView>
-                      )}
-
-                      {/* Fallback: Render legacy sections format if no content blocks */}
-                      {(!content.contentBlocks || content.contentBlocks.length === 0) && content.sections && (
-                        <ThemedView style={styles.sectionsContainer}>
-                          {content.sections.learning_goals && renderSection('learning_goals', content.sections.learning_goals, '🎯')}
-                          {content.sections.vocabulary && renderSection('vocabulary', content.sections.vocabulary, '📖')}
-                          {content.sections.activity && renderSection('activity', content.sections.activity, '🎨')}
-                          {content.sections.reflection && renderSection('reflection', content.sections.reflection, '💭')}
-                        </ThemedView>
-                      )}
-
-                      {/* Debug/Metadata info */}
-                      {content.metadata && (
-                        <ThemedView style={styles.metadataContainer}>
-                          <ThemedText style={styles.metadataText}>
-                            📄 Document: {content.metadata.documentId} | Sections: {content.metadata.totalSections}
-                          </ThemedText>
-                        </ThemedView>
-                      )}
-                    </ThemedView>
-                  )}
-
-                  {!loading && !error && !content && (
-                    <ThemedView style={styles.errorContainer}>
-                      <ThemedText style={styles.errorText}>
-                        No content available for this day yet.
-                      </ThemedText>
-                    </ThemedView>
-                  )}
-                </ThemedView>
-              )}
-            </CollapsibleDayCard>
-          ))}
-        </ThemedView>
+      <ScrollView 
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.daysContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {dayModules.map((day) => (
+          <CollapsibleDayCard
+            key={day.id}
+            day={day}
+            isExpanded={expandedDay === day.id}
+            onToggle={handleDayToggle}
+          >
+            {renderDayContent(day)}
+          </CollapsibleDayCard>
+        ))}
       </ScrollView>
     </ThemedView>
   );
@@ -491,76 +511,104 @@ export default function JobModuleScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  scrollView: {
-    flex: 1,
+    backgroundColor: '#f8f9fa',
   },
   header: {
     padding: 20,
+    paddingTop: 60,
     alignItems: 'center',
   },
-  title: {
-    fontSize: 28,
+  moduleTitle: {
+    fontSize: 32,
     fontWeight: 'bold',
     marginBottom: 8,
-    textAlign: 'center',
+    color: '#333',
   },
-  subtitle: {
+  moduleSubtitle: {
     fontSize: 16,
-    color: '#666',
+    opacity: 0.7,
     textAlign: 'center',
+    color: '#666',
+  },
+  scrollContainer: {
+    flex: 1,
   },
   daysContainer: {
-    padding: 16,
-  },
-  dayContent: {
-    padding: 16,
-  },
-  loadingContainer: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#666',
-  },
-  errorContainer: {
     padding: 20,
-    alignItems: 'center',
+    paddingTop: 10,
   },
-  errorText: {
-    fontSize: 16,
-    color: '#D63031',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
+  contentTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 12,
-  },
-  bulletContainer: {
-    marginLeft: 8,
-  },
-  bulletPoint: {
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: 8,
+    color: '#333',
   },
   contentText: {
     fontSize: 16,
     lineHeight: 24,
+    color: '#666',
+    marginBottom: 16,
+  },
+  section: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  bulletContainer: {
     marginTop: 8,
   },
-  contentBlocksContainer: {
-    gap: 12,
+  bulletPoint: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#666',
+    marginBottom: 4,
   },
-  sectionsContainer: {
-    gap: 20,
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  errorContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#E74C3C',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#E74C3C',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   refreshButton: {
     backgroundColor: '#f8f9fa',
