@@ -3,27 +3,38 @@
  * This will help us understand what's happening with image parsing
  */
 
+require('dotenv').config();
 const GoogleDocsService = require('./services/google-docs-service');
+const { getDocumentId } = require('./config/document-mapping');
 
 async function testImageDetection() {
   console.log('🧪 Testing Image Detection in Google Docs');
   console.log('==========================================\n');
 
+  // Get document ID from environment variable
+  const documentId = process.env.MAIN_DOCUMENT_ID || getDocumentId('main_document');
+  
+  if (!documentId) {
+    console.error('❌ Error: MAIN_DOCUMENT_ID environment variable is not set');
+    console.error('   Please set MAIN_DOCUMENT_ID in your .env file');
+    return false;
+  }
+
   const docsService = new GoogleDocsService();
   
   try {
     console.log('1️⃣ Testing raw document (no tab/day filter)...');
-    const rawResult = await docsService.getDocument('1_skllRRK6_JMgSrUiAQgZmmVMcN8QTE1fUe44DC7c20', 'raw');
+    const rawResult = await docsService.getDocument(documentId, 'raw');
     console.log('Raw document inline objects:', Object.keys(rawResult.inlineObjects || {}).length);
     
     console.log('\n2️⃣ Testing Mistakes tab, Day 1...');
-    const day1Result = await docsService.getDocument('1_skllRRK6_JMgSrUiAQgZmmVMcN8QTE1fUe44DC7c20', 'mistakes', { tab: 'Mistakes', day: 1 });
+    const day1Result = await docsService.getDocument(documentId, 'mistakes', { tab: 'Mistakes', day: 1 });
     
     console.log('\n3️⃣ Testing Mistakes tab, Day 2...');
-    const day2Result = await docsService.getDocument('1_skllRRK6_JMgSrUiAQgZmmVMcN8QTE1fUe44DC7c20', 'mistakes', { tab: 'Mistakes', day: 2 });
+    const day2Result = await docsService.getDocument(documentId, 'mistakes', { tab: 'Mistakes', day: 2 });
     
     console.log('\n4️⃣ Testing Mistakes tab, Day 3...');
-    const day3Result = await docsService.getDocument('1_skllRRK6_JMgSrUiAQgZmmVMcN8QTE1fUe44DC7c20', 'mistakes', { tab: 'Mistakes', day: 3 });
+    const day3Result = await docsService.getDocument(documentId, 'mistakes', { tab: 'Mistakes', day: 3 });
     
     // Analyze results
     const results = [

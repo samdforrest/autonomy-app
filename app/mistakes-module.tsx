@@ -152,12 +152,16 @@ export default function MistakesModuleScreen() {
     const colorMap = new Map<number, string>();
     const colorKeywords = {
       'read the purpose together:': 'yellow',
-      'opener:': 'green', 
+      'opener:': 'green',
       'scenario:': 'orange',
       'activity:': 'orange',
       'learning:': 'blue',
       'connect and share:': 'green',
       'closing conversation:': 'purple',
+      'instructions:': 'blue',
+      'question:': 'purple',
+      'answer:': 'green',
+      'tip:': 'teal',
     };
     
     let currentColor: string | null = null;
@@ -185,12 +189,16 @@ export default function MistakesModuleScreen() {
   const getContextualBubbleStyle = (header: string, blockIndex: number, blockId?: number) => {
     const colorKeywords = {
       'read the purpose together:': 'yellow',
-      'opener:': 'green', 
+      'opener:': 'green',
       'scenario:': 'orange',
       'activity:': 'orange',
       'learning:': 'blue',
       'connect and share:': 'green',
       'closing conversation:': 'purple',
+      'instructions:': 'blue',
+      'question:': 'purple',
+      'answer:': 'green',
+      'tip:': 'teal',
     };
 
     if (header) {
@@ -214,6 +222,7 @@ export default function MistakesModuleScreen() {
       green: styles.bubbleGreen,
       purple: styles.bubblePurple,
       yellow: styles.bubbleYellow,
+      teal: styles.bubbleTeal,
     };
     return styleMap[color] || {};
   };

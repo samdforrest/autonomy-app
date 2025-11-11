@@ -152,12 +152,16 @@ export default function RegulationModuleScreen() {
     const colorMap = new Map<number, string>();
     const colorKeywords = {
       'read the purpose together:': 'yellow',
-      'opener:': 'green', 
+      'opener:': 'green',
       'scenario:': 'orange',
       'activity:': 'orange',
       'learning:': 'blue',
       'connect and share:': 'green',
       'closing conversation:': 'purple',
+      'instructions:': 'blue',
+      'question:': 'purple',
+      'answer:': 'green',
+      'tip:': 'teal',
     };
     
     let currentColor: string | null = null;
@@ -188,12 +192,16 @@ export default function RegulationModuleScreen() {
     // Define color keywords
     const colorKeywords = {
       'read the purpose together:': 'yellow',
-      'opener:': 'green', 
+      'opener:': 'green',
       'scenario:': 'orange',
       'activity:': 'orange',
       'learning:': 'blue',
       'connect and share:': 'green',
       'closing conversation:': 'purple',
+      'instructions:': 'blue',
+      'question:': 'purple',
+      'answer:': 'green',
+      'tip:': 'teal',
     };
 
     // Check if this block has a color keyword
@@ -219,6 +227,7 @@ export default function RegulationModuleScreen() {
       green: styles.bubbleGreen,
       purple: styles.bubblePurple,
       yellow: styles.bubbleYellow,
+      teal: styles.bubbleTeal,
     };
     return styleMap[color] || {};
   };

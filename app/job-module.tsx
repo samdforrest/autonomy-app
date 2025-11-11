@@ -157,8 +157,13 @@ export default function JobModuleScreen() {
     
     const colorMap = new Map<number, string>();
     const colorKeywords = {
+      'read the purpose together:': 'yellow',
+      'opener:': 'green',
+      'scenario:': 'orange',
       'activity:': 'orange',
-      'scenario:': 'yellow', 
+      'learning:': 'blue',
+      'connect and share:': 'green',
+      'closing conversation:': 'purple',
       'instructions:': 'blue',
       'question:': 'purple',
       'answer:': 'green',
@@ -189,8 +194,13 @@ export default function JobModuleScreen() {
   // Color inheritance logic - pure function, no side effects
   const getContextualBubbleStyle = (header: string, blockIndex: number, blockId?: number) => {
     const colorKeywords = {
+      'read the purpose together:': 'yellow',
+      'opener:': 'green',
+      'scenario:': 'orange',
       'activity:': 'orange',
-      'scenario:': 'yellow', 
+      'learning:': 'blue',
+      'connect and share:': 'green',
+      'closing conversation:': 'purple',
       'instructions:': 'blue',
       'question:': 'purple',
       'answer:': 'green',
