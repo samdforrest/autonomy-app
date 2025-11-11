@@ -14,7 +14,7 @@ interface UseGoogleDocsContentResult {
  */
 export function useGoogleDocsContent(
   documentId: string,
-  format: 'raw' | 'job' | 'mistakes' | 'regulation' = 'raw',
+  format: 'raw' | 'job' | 'mistakes' | 'regulation' | 'selfcoach' = 'raw',
   options: { tab?: string; day?: number; autoFetch?: boolean } = {}
 ): UseGoogleDocsContentResult {
   const { tab, day, autoFetch = true } = options;

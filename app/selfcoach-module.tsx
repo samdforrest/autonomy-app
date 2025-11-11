@@ -23,7 +23,7 @@ interface DayModule {
 export default function SelfCoachModuleScreen() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [currentDay, setCurrentDay] = useState<number>(1);
-  const [revealedAnswers, setRevealedAnswers] = useState<Set<number>>(new Set());
+  const [revealedAnswers, setRevealedAnswers] = useState<Set<string>>(new Set());
   
   // Google Docs content for the currently active day
   const { content, loading, error, refetch } = useGoogleDocsContent(
@@ -31,6 +31,7 @@ export default function SelfCoachModuleScreen() {
     'selfcoach',
     { tab: 'Self-Coaching', day: currentDay }
   );
+
 
   // Debug: Log content structure to help troubleshoot images
   React.useEffect(() => {
@@ -150,20 +151,76 @@ export default function SelfCoachModuleScreen() {
     return boldPatterns.some(pattern => pattern.test(header));
   };
 
-  // Helper function to get bubble style based on header type
-  const getBubbleStyle = (header: string) => {
-    if (!header) return null;
+  // Pre-compute color for each block based on inheritance
+  const blockColors = React.useMemo(() => {
+    if (!content?.contentBlocks) return new Map<number, string>();
     
-    const lowerHeader = header.toLowerCase();
+    const colorMap = new Map<number, string>();
+    const colorKeywords = {
+      'activity:': 'orange',
+      'scenario:': 'yellow', 
+      'instructions:': 'blue',
+      'question:': 'purple',
+      'answer:': 'green',
+      'tip:': 'teal',
+    };
     
-    if (lowerHeader.includes('activity:')) return styles.bubbleOrange;
-    if (lowerHeader.includes('scenario:')) return styles.bubbleYellow;
-    if (lowerHeader.includes('instructions:')) return styles.bubbleBlue;
-    if (lowerHeader.includes('question:')) return styles.bubblePurple;
-    if (lowerHeader.includes('answer:')) return styles.bubbleGreen;
-    if (lowerHeader.includes('tip:')) return styles.bubbleTeal;
+    let currentColor: string | null = null;
     
-    return null;
+    content.contentBlocks.forEach((block, index) => {
+      if (block.header) {
+        const lowerHeader = block.header.toLowerCase();
+        for (const [keyword, color] of Object.entries(colorKeywords)) {
+          if (lowerHeader.includes(keyword)) {
+            currentColor = color;
+            break;
+          }
+        }
+      }
+      
+      if (currentColor) {
+        colorMap.set(block.id || index, currentColor);
+      }
+    });
+    
+    return colorMap;
+  }, [content?.contentBlocks]);
+
+  // Color inheritance logic - pure function, no side effects
+  const getContextualBubbleStyle = (header: string, blockIndex: number, blockId?: number) => {
+    const colorKeywords = {
+      'activity:': 'orange',
+      'scenario:': 'yellow', 
+      'instructions:': 'blue',
+      'question:': 'purple',
+      'answer:': 'green',
+      'tip:': 'teal',
+    };
+
+    if (header) {
+      const lowerHeader = header.toLowerCase();
+      for (const [keyword, color] of Object.entries(colorKeywords)) {
+        if (lowerHeader.includes(keyword)) {
+          return getStyleForColor(color);
+        }
+      }
+    }
+
+    const inheritedColor = blockId !== undefined ? blockColors.get(blockId) : blockColors.get(blockIndex);
+    return inheritedColor ? getStyleForColor(inheritedColor) : {};
+  };
+
+  // Helper function to convert color name to style
+  const getStyleForColor = (color: string) => {
+    const styleMap = {
+      orange: styles.bubbleOrange,
+      blue: styles.bubbleBlue,
+      green: styles.bubbleGreen,
+      purple: styles.bubblePurple,
+      yellow: styles.bubbleYellow,
+      teal: styles.bubbleTeal,
+    };
+    return styleMap[color] || {};
   };
 
   const renderContentBlock = (block: any, index: number) => {
@@ -173,7 +230,7 @@ export default function SelfCoachModuleScreen() {
     const isAnswerRevealed = revealedAnswers.has(block.id);
     
     // Parse scenario content if this is a scenario block
-    let scenarioQuestion = null;
+    let scenarioQuestion: string | null = null;
     let scenarioOptions: any[] = [];
     let answerText = null;
     let otherContent: any[] = [];
@@ -215,7 +272,7 @@ export default function SelfCoachModuleScreen() {
       : block.content;
 
     return (
-      <ThemedView key={block.id || index} style={[styles.bubble, getBubbleStyle(block.header)]}>
+      <ThemedView key={block.id || index} style={[styles.bubble, getContextualBubbleStyle(block.header, index, block.id)]}>
         {/* Header/Label - shows Scenario question or Answer based on reveal state */}
         {displayHeader && (
           <ThemedText style={[
@@ -397,7 +454,7 @@ export default function SelfCoachModuleScreen() {
                       {content.metadata && (
                         <ThemedView style={styles.metadataContainer}>
                           <ThemedText style={styles.metadataText}>
-                            📄 Tab: {content.metadata.tab || 'N/A'} | Day: {content.metadata.day || 'N/A'}
+                            📄 Document: {content.metadata.documentId} | Sections: {content.metadata.totalSections}
                           </ThemedText>
                         </ThemedView>
                       )}
