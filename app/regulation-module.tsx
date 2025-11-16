@@ -1,5 +1,6 @@
 import CollapsibleDayCard from '@/components/CollapsibleDayCard';
 import { ImageViewer } from '@/components/ImageViewer';
+import { TableViewer } from '@/components/TableViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -305,6 +306,35 @@ export default function RegulationModuleScreen() {
                   maxHeight={250}
                   allowFullScreen={true}
                 />
+              );
+            } else if (item.type === 'table') {
+              console.log('📊 Rendering TableViewer with:', { 
+                id: item.id, 
+                rows: item.rows?.length, 
+                columns: item.columns 
+              });
+              return (
+                <TableViewer 
+                  key={idx} 
+                  tableData={item}
+                  style={styles.bubbleTable}
+                />
+              );
+            } else if (item.type === 'chart') {
+              console.log('📈 Rendering chart placeholder with:', { 
+                id: item.id, 
+                title: item.title, 
+                chartType: item.chartType 
+              });
+              return (
+                <ThemedView key={idx} style={styles.chartPlaceholder}>
+                  <ThemedText style={styles.chartTitle}>
+                    📈 {item.title || 'Chart'}
+                  </ThemedText>
+                  <ThemedText style={styles.chartSubtitle}>
+                    Type: {item.chartType || 'Unknown'}
+                  </ThemedText>
+                </ThemedView>
               );
             }
             return null;
@@ -636,6 +666,29 @@ const styles = StyleSheet.create({
   bubbleImage: {
     marginVertical: 8,
     alignSelf: 'center',
+  },
+  bubbleTable: {
+    marginVertical: 8,
+  },
+  chartPlaceholder: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 16,
+    marginVertical: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    borderStyle: 'dashed',
+  },
+  chartTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#495057',
+    marginBottom: 4,
+  },
+  chartSubtitle: {
+    fontSize: 14,
+    color: '#6c757d',
   },
   // Color-coded bubble styles
   bubbleOrange: {

@@ -254,6 +254,11 @@ class DocumentParser {
       try {
         if (element && element.paragraph) {
           this.parseParagraph(element.paragraph);
+        } else if (element && element.table) {
+          console.log('📊 Found table element at index', index);
+          this.parseTable(element.table);
+        } else if (element) {
+          console.log(`⚠️ Skipping element at index ${index}:`, Object.keys(element));
         }
       } catch (error) {
         console.error(`❌ Error parsing element at index ${index}:`, error.message);
@@ -530,7 +535,7 @@ class DocumentParser {
   }
 
   /**
-   * Process inline objects (images) - optimized for copied/pasted images
+   * Process inline objects (images, tables, charts) - optimized for copied/pasted content
    * @param {Object} inlineObjectElement - Inline object element from Google Docs
    */
   processInlineObject(inlineObjectElement) {
@@ -547,18 +552,33 @@ class DocumentParser {
     const inlineObject = this.inlineObjects[inlineObjectId];
     const embeddedObject = inlineObject.inlineObjectProperties?.embeddedObject;
     
-    if (!embeddedObject || !embeddedObject.imageProperties) {
-      console.warn('⚠️ Inline object is not an image:', inlineObjectId);
-      console.warn('   Object type:', embeddedObject ? Object.keys(embeddedObject) : 'No embeddedObject');
-      if (embeddedObject) {
-        console.warn('   Available properties:', Object.keys(embeddedObject));
-        if (embeddedObject.table) console.warn('   -> This is a TABLE');
-        if (embeddedObject.drawing) console.warn('   -> This is a DRAWING');
-        if (embeddedObject.chart) console.warn('   -> This is a CHART');
-      }
+    if (!embeddedObject) {
+      console.warn('⚠️ No embedded object found:', inlineObjectId);
       return;
     }
     
+    // Handle different types of embedded objects
+    if (embeddedObject.imageProperties) {
+      this.processImageObject(embeddedObject, inlineObjectId);
+    } else if (embeddedObject.table) {
+      console.log('📊 Processing TABLE object:', inlineObjectId);
+      this.processTableObject(embeddedObject.table, inlineObjectId);
+    } else if (embeddedObject.chart) {
+      console.log('📈 Processing CHART object:', inlineObjectId);
+      this.processChartObject(embeddedObject.chart, inlineObjectId);
+    } else {
+      console.warn('⚠️ Unknown inline object type:', inlineObjectId);
+      console.warn('   Available properties:', Object.keys(embeddedObject));
+      return;
+    }
+  }
+
+  /**
+   * Process image objects
+   * @param {Object} embeddedObject - The embedded object containing image properties
+   * @param {string} inlineObjectId - The inline object ID
+   */
+  processImageObject(embeddedObject, inlineObjectId) {
     const imageProperties = embeddedObject.imageProperties;
     const contentUri = imageProperties.contentUri || imageProperties.sourceUri;
     
@@ -586,16 +606,183 @@ class DocumentParser {
       dimensions: imageData.width && imageData.height ? `${imageData.width}x${imageData.height}` : 'unknown'
     });
     
-    // Add to current content block
+    // Add to current block
+    this.addContentToCurrentBlock(imageData);
+  }
+
+  /**
+   * Process table objects
+   * @param {Object} table - The table object from Google Docs
+   * @param {string} inlineObjectId - The inline object ID
+   */
+  processTableObject(table, inlineObjectId) {
+    if (!table || !table.tableRows) {
+      console.warn('⚠️ Table has no rows:', inlineObjectId);
+      return;
+    }
+
+    const tableData = {
+      type: 'table',
+      id: inlineObjectId,
+      rows: [],
+      columns: 0
+    };
+
+    // Process each row
+    table.tableRows.forEach((row, rowIndex) => {
+      if (!row.tableCells) return;
+      
+      const rowData = {
+        cells: [],
+        isHeader: false // Don't automatically treat first row as header
+      };
+
+      row.tableCells.forEach((cell, cellIndex) => {
+        let cellText = '';
+        
+        // Extract text from cell content
+        if (cell.content) {
+          cell.content.forEach(element => {
+            if (element.paragraph && element.paragraph.elements) {
+              element.paragraph.elements.forEach(textElement => {
+                if (textElement.textRun && textElement.textRun.content) {
+                  cellText += textElement.textRun.content;
+                }
+              });
+            }
+          });
+        }
+
+        rowData.cells.push({
+          text: cellText.trim(),
+          columnIndex: cellIndex
+        });
+      });
+
+      // Update column count
+      tableData.columns = Math.max(tableData.columns, rowData.cells.length);
+      tableData.rows.push(rowData);
+    });
+
+    console.log('📊 Found table:', {
+      rows: tableData.rows.length,
+      columns: tableData.columns,
+      id: inlineObjectId
+    });
+
+    // Add to current block
+    this.addContentToCurrentBlock(tableData);
+  }
+
+  /**
+   * Process chart objects (charts are often rendered as images by Google Docs API)
+   * @param {Object} chart - The chart object from Google Docs
+   * @param {string} inlineObjectId - The inline object ID
+   */
+  processChartObject(chart, inlineObjectId) {
+    // Charts in Google Docs are often complex and may need special handling
+    // For now, we'll extract basic information and potentially treat as image
+    const chartData = {
+      type: 'chart',
+      id: inlineObjectId,
+      title: chart.title || 'Chart',
+      chartType: chart.chartType || 'unknown'
+    };
+
+    console.log('📈 Found chart:', {
+      title: chartData.title,
+      type: chartData.chartType,
+      id: inlineObjectId
+    });
+
+    // Add to current block
+    this.addContentToCurrentBlock(chartData);
+  }
+
+  /**
+   * Parse table elements directly from Google Docs content structure
+   * @param {Object} table - Table element from Google Docs
+   */
+  parseTable(table) {
+    if (!table || !table.tableRows) {
+      console.warn('⚠️ Table has no rows');
+      return;
+    }
+
+    const tableData = {
+      type: 'table',
+      id: `table-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      rows: [],
+      columns: 0
+    };
+
+    console.log('📊 Processing table with', table.tableRows.length, 'rows');
+
+    // Process each row
+    table.tableRows.forEach((row, rowIndex) => {
+      if (!row.tableCells) {
+        console.warn(`⚠️ Row ${rowIndex} has no cells`);
+        return;
+      }
+      
+      const rowData = {
+        cells: [],
+        isHeader: false // Don't automatically treat first row as header
+      };
+
+      row.tableCells.forEach((cell, cellIndex) => {
+        let cellText = '';
+        
+        // Extract text from cell content (cells contain content elements like paragraphs)
+        if (cell.content) {
+          cell.content.forEach(element => {
+            if (element.paragraph && element.paragraph.elements) {
+              element.paragraph.elements.forEach(textElement => {
+                if (textElement.textRun && textElement.textRun.content) {
+                  cellText += textElement.textRun.content;
+                }
+              });
+            }
+          });
+        }
+
+        rowData.cells.push({
+          text: cellText.trim(),
+          columnIndex: cellIndex
+        });
+      });
+
+      // Update column count
+      tableData.columns = Math.max(tableData.columns, rowData.cells.length);
+      tableData.rows.push(rowData);
+      
+      console.log(`   Row ${rowIndex + 1}: ${rowData.cells.length} cells, header: ${rowData.isHeader}`);
+    });
+
+    console.log('📊 Table processed:', {
+      rows: tableData.rows.length,
+      columns: tableData.columns,
+      id: tableData.id
+    });
+
+    // Add to current block
+    this.addContentToCurrentBlock(tableData);
+  }
+
+  /**
+   * Helper method to add content to current block or create new block
+   * @param {Object} contentData - The content data to add
+   */
+  addContentToCurrentBlock(contentData) {
     if (this.currentBlock) {
-      this.currentBlock.content.push(imageData);
+      this.currentBlock.content = this.currentBlock.content || [];
+      this.currentBlock.content.push(contentData);
     } else {
-      // Create a new block for orphan images
+      // Create new block for standalone content
       this.currentBlock = {
         id: this.parsedContent.contentBlocks.length + 1,
         header: null,
-        content: [imageData],
-        type: 'image'
+        content: [contentData]
       };
       this.parsedContent.contentBlocks.push(this.currentBlock);
     }
