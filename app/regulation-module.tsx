@@ -3,12 +3,11 @@ import { ImageViewer } from '@/components/ImageViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useColorInheritance } from '../hooks/useColorInheritance';
 import { useGoogleDocsContent } from '../hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '../services/api';
-import { getColorFromHeader } from '../utils/colorInheritance';
 
 interface DayModule {
   id: string;
@@ -22,7 +21,7 @@ interface DayModule {
   type: 'collaborative' | 'independent' | 'evaluation';
 }
 
-export default function JobModuleScreen() {
+export default function RegulationModuleScreen() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [currentDay, setCurrentDay] = useState<number>(1);
   const [revealedAnswers, setRevealedAnswers] = useState<Set<number>>(new Set());
@@ -30,8 +29,8 @@ export default function JobModuleScreen() {
   // Google Docs content for the currently active day
   const { content, loading, error, refetch } = useGoogleDocsContent(
     DOCUMENT_REFS.MAIN_DOCUMENT,
-    'job',
-    { tab: 'My Job, Your Job', day: currentDay }
+    'regulation',
+    { tab: 'Regulation', day: currentDay }
   );
 
 
@@ -59,55 +58,56 @@ export default function JobModuleScreen() {
       }
     }
   }, [content]);
+
   const dayModules: DayModule[] = [
     {
       id: 'day1',
-      title: 'Understanding Roles',
-      description: 'Learning about different job roles and responsibilities',
+      title: 'Understanding Emotions',
+      description: 'Learning to identify and name our feelings',
       dayNumber: 1,
       isCompleted: false,
       isLocked: false,
       color: '#FFC93C',
-      icon: '👔',
+      icon: '😊',
       type: 'collaborative'
     },
     {
       id: 'day2',
-      title: 'Communication at Work',
-      description: 'Effective workplace communication skills',
+      title: 'Calming Strategies',
+      description: 'Tools and techniques for self-regulation',
       dayNumber: 2,
       isCompleted: false,
       isLocked: false,
       color: '#FF9A3C',
-      icon: '💬',
+      icon: '🧘',
       type: 'collaborative'
     },
     {
       id: 'day3',
-      title: 'Teamwork',
-      description: 'Working together to achieve goals',
+      title: 'Recognizing Triggers',
+      description: 'Understanding what makes us feel big emotions',
       dayNumber: 3,
       isCompleted: false,
       isLocked: false,
       color: '#FF6F3C',
-      icon: '🤝',
+      icon: '🔍',
       type: 'collaborative'
     },
     {
       id: 'day4',
-      title: 'Problem Solving',
-      description: 'Handling workplace challenges',
+      title: 'Practicing Control',
+      description: 'Building skills for emotional management',
       dayNumber: 4,
       isCompleted: false,
       isLocked: false,
       color: '#155263',
-      icon: '💡',
+      icon: '💪',
       type: 'collaborative'
     },
     {
       id: 'day5',
-      title: 'Reflection',
-      description: 'Putting workplace skills into practice',
+      title: 'Putting It Together',
+      description: 'Reflecting on growth and progress',
       dayNumber: 5,
       isCompleted: false,
       isLocked: false,
@@ -179,8 +179,6 @@ export default function JobModuleScreen() {
   };
 
   const renderContentBlock = (block: any, index: number) => {
-    if (!block || !block.content) return null;
-
     const isScenario = block.header && block.header.toLowerCase().includes('scenario:');
     const isAnswerRevealed = revealedAnswers.has(block.id);
     
@@ -316,97 +314,48 @@ export default function JobModuleScreen() {
     );
   };
 
-  // Compute color inheritance for sections (similar to contentBlocks)
-  const sectionColors = useMemo(() => {
-    if (!content?.sections) return new Map<string, string>();
-    
-    const colorMap = new Map<string, string>();
-    let currentColor: string | null = null;
-    
-    // Process sections in order to build inheritance map
-    Object.entries(content.sections).forEach(([sectionKey, section]: [string, any]) => {
-      const sectionTitle = section.title || sectionKey;
-      const blockColor = getColorFromHeader(sectionTitle);
+  const renderSection = (sectionKey: string, section: any, defaultIcon: string) => (
+    <ThemedView key={sectionKey} style={styles.section}>
+      <ThemedText style={styles.sectionTitle}>
+        {defaultIcon} {section.title}
+      </ThemedText>
       
-      if (blockColor) {
-        currentColor = blockColor;
-      }
+      {/* Render bullet points */}
+      {section.items && section.items.length > 0 && (
+        <ThemedView style={styles.bulletContainer}>
+          {section.items.map((item: string, index: number) => (
+            <TextWithYouTube 
+              key={index} 
+              text={`• ${item}`}
+              textStyle={styles.bulletPoint}
+              videoHeight={180}
+            />
+          ))}
+        </ThemedView>
+      )}
       
-      // Store the color for this section (inherited or new)
-      if (currentColor) {
-        colorMap.set(sectionKey, currentColor);
-      }
-    });
-    
-    return colorMap;
-  }, [content?.sections]);
+      {/* Render additional content */}
+      {section.content && (
+        <TextWithYouTube 
+          text={section.content}
+          textStyle={styles.contentText}
+          videoHeight={200}
+        />
+      )}
+    </ThemedView>
+  );
 
-  // Helper to get bubble style from color name
-  const getBubbleStyleFromColor = (color: string | null) => {
-    if (!color) return {};
-    
-    const styleMap: Record<string, any> = {
-      // Day-specific styles (new system)
-      day1: styles.bubbleDay1,
-      day2: styles.bubbleDay2,
-      day3: styles.bubbleDay3,
-      day4: styles.bubbleDay4,
-      day5: styles.bubbleDay5,
-      // Legacy color names (fallback)
-      orange: styles.bubbleOrange,
-      blue: styles.bubbleBlue,
-      green: styles.bubbleGreen,
-      purple: styles.bubblePurple,
-      yellow: styles.bubbleYellow,
-      teal: styles.bubbleTeal,
+  const getSectionIcon = (sectionKey: string): string => {
+    const iconMap: Record<string, string> = {
+      rules: '📋',
+      instructions: '💭', 
+      activities: '🎯',
+      understanding_emotions: '😊',
+      think_together: '💭',
+      todays_activities: '🎯',
     };
-    
-    return styleMap[color] || {};
+    return iconMap[sectionKey] || '📝';
   };
-
-  const renderSection = (sectionKey: string, section: any, defaultIcon: string) => {
-    // Get color from inheritance map (with fallback to direct keyword match)
-    const sectionTitle = section.title || sectionKey;
-    const inheritedColor = sectionColors.get(sectionKey);
-    const directColor = getColorFromHeader(sectionTitle);
-    const color = inheritedColor || directColor;
-    const colorStyle = getBubbleStyleFromColor(color);
-    
-    return (
-      <ThemedView key={sectionKey} style={[styles.bubble, colorStyle]}>
-        <ThemedText style={[
-          styles.bubbleHeader,
-          shouldBoldHeader(sectionTitle) && styles.bubbleHeaderBold
-        ]}>
-          {sectionTitle}
-        </ThemedText>
-        
-        {/* Render bullet points */}
-        {section.items && section.items.length > 0 && (
-          <ThemedView style={styles.bulletContainer}>
-            {section.items.map((item: string, index: number) => (
-              <TextWithYouTube 
-                key={index} 
-                text={`• ${item}`}
-                textStyle={styles.bulletPoint}
-                videoHeight={180}
-              />
-            ))}
-          </ThemedView>
-        )}
-        
-        {/* Render additional content */}
-        {section.content && (
-          <TextWithYouTube 
-            text={section.content}
-            textStyle={styles.bubbleText}
-            videoHeight={200}
-          />
-        )}
-      </ThemedView>
-    );
-  };
-
 
   const renderDayContent = (day: DayModule) => {
     // Only render content for the currently expanded day
@@ -453,7 +402,7 @@ export default function JobModuleScreen() {
           ) : content?.sections ? (
             // Fallback: Render sections from Google Docs (old format)
             Object.entries(content.sections).map(([sectionKey, section]) =>
-              renderSection(sectionKey, section, '')
+              renderSection(sectionKey, section, getSectionIcon(sectionKey))
             )
           ) : (
             // Fallback content if no Google Docs content is available
@@ -495,9 +444,9 @@ export default function JobModuleScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.header}>
-        <ThemedText type="title" style={styles.moduleTitle}>💼 My Job, Your Job</ThemedText>
+        <ThemedText type="title" style={styles.moduleTitle}>Regulation & Control</ThemedText>
         <ThemedText style={styles.moduleSubtitle}>
-          Understanding workplace roles and responsibilities through 5 focused days...
+          Build emotional awareness and self-regulation skills through 5 focused days...
         </ThemedText>
       </ThemedView>
 
@@ -801,3 +750,4 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+

@@ -40,7 +40,7 @@ export default function TabTwoScreen() {
       title: 'Regulation',
       emoji: '📏',
       description: 'Self-control and emotional balance',
-      isActive: false
+      isActive: true
     },
     {
       id: '5',
@@ -61,7 +61,7 @@ export default function TabTwoScreen() {
       title: 'Self Coach',
       emoji: '🧘‍♂️',
       description: 'Self-reflection and guidance',
-      isActive: false
+      isActive: true
     },
     {
       id: '8',
@@ -90,6 +90,10 @@ export default function TabTwoScreen() {
       router.push('/job-module');
     } else if (module.title === 'Mistakes') {
       router.push('/mistakes-module');
+    } else if (module.title === 'Regulation') {
+      router.push('/regulation-module');
+    } else if (module.title === 'Self Coach') {
+      router.push('/selfcoach-module');
     } else {
       console.log(`${module.title} module pressed - coming soon`);
     }

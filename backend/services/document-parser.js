@@ -325,6 +325,17 @@ class DocumentParser {
    * @returns {boolean}
    */
   isHeader(text, paragraph, isStyleHeader) {
+    // Special case: If we're inside a scenario block, A:, B:, C:, Answer: are NOT headers
+    const isInScenario = this.currentBlock && this.currentBlock.header && 
+                         this.currentBlock.header.toLowerCase().includes('scenario:');
+    
+    if (isInScenario) {
+      // Check if this is an option (A:, B:, C:, etc.) or Answer:
+      if (text.match(/^([A-Z]):\s*.+$/) || text.toLowerCase().startsWith('answer:')) {
+        return false; // Not a header, keep it in the scenario block
+      }
+    }
+    
     // Check paragraph style for heading
     const paragraphStyle = paragraph.paragraphStyle || {};
     const namedStyleType = paragraphStyle.namedStyleType;
@@ -383,6 +394,47 @@ class DocumentParser {
     const headerText = text.trim();
     
     console.log('📌 Creating new content block with header:', headerText);
+    
+    // Special case: If this is "Instructions:" and the previous block is "Activity:", 
+    // merge it into the Activity block instead of creating a new one
+    const lowerHeader = headerText.toLowerCase();
+    if (lowerHeader.includes('instructions:') && this.currentBlock && 
+        this.currentBlock.header && this.currentBlock.header.toLowerCase().includes('activity:')) {
+      console.log('🔗 Merging Instructions into Activity block');
+      // Add instructions as a sub-header within the current Activity block
+      this.currentBlock.content.push({
+        type: 'subheader',
+        text: headerText
+      });
+      // Update the current section but don't create a new block
+      this.currentSection = this.sanitizeKey(headerText);
+      this.parsedContent.sections[this.currentSection] = {
+        title: headerText,
+        type: 'section',
+        items: [],
+        content: ''
+      };
+      return; // Don't create a new block
+    }
+    
+    // Special case: If this is content after "Closing Conversation:", group it together
+    if (this.currentBlock && this.currentBlock.header && 
+        this.currentBlock.header.toLowerCase().includes('closing conversation:')) {
+      // Continue adding to the Closing Conversation block until we hit a day delimiter
+      console.log('🔗 Adding to Closing Conversation block');
+      this.currentBlock.content.push({
+        type: 'subheader',
+        text: headerText
+      });
+      this.currentSection = this.sanitizeKey(headerText);
+      this.parsedContent.sections[this.currentSection] = {
+        title: headerText,
+        type: 'section',
+        items: [],
+        content: ''
+      };
+      return; // Don't create a new block
+    }
     
     this.currentSection = this.sanitizeKey(headerText);
     this.parsedContent.sections[this.currentSection] = {
@@ -443,20 +495,33 @@ class DocumentParser {
         existingContent ? `${existingContent}\n${text}` : text;
     }
     
+    // Check if this text is an option (A:, B:, C:, D:, etc.)
+    const optionMatch = text.match(/^([A-Z]):\s*(.+)$/);
+    
     // Add to current content block
     if (this.currentBlock) {
-      this.currentBlock.content.push({
-        type: 'text',
-        text: text
-      });
+      if (optionMatch) {
+        // This is an option like "A: Something", "B: Something else"
+        this.currentBlock.content.push({
+          type: 'option',
+          label: optionMatch[1], // A, B, C, etc.
+          text: optionMatch[2].trim() // The text after the colon
+        });
+      } else {
+        this.currentBlock.content.push({
+          type: 'text',
+          text: text
+        });
+      }
     } else {
       // If no current block exists, create one for orphan content
       this.currentBlock = {
         id: this.parsedContent.contentBlocks.length + 1,
         header: null,
         content: [{
-          type: 'text',
-          text: text
+          type: optionMatch ? 'option' : 'text',
+          text: optionMatch ? optionMatch[2].trim() : text,
+          ...(optionMatch && { label: optionMatch[1] })
         }],
         type: 'text'
       };
@@ -551,7 +616,7 @@ class DocumentParser {
 
   /**
    * Get formatted output for specific use cases
-   * @param {string} format - Output format ('job', 'mistakes', 'raw')
+   * @param {string} format - Output format ('job', 'mistakes', 'regulation', 'raw')
    * @returns {Object} - Formatted output
    */
   getFormattedOutput(format = 'raw') {
@@ -560,6 +625,8 @@ class DocumentParser {
         return this.formatForJobModule();
       case 'mistakes':
         return this.formatForMistakesModule();
+      case 'regulation':
+        return this.formatForRegulationModule();
       default:
         // Raw format also includes contentBlocks
         return {
@@ -595,6 +662,24 @@ class DocumentParser {
       title: this.parsedContent.dayTitle || this.parsedContent.title,
       sections: this.parsedContent.sections,
       contentBlocks: this.parsedContent.contentBlocks, // New: Include content blocks
+      lastUpdated: this.parsedContent.metadata.lastModified,
+      tab: this.parsedContent.metadata.tab,
+      day: this.parsedContent.metadata.day,
+      dayTitle: this.parsedContent.dayTitle,
+      metadata: this.parsedContent.metadata
+    };
+  }
+
+  /**
+   * Format content specifically for regulation modules
+   * @returns {Object} - Regulation module formatted content
+   */
+  formatForRegulationModule() {
+    return {
+      moduleType: 'regulation',
+      title: this.parsedContent.dayTitle || this.parsedContent.title,
+      sections: this.parsedContent.sections,
+      contentBlocks: this.parsedContent.contentBlocks,
       lastUpdated: this.parsedContent.metadata.lastModified,
       tab: this.parsedContent.metadata.tab,
       day: this.parsedContent.metadata.day,

@@ -14,7 +14,7 @@ interface UseGoogleDocsContentResult {
  */
 export function useGoogleDocsContent(
   documentId: string,
-  format: 'raw' | 'job' | 'mistakes' = 'raw',
+  format: 'raw' | 'job' | 'mistakes' | 'regulation' | 'selfcoach' = 'raw',
   options: { tab?: string; day?: number; autoFetch?: boolean } = {}
 ): UseGoogleDocsContentResult {
   const { tab, day, autoFetch = true } = options;
@@ -67,7 +67,7 @@ export function useGoogleDocsContent(
  */
 export function useMultipleGoogleDocsContent(
   documentIds: string[],
-  format: 'raw' | 'job' | 'mistakes' = 'raw',
+  format: 'raw' | 'job' | 'mistakes' | 'regulation' = 'raw',
   options: { tab?: string; day?: number } = {}
 ) {
   const [content, setContent] = useState<Record<string, DocumentResponse | { error: string }>>({});

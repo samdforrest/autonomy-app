@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import React, { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { useColorInheritance } from '../hooks/useColorInheritance';
 import { useGoogleDocsContent } from '../hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '../services/api';
 
@@ -31,6 +32,7 @@ export default function MistakesModuleScreen() {
     'mistakes',
     { tab: 'Mistakes', day: currentDay }
   );
+
 
   // Debug: Log content structure to help troubleshoot images
   React.useEffect(() => {
@@ -65,7 +67,7 @@ export default function MistakesModuleScreen() {
       dayNumber: 1,
       isCompleted: false,
       isLocked: false,
-      color: '#E74C3C',
+      color: '#FFC93C',
       icon: '🤔',
       type: 'collaborative'
     },
@@ -76,7 +78,7 @@ export default function MistakesModuleScreen() {
       dayNumber: 2,
       isCompleted: false,
       isLocked: false,
-      color: '#F39C12',
+      color: '#FF9A3C',
       icon: '🙋‍♂️',
       type: 'collaborative'
     },
@@ -87,7 +89,7 @@ export default function MistakesModuleScreen() {
       dayNumber: 3,
       isCompleted: false,
       isLocked: false,
-      color: '#3498DB',
+      color: '#FF6F3C',
       icon: '💡',
       type: 'collaborative'
     },
@@ -98,7 +100,7 @@ export default function MistakesModuleScreen() {
       dayNumber: 4,
       isCompleted: false,
       isLocked: false,
-      color: '#2ECC71',
+      color: '#155263',
       icon: '🔧',
       type: 'collaborative'
     },
@@ -109,7 +111,7 @@ export default function MistakesModuleScreen() {
       dayNumber: 5,
       isCompleted: false,
       isLocked: false,
-      color: '#9B59B6',
+      color: '#939393',
       icon: '🌟',
       type: 'evaluation'
     }
@@ -144,26 +146,21 @@ export default function MistakesModuleScreen() {
     });
   };
 
-  // Get bubble style based on header content
-  const getBubbleStyle = (header: string) => {
-    if (!header) return {};
-    
-    const lowerHeader = header.toLowerCase();
-    if (lowerHeader.includes('activity:')) {
-      return styles.bubbleOrange;
-    } else if (lowerHeader.includes('learning:')) {
-      return styles.bubbleBlue;
-    } else if (lowerHeader.includes('opener:')) {
-      return styles.bubbleGreen;
-    } else if (lowerHeader.includes('closing conversation:')) {
-      return styles.bubblePurple;
-    } else if (lowerHeader.includes('read the purpose together:')) {
-      return styles.bubbleYellow;
-    } else if (lowerHeader.includes('scenario:')) {
-      return styles.bubbleTeal;
-    }
-    return {};
-  };
+  // Color inheritance hook
+  const { getBubbleStyle } = useColorInheritance(content?.contentBlocks, {
+    day1: styles.bubbleDay1,
+    day2: styles.bubbleDay2,
+    day3: styles.bubbleDay3,
+    day4: styles.bubbleDay4,
+    day5: styles.bubbleDay5,
+    // Keep legacy styles for fallback
+    orange: styles.bubbleOrange,
+    blue: styles.bubbleBlue,
+    green: styles.bubbleGreen,
+    purple: styles.bubblePurple,
+    yellow: styles.bubbleYellow,
+    teal: styles.bubbleTeal,
+  });
 
   // Check if header should be bold
   const shouldBoldHeader = (header: string) => {
@@ -173,9 +170,11 @@ export default function MistakesModuleScreen() {
     return lowerHeader.includes('activity:') || 
            lowerHeader.includes('learning:') || 
            lowerHeader.includes('opener:') || 
+           lowerHeader.includes('connect and share:') ||
            lowerHeader.includes('closing conversation:') ||
            lowerHeader.includes('read the purpose together:') ||
            lowerHeader.includes('scenario:') ||
+           lowerHeader.includes('instructions:') ||
            lowerHeader.includes('answer:');
   };
 
@@ -183,61 +182,51 @@ export default function MistakesModuleScreen() {
     const isScenario = block.header && block.header.toLowerCase().includes('scenario:');
     const isAnswerRevealed = revealedAnswers.has(block.id);
     
-    // Debug logging
-    if (isScenario) {
-      console.log('🔍 Scenario Block Debug:', {
+    // For scenario blocks, separate content into question, options, and answer
+    let scenarioQuestion: string | null = null;
+    let scenarioOptions: any[] = [];
+    let answerText: string | null = null;
+    let otherContent: any[] = [];
+    
+    if (isScenario && block.content) {
+      block.content.forEach((item: any) => {
+        if (item.type === 'option') {
+          // This is an A:, B:, C: option
+          scenarioOptions.push(item);
+        } else if (item.text && item.text.toLowerCase().includes('answer:')) {
+          // This is the answer
+          answerText = item.text;
+        } else if (item.type === 'text' && !scenarioQuestion) {
+          // First text item is the scenario question
+          scenarioQuestion = item.text;
+        } else {
+          // Everything else
+          otherContent.push(item);
+        }
+      });
+      
+      console.log('🔍 Scenario Block Parsed:', {
         blockId: block.id,
-        header: block.header,
-        isAnswerRevealed,
-        contentItems: block.content?.length || 0,
-        contentPreview: block.content?.map((item: any) => ({
-          type: item.type,
-          textPreview: item.text?.substring(0, 50) + '...'
-        }))
+        hasQuestion: !!scenarioQuestion,
+        optionsCount: scenarioOptions.length,
+        hasAnswer: !!answerText,
+        otherContentCount: otherContent.length
       });
     }
     
-    // Find the corresponding answer text for this scenario
-    const findAnswerText = () => {
-      if (!isScenario || !block.content) return null;
-      
-      const answerItem = block.content.find((item: any) => 
-        item.text && item.text.toLowerCase().includes('answer:')
-      );
-      
-      console.log('🔍 Answer Search Result:', {
-        found: !!answerItem,
-        answerText: answerItem?.text?.substring(0, 100) + '...'
-      });
-      
-      return answerItem ? answerItem.text : null;
-    };
-
-    const answerText = findAnswerText();
-    
-    // Determine what header to display
-    const displayHeader = isScenario && isAnswerRevealed && answerText 
-      ? answerText 
+    // Determine what header to display for scenarios
+    const displayHeader = isScenario 
+      ? (isAnswerRevealed && answerText ? answerText : (scenarioQuestion || block.header))
       : block.header;
     
-    // Debug the header decision
-    if (isScenario) {
-      console.log('🔍 Header Decision:', {
-        originalHeader: block.header,
-        displayHeader,
-        isAnswerRevealed,
-        hasAnswerText: !!answerText
-      });
-    }
-    
-    // Filter content - when answer is revealed, hide the answer text from content since it's now the header
+    // Filter content - for scenarios, we'll handle question/options/answer separately
     const filteredContent = isScenario 
-      ? block.content?.filter((item: any) => !item.text?.toLowerCase().includes('answer:'))
+      ? otherContent  // Everything except question, options, and answer
       : block.content;
 
     return (
-      <ThemedView key={block.id || index} style={[styles.bubble, getBubbleStyle(block.header)]}>
-        {/* Header/Label - shows Scenario or Answer based on reveal state */}
+      <ThemedView key={block.id || index} style={[styles.bubble, getBubbleStyle(block.header, index, block.id)]}>
+        {/* Header/Label - shows Scenario question or Answer based on reveal state */}
         {displayHeader && (
           <ThemedText style={[
             styles.bubbleHeader, 
@@ -247,7 +236,19 @@ export default function MistakesModuleScreen() {
           </ThemedText>
         )}
         
-        {/* Reveal Answer Button for Scenarios */}
+        {/* Scenario Options (A, B, C) - Always visible for scenarios */}
+        {isScenario && scenarioOptions.length > 0 && (
+          <ThemedView style={styles.optionsContainer}>
+            {scenarioOptions.map((option: any, idx: number) => (
+              <ThemedView key={idx} style={styles.optionItem}>
+                <ThemedText style={styles.optionLabel}>{option.label}:</ThemedText>
+                <ThemedText style={styles.optionText}>{option.text}</ThemedText>
+              </ThemedView>
+            ))}
+          </ThemedView>
+        )}
+        
+        {/* Reveal Answer Button for Scenarios - positioned after options */}
         {isScenario && (
           <TouchableOpacity 
             style={styles.revealButton} 
@@ -259,10 +260,23 @@ export default function MistakesModuleScreen() {
           </TouchableOpacity>
         )}
         
-        {/* Content */}
+        {/* Other Content */}
         <ThemedView style={styles.bubbleContent}>
           {filteredContent && filteredContent.map((item: any, idx: number) => {
-            if (item.type === 'bullet') {
+            if (item.type === 'subheader') {
+              // Render subheaders (like Instructions: within Activity:)
+              return (
+                <ThemedText 
+                  key={idx} 
+                  style={[
+                    styles.bubbleSubheader,
+                    shouldBoldHeader(item.text) && styles.bubbleHeaderBold
+                  ]}
+                >
+                  {item.text}
+                </ThemedText>
+              );
+            } else if (item.type === 'bullet') {
               return (
                 <TextWithYouTube 
                   key={idx} 
@@ -603,6 +617,13 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 8,
   },
+  bubbleSubheader: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 12,
+    marginBottom: 8,
+  },
   bubbleContent: {
     backgroundColor: 'transparent',
   },
@@ -647,6 +668,32 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: '#009688', // Teal border
   },
+  // Day-specific bubble styles that match day card colors
+  bubbleDay1: {
+    backgroundColor: '#FFF8E1', // Light version of #FFC93C
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFC93C', // Day 1 golden yellow
+  },
+  bubbleDay2: {
+    backgroundColor: '#FFF3E0', // Light version of #FF9A3C  
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF9A3C', // Day 2 orange
+  },
+  bubbleDay3: {
+    backgroundColor: '#FFEBE0', // Light version of #FF6F3C
+    borderLeftWidth: 4, 
+    borderLeftColor: '#FF6F3C', // Day 3 red-orange
+  },
+  bubbleDay4: {
+    backgroundColor: '#E0F4F3', // Light version of #155263
+    borderLeftWidth: 4,
+    borderLeftColor: '#155263', // Day 4 dark teal  
+  },
+  bubbleDay5: {
+    backgroundColor: '#F5F5F5', // Light version of #939393
+    borderLeftWidth: 4,
+    borderLeftColor: '#939393', // Day 5 gray
+  },
   // Bold header style
   bubbleHeaderBold: {
     fontWeight: 'bold',
@@ -676,5 +723,30 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     letterSpacing: 0.5,
+  },
+  // Options container styles
+  optionsContainer: {
+    marginTop: 8,
+    marginBottom: 8,
+    backgroundColor: 'transparent', // No background color
+  },
+  optionItem: {
+    flexDirection: 'row',
+    marginBottom: 8,
+    alignItems: 'flex-start',
+    backgroundColor: 'transparent', // No background color
+  },
+  optionLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginRight: 8,
+    minWidth: 20,
+  },
+  optionText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#333',
+    flex: 1,
   },
 });

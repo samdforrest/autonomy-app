@@ -94,7 +94,7 @@ export default function MistakesDay1Screen() {
       <ThemedView style={styles.header}>
         <ThemedText style={styles.dayLabel}>Day 1 of 5</ThemedText>
         <ThemedText type="title" style={styles.title}>
-          {content?.dayTitle || content?.title || 'Understanding Mistakes'}
+          {content?.title || 'Understanding Mistakes'}
         </ThemedText>
         <ThemedText style={styles.subtitle}>Parent + Child • Collaborative Learning</ThemedText>
         
