@@ -21,6 +21,34 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen 
+          name="mistakes-module" 
+          options={{ 
+            title: "Mistakes & Learning",
+            headerBackTitle: "Modules"
+          }} 
+        />
+        <Stack.Screen 
+          name="regulation-module" 
+          options={{ 
+            title: "Regulation & Control",
+            headerBackTitle: "Modules"
+          }} 
+        />
+        <Stack.Screen 
+          name="job-module" 
+          options={{ 
+            title: "My Job, Your Job",
+            headerBackTitle: "Modules"
+          }} 
+        />
+        <Stack.Screen 
+          name="selfcoach-module" 
+          options={{ 
+            title: "Self-Coaching Module",
+            headerBackTitle: "Modules"
+          }} 
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
