@@ -1,7 +1,8 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Platform, Text, TouchableOpacity } from 'react-native';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -17,37 +18,64 @@ export default function RootLayout() {
     return null;
   }
 
+  // Custom back button for web deployment
+  const CustomBackButton = () => (
+    <TouchableOpacity
+      onPress={() => router.back()}
+      style={{
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+      }}
+    >
+      <Text style={{ 
+        fontSize: 18, 
+        color: colorScheme === 'dark' ? '#fff' : '#007AFF',
+        marginRight: 4 
+      }}>
+        ←
+      </Text>
+      <Text style={{ 
+        fontSize: 16, 
+        color: colorScheme === 'dark' ? '#fff' : '#007AFF' 
+      }}>
+        Modules
+      </Text>
+    </TouchableOpacity>
+  );
+
+  // Common screen options for module screens
+  const getModuleOptions = (title: string) => ({
+    title,
+    headerBackTitle: "Modules",
+    ...(Platform.OS === 'web' && {
+      headerLeft: () => <CustomBackButton />,
+      headerStyle: {
+        backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
+      },
+    }),
+  });
+
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen 
           name="mistakes-module" 
-          options={{ 
-            title: "Mistakes & Learning",
-            headerBackTitle: "Modules"
-          }} 
+          options={getModuleOptions("Mistakes & Learning")}
         />
         <Stack.Screen 
           name="regulation-module" 
-          options={{ 
-            title: "Regulation & Control",
-            headerBackTitle: "Modules"
-          }} 
+          options={getModuleOptions("Regulation & Control")}
         />
         <Stack.Screen 
           name="job-module" 
-          options={{ 
-            title: "My Job, Your Job",
-            headerBackTitle: "Modules"
-          }} 
+          options={getModuleOptions("My Job, Your Job")}
         />
         <Stack.Screen 
           name="selfcoach-module" 
-          options={{ 
-            title: "Self-Coaching Module",
-            headerBackTitle: "Modules"
-          }} 
+          options={getModuleOptions("Self-Coaching Module")}
         />
         <Stack.Screen name="+not-found" />
       </Stack>
