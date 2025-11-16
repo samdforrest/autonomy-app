@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    paddingTop: 20,
+    paddingTop: 60,
     alignItems: 'center',
   },
   moduleTitle: {
