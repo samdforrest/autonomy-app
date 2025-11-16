@@ -18,32 +18,44 @@ export default function RootLayout() {
     return null;
   }
 
-  // Custom back button for web deployment
-  const CustomBackButton = () => (
-    <TouchableOpacity
-      onPress={() => router.back()}
-      style={{
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        flexDirection: 'row',
-        alignItems: 'center',
-      }}
-    >
-      <Text style={{ 
-        fontSize: 18, 
-        color: colorScheme === 'dark' ? '#fff' : '#007AFF',
-        marginRight: 4 
-      }}>
-        ←
-      </Text>
-      <Text style={{ 
-        fontSize: 16, 
-        color: colorScheme === 'dark' ? '#fff' : '#007AFF' 
-      }}>
-        Modules
-      </Text>
-    </TouchableOpacity>
-  );
+  // Custom back button for web deployment - styled like native iOS back button
+  const CustomBackButton = () => {
+    const handleBackPress = () => {
+      // Check if we can go back in navigation history
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        // If no history (e.g., direct page reload), navigate to explore tab
+        router.push('/(tabs)/explore');
+      }
+    };
+
+    return (
+      <TouchableOpacity
+        onPress={handleBackPress}
+        style={{
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minWidth: 50, // Larger touch target
+          minHeight: 50,
+        }}
+      >
+        <Text style={{ 
+          fontSize: 40, // Bigger size
+          fontWeight: '300', // Lighter weight like iOS
+          color: colorScheme === 'dark' ? '#0A84FF' : '#007AFF', // iOS blue
+          lineHeight: 28,
+          textAlign: 'center',
+          marginTop: -11, // Slight vertical adjustment to align with title baseline
+        }}>
+          ‹
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   // Common screen options for module screens
   const getModuleOptions = (title: string) => ({
