@@ -2,12 +2,12 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import React, { useState } from 'react';
 import {
-    Animated,
-    LayoutAnimation,
-    Platform,
-    StyleSheet,
-    TouchableOpacity,
-    UIManager
+  Animated,
+  LayoutAnimation,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  UIManager
 } from 'react-native';
 
 // Enable LayoutAnimation on Android
@@ -59,19 +59,6 @@ export default function CollapsibleDayCard({
     onToggle(day.id);
   };
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'collaborative':
-        return 'Parent + Child';
-      case 'independent':
-        return 'Child Only';
-      case 'evaluation':
-        return 'Review Together';
-      default:
-        return '';
-    }
-  };
-
   const getArrowIcon = () => {
     if (day.isLocked) return '🔒';
     return isExpanded ? '▲' : '▼';
@@ -94,7 +81,7 @@ export default function CollapsibleDayCard({
           <ThemedView style={styles.dayHeader}>
             <ThemedView style={styles.dayInfo}>
               <ThemedText style={styles.dayNumber}>Day {day.dayNumber}</ThemedText>
-              <ThemedText style={styles.typeLabel}>{getTypeLabel(day.type)}</ThemedText>
+              
             </ThemedView>
             <ThemedView style={styles.dayControls}>
               {day.isCompleted && (

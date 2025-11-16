@@ -67,7 +67,7 @@ export default function SelfCoachModuleScreen() {
       dayNumber: 1,
       isCompleted: false,
       isLocked: false,
-      color: '#E74C3C',
+      color: '#FFC93C',
       icon: '🪞',
       type: 'collaborative'
     },
@@ -78,7 +78,7 @@ export default function SelfCoachModuleScreen() {
       dayNumber: 2,
       isCompleted: false,
       isLocked: false,
-      color: '#F39C12',
+      color: '#FF9A3C',
       icon: '🎯',
       type: 'collaborative'
     },
@@ -89,7 +89,7 @@ export default function SelfCoachModuleScreen() {
       dayNumber: 3,
       isCompleted: false,
       isLocked: false,
-      color: '#3498DB',
+      color: '#FF6F3C',
       icon: '💭',
       type: 'collaborative'
     },
@@ -100,7 +100,7 @@ export default function SelfCoachModuleScreen() {
       dayNumber: 4,
       isCompleted: false,
       isLocked: false,
-      color: '#2ECC71',
+      color: '#155263',
       icon: '🧩',
       type: 'collaborative'
     },
@@ -111,7 +111,7 @@ export default function SelfCoachModuleScreen() {
       dayNumber: 5,
       isCompleted: false,
       isLocked: false,
-      color: '#9B59B6',
+      color: '#939393',
       icon: '🌱',
       type: 'evaluation'
     }
@@ -154,6 +154,12 @@ export default function SelfCoachModuleScreen() {
 
   // Color inheritance hook
   const { getBubbleStyle } = useColorInheritance(content?.contentBlocks, {
+    day1: styles.bubbleDay1,
+    day2: styles.bubbleDay2,
+    day3: styles.bubbleDay3,
+    day4: styles.bubbleDay4,
+    day5: styles.bubbleDay5,
+    // Keep legacy styles for fallback
     orange: styles.bubbleOrange,
     blue: styles.bubbleBlue,
     green: styles.bubbleGreen,
@@ -586,6 +592,32 @@ const styles = StyleSheet.create({
     backgroundColor: '#E0F2F1', // Light teal background
     borderLeftWidth: 4,
     borderLeftColor: '#009688', // Teal border
+  },
+  // Day-specific bubble styles that match day card colors
+  bubbleDay1: {
+    backgroundColor: '#FFF8E1', // Light version of #FFC93C
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFC93C', // Day 1 golden yellow
+  },
+  bubbleDay2: {
+    backgroundColor: '#FFF3E0', // Light version of #FF9A3C  
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF9A3C', // Day 2 orange
+  },
+  bubbleDay3: {
+    backgroundColor: '#FFEBE0', // Light version of #FF6F3C
+    borderLeftWidth: 4, 
+    borderLeftColor: '#FF6F3C', // Day 3 red-orange
+  },
+  bubbleDay4: {
+    backgroundColor: '#E0F4F3', // Light version of #155263
+    borderLeftWidth: 4,
+    borderLeftColor: '#155263', // Day 4 dark teal  
+  },
+  bubbleDay5: {
+    backgroundColor: '#F5F5F5', // Light version of #939393
+    borderLeftWidth: 4,
+    borderLeftColor: '#939393', // Day 5 gray
   },
   // Bold header style
   bubbleHeaderBold: {

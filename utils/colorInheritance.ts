@@ -5,18 +5,19 @@
  */
 
 // Unified color keyword mapping - used across all modules
+// Maps to day-specific styles that match day card colors
 export const COLOR_KEYWORDS = {
-  'read the purpose together:': 'yellow',
-  'opener:': 'green',
-  'scenario:': 'orange',
-  'activity:': 'orange',
-  'learning:': 'blue',
-  'connect and share:': 'green',
-  'closing conversation:': 'purple',
-  'instructions:': 'blue',
-  'question:': 'purple',
-  'answer:': 'green',
-  'tip:': 'teal',
+  'read the purpose together:': 'day1', // matches Day 1 golden yellow (#FFC93C)
+  'opener:': 'day2', // matches Day 2 orange (#FF9A3C)
+  'scenario:': 'day3', // matches Day 3 red-orange (#FF6F3C)
+  'activity:': 'day3', // also matches Day 3 red-orange
+  'learning:': 'day4', // matches Day 4 dark teal (#155263)
+  'connect and share:': 'day2', // matches Day 2 orange
+  'closing conversation:': 'day5', // matches Day 5 gray (#939393)
+  'instructions:': 'day4', // matches Day 4 dark teal
+  'question:': 'day5', // matches Day 5 gray
+  'answer:': 'day2', // matches Day 2 orange
+  'tip:': 'day4', // matches Day 4 dark teal
 } as const;
 
 export type ColorType = typeof COLOR_KEYWORDS[keyof typeof COLOR_KEYWORDS];

@@ -5,9 +5,9 @@
 
 import { useMemo } from 'react';
 import {
-    ColorType,
-    computeBlockColors,
-    getContextualBubbleStyle
+  ColorType,
+  computeBlockColors,
+  getContextualBubbleStyle
 } from '../utils/colorInheritance';
 
 interface ContentBlock {
@@ -52,13 +52,20 @@ export function useColorInheritance(
   const getStyleForColor = (color: ColorType | null): any => {
     if (!color) return {};
     
-    const styleMap: Record<ColorType, any> = {
-      orange: styles.orange,
-      blue: styles.blue,
-      green: styles.green,
-      purple: styles.purple,
-      yellow: styles.yellow,
-      teal: styles.teal,
+    const styleMap: Record<string, any> = {
+      // Day-specific styles
+      day1: styles.day1 || {},
+      day2: styles.day2 || {},
+      day3: styles.day3 || {},
+      day4: styles.day4 || {},
+      day5: styles.day5 || {},
+      // Legacy color names (fallback)
+      orange: styles.orange || {},
+      blue: styles.blue || {},
+      green: styles.green || {},
+      purple: styles.purple || {},
+      yellow: styles.yellow || {},
+      teal: styles.teal || {},
     };
     
     return styleMap[color] || {};
