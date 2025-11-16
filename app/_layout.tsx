@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Platform, Text, TouchableOpacity } from 'react-native';
 import 'react-native-reanimated';
 
+import { AppModeProvider } from '@/contexts/AppModeContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function RootLayout() {
@@ -70,28 +71,30 @@ export default function RootLayout() {
   });
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen 
-          name="mistakes-module" 
-          options={getModuleOptions("Mistakes & Learning")}
-        />
-        <Stack.Screen 
-          name="regulation-module" 
-          options={getModuleOptions("Regulation & Control")}
-        />
-        <Stack.Screen 
-          name="job-module" 
-          options={getModuleOptions("My Job, Your Job")}
-        />
-        <Stack.Screen 
-          name="selfcoach-module" 
-          options={getModuleOptions("Self-Coaching Module")}
-        />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <AppModeProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen 
+            name="mistakes-module" 
+            options={getModuleOptions("Mistakes & Learning")}
+          />
+          <Stack.Screen 
+            name="regulation-module" 
+            options={getModuleOptions("Regulation & Control")}
+          />
+          <Stack.Screen 
+            name="job-module" 
+            options={getModuleOptions("My Job, Your Job")}
+          />
+          <Stack.Screen 
+            name="selfcoach-module" 
+            options={getModuleOptions("Self-Coaching Module")}
+          />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </AppModeProvider>
   );
 }
