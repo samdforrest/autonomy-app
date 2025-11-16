@@ -54,6 +54,12 @@ const initialState: AppModeState = {
       lastAccessed: new Date(Date.now() - 172800000), // 2 days ago
       assessmentScores: [88, 91, 87]
     },
+    'collaboration': {
+      completedDays: 1,
+      totalDays: 5,
+      lastAccessed: new Date(Date.now() - 259200000), // 3 days ago
+      assessmentScores: [82]
+    },
     'selfcoach': {
       completedDays: 0,
       totalDays: 5,
@@ -96,7 +102,7 @@ function appModeReducer(state: AppModeState, action: AppModeAction): AppModeStat
       const completionRates = modules.map(([id, progress]) => ({
         id,
         rate: progress.completedDays / progress.totalDays,
-        avgScore: progress.assessmentScores?.reduce((a, b) => a + b, 0) / (progress.assessmentScores?.length || 1) || 0
+        avgScore: (progress.assessmentScores?.reduce((a, b) => a + b, 0) || 0) / (progress.assessmentScores?.length || 1)
       }));
       
       // Sort by completion rate (ascending) to prioritize incomplete modules
@@ -137,6 +143,7 @@ function getModuleName(moduleId: string): string {
     'mistakes': 'Learning from Mistakes',
     'regulation': 'Self-Regulation',
     'job': 'Job Skills',
+    'collaboration': 'Collaboration & Teamwork',
     'selfcoach': 'Self-Coaching'
   };
   return moduleNames[moduleId] || moduleId;

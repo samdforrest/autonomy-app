@@ -83,14 +83,18 @@ export default function RootLayout() {
             name="regulation-module" 
             options={getModuleOptions("Regulation & Control")}
           />
-          <Stack.Screen 
-            name="job-module" 
-            options={getModuleOptions("My Job, Your Job")}
-          />
-          <Stack.Screen 
-            name="selfcoach-module" 
-            options={getModuleOptions("Self-Coaching Module")}
-          />
+        <Stack.Screen 
+          name="job-module" 
+          options={getModuleOptions("My Job, Your Job")}
+        />
+        <Stack.Screen 
+          name="collaboration-module" 
+          options={getModuleOptions("Collaboration & Teamwork")}
+        />
+        <Stack.Screen 
+          name="selfcoach-module" 
+          options={getModuleOptions("Self-Coaching Module")}
+        />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />

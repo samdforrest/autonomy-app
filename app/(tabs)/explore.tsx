@@ -29,7 +29,7 @@ export default function TabTwoScreen() {
       title: 'Collaboration',
       emoji: '🤝',
       description: 'Working together effectively',
-      isActive: false
+      isActive: true
     },
     {
       id: '3',
@@ -91,6 +91,8 @@ export default function TabTwoScreen() {
     // Navigate to specific module
     if (module.title === 'Job') {
       router.push('/job-module');
+    } else if (module.title === 'Collaboration') {
+      router.push('/collaboration-module');
     } else if (module.title === 'Mistakes') {
       router.push('/mistakes-module');
     } else if (module.title === 'Regulation') {
