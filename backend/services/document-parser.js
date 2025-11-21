@@ -7,6 +7,7 @@ class DocumentParser {
   constructor() {
     this.currentSection = null;
     this.parsedContent = {};
+    this.globalQuestionCounter = 0; // Global counter for unique question IDs
   }
 
   /**
@@ -29,6 +30,7 @@ class DocumentParser {
       }
     };
     this.currentBlock = null; // Track current content block
+    this.globalQuestionCounter = 0; // Reset question counter for each document
     this.inlineObjects = document.inlineObjects || {}; // Store inline objects (images) for reference
     
     // Debug: Log inline objects found in document
@@ -1019,6 +1021,7 @@ class DocumentParser {
 
     let currentQuestion = null;
     let currentModule = null;
+    // Use global counter to ensure uniqueness across all tables
     
     table.tableRows.forEach((row, rowIndex) => {
       if (!row.tableCells) return;
@@ -1040,15 +1043,16 @@ class DocumentParser {
         
         if (questionText) {
           // This row contains both module tag and question
+          const questionId = `assessment_q_${this.globalQuestionCounter++}`;
           currentQuestion = {
-            id: `assessment_q_${rowIndex}`,
+            id: questionId,
             question: questionText,
             module: currentModule,
             type: 'multi-select',
             options: []
           };
           assessmentData.questions.push(currentQuestion);
-          console.log(`📝 Found question: "${questionText}" (Module: ${currentModule})`);
+          console.log(`📝 Found question: "${questionText}" (Module: ${currentModule}) - ID: ${questionId}`);
         }
         return;
       }
@@ -1057,22 +1061,23 @@ class DocumentParser {
       const isQuestionRow = cells[0] && cells[0].length > 30 && !cells[cells.length - 1].match(/^[1-3]$/);
       
       if (isQuestionRow) {
+        const questionId = `assessment_q_${this.globalQuestionCounter++}`;
         currentQuestion = {
-          id: `assessment_q_${rowIndex}`,
+          id: questionId,
           question: cells[0],
           module: currentModule || 'general',
           type: 'multi-select',
           options: []
         };
         assessmentData.questions.push(currentQuestion);
-        console.log(`📝 Found question: "${cells[0].substring(0, 60)}..." (Module: ${currentModule || 'general'})`);
+        console.log(`📝 Found question: "${cells[0].substring(0, 60)}..." (Module: ${currentModule || 'general'}) - ID: ${questionId}`);
       } else if (currentQuestion && cells[0] && cells[cells.length - 1].match(/^[1-3]$/)) {
         // This is an option row (has text and ends with a score)
         const optionText = cells[0];
         const score = parseInt(cells[cells.length - 1]);
         
         const option = {
-          id: `option_${currentQuestion.options.length}`,
+          id: `${currentQuestion.id}_option_${currentQuestion.options.length}`,
           text: optionText,
           score: score
         };
@@ -1085,7 +1090,8 @@ class DocumentParser {
     console.log('🎯 Assessment parsing complete:', {
       questionsFound: assessmentData.questions.length,
       totalOptions: assessmentData.questions.reduce((sum, q) => sum + q.options.length, 0),
-      moduleBreakdown: this.getModuleBreakdown(assessmentData.questions)
+      moduleBreakdown: this.getModuleBreakdown(assessmentData.questions),
+      questionIds: assessmentData.questions.map(q => q.id)
     });
 
     // Add to current block

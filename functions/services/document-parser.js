@@ -7,6 +7,7 @@ class DocumentParser {
   constructor() {
     this.currentSection = null;
     this.parsedContent = {};
+    this.globalQuestionCounter = 0; // Global counter for unique question IDs
   }
 
   /**
@@ -29,6 +30,7 @@ class DocumentParser {
       }
     };
     this.currentBlock = null; // Track current content block
+    this.globalQuestionCounter = 0; // Reset question counter for each document
     this.inlineObjects = document.inlineObjects || {}; // Store inline objects (images) for reference
     
     // Debug: Log inline objects found in document
@@ -860,6 +862,7 @@ class DocumentParser {
 
     let currentQuestion = null;
     let currentModule = null;
+    // Use global counter to ensure uniqueness across all tables
     
     table.tableRows.forEach((row, rowIndex) => {
       if (!row.tableCells) return;
@@ -882,7 +885,7 @@ class DocumentParser {
         if (questionText) {
           // This row contains both module tag and question
           currentQuestion = {
-            id: `assessment_q_${rowIndex}`,
+            id: `assessment_q_${this.globalQuestionCounter++}`,
             question: questionText,
             module: currentModule,
             type: 'multi-select',
@@ -899,7 +902,7 @@ class DocumentParser {
       
       if (isQuestionRow) {
         currentQuestion = {
-          id: `assessment_q_${rowIndex}`,
+          id: `assessment_q_${this.globalQuestionCounter++}`,
           question: cells[0],
           module: currentModule || 'general',
           type: 'multi-select',
@@ -913,7 +916,7 @@ class DocumentParser {
         const score = parseInt(cells[cells.length - 1]);
         
         const option = {
-          id: `option_${currentQuestion.options.length}`,
+          id: `${currentQuestion.id}_option_${currentQuestion.options.length}`,
           text: optionText,
           score: score
         };

@@ -23,6 +23,15 @@ export default function AssessmentScreen() {
   const [responses, setResponses] = useState<AssessmentResponse[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [results, setResults] = useState<ModulePriority[] | null>(null);
+  const [showQuestions, setShowQuestions] = useState(false);
+
+  // Debug current state
+  console.log('🎯 AssessmentScreen render:', { 
+    hasResults: !!results, 
+    showQuestions, 
+    responsesCount: responses.length,
+    isSubmitting
+  });
 
   // Load assessment questions from Google Docs "Assessment Questions" tab
   const { content, loading, error, refetch } = useGoogleDocsContent(
@@ -52,13 +61,30 @@ export default function AssessmentScreen() {
 
   // Check if user has already completed assessment
   useEffect(() => {
+    console.log('🔍 Assessment useEffect:', { 
+      showQuestions, 
+      questionsLength: assessmentQuestions.length,
+      hasExistingResults: !!assessmentService.loadAssessmentResults()
+    });
+    
+    // If we're explicitly showing questions, don't load existing results
+    if (showQuestions) {
+      console.log('📝 Showing questions (showQuestions=true)');
+      return;
+    }
+    
     const existingResults = assessmentService.loadAssessmentResults();
-    if (existingResults) {
+    if (existingResults && assessmentQuestions.length > 0) {
       // User has already completed assessment, show results
+      console.log('📊 Loading existing results');
       const priorities = assessmentService.calculateModulePriorities([], assessmentQuestions);
       setResults(priorities);
+    } else {
+      // No existing results, show questions
+      console.log('📝 No existing results, showing questions');
+      setShowQuestions(true);
     }
-  }, [assessmentQuestions]);
+  }, [assessmentQuestions, showQuestions]);
 
   const handleSelectionChange = (questionId: string, selectedOptions: string[]) => {
     setResponses(prev => {
@@ -109,6 +135,7 @@ export default function AssessmentScreen() {
       assessmentService.saveAssessmentResults(summary);
       
       setResults(priorities);
+      setShowQuestions(false); // Switch to results view
       
       Alert.alert(
         'Assessment Complete!',
@@ -132,18 +159,26 @@ export default function AssessmentScreen() {
   };
 
   const handleRetakeAssessment = () => {
+    console.log('🔄 Retake button pressed');
+    
     Alert.alert(
       'Retake Assessment',
       'This will clear your current results. Are you sure?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Cancel', style: 'cancel', onPress: () => console.log('❌ Retake cancelled') },
         { 
           text: 'Retake', 
           style: 'destructive',
           onPress: () => {
+            console.log('✅ Retake confirmed, clearing data...');
+            // Clear all assessment data
             assessmentService.clearAssessmentResults();
             setResults(null);
             setResponses([]);
+            setIsSubmitting(false);
+            setShowQuestions(true); // Force show questions
+            
+            console.log('🔄 Assessment retake: All data cleared, showing questions');
           }
         }
       ]
@@ -180,7 +215,7 @@ export default function AssessmentScreen() {
   }
 
   // Results view
-  if (results) {
+  if (results && !showQuestions) {
     return (
       <ThemedView style={styles.container}>
         <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.resultsContainer}>
@@ -227,6 +262,40 @@ export default function AssessmentScreen() {
               onPress={handleRetakeAssessment}
             >
               <ThemedText style={styles.secondaryButtonText}>Retake Assessment</ThemedText>
+            </TouchableOpacity>
+            
+            {/* Alternative retake button without Alert */}
+            <TouchableOpacity 
+              style={[styles.secondaryButton, { backgroundColor: '#F39C12', marginTop: 8 }]} 
+              onPress={() => {
+                console.log('🔄 Direct retake (no alert)');
+                assessmentService.clearAssessmentResults();
+                setResults(null);
+                setResponses([]);
+                setIsSubmitting(false);
+                setShowQuestions(true);
+                console.log('🔄 Assessment retake: All data cleared, showing questions');
+              }}
+            >
+              <ThemedText style={[styles.secondaryButtonText, { color: 'white' }]}>
+                🔄 Retake (Direct)
+              </ThemedText>
+            </TouchableOpacity>
+            
+            {/* Debug button - remove in production */}
+            <TouchableOpacity 
+              style={[styles.secondaryButton, { backgroundColor: '#E74C3C', marginTop: 8 }]} 
+              onPress={() => {
+                console.log('🧹 Force clearing all assessment data');
+                assessmentService.clearAssessmentResults();
+                setResults(null);
+                setResponses([]);
+                setShowQuestions(true);
+              }}
+            >
+              <ThemedText style={[styles.secondaryButtonText, { color: 'white' }]}>
+                🧹 Force Clear (Debug)
+              </ThemedText>
             </TouchableOpacity>
           </ThemedView>
         </ScrollView>
