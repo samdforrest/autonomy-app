@@ -14,13 +14,31 @@ export interface ContentBlock {
   id: number;
   header: string | null;
   content: Array<{
-    type: 'text' | 'bullet' | 'image' | 'subheader' | 'option';
+    type: 'text' | 'bullet' | 'image' | 'subheader' | 'option' | 'table' | 'assessment';
     text?: string;
     label?: string; // For options: A, B, C, etc.
     uri?: string; // For copied/pasted images, this will be a data URL (base64)
     alt?: string;
     width?: number | null;
     height?: number | null;
+    // Table properties
+    rows?: Array<{
+      cells: Array<{ text: string; columnIndex: number }>;
+      isHeader: boolean;
+    }>;
+    columns?: number;
+    // Assessment properties
+    questions?: Array<{
+      id: string;
+      question: string;
+      module: string;
+      type: 'multi-select';
+      options: Array<{
+        id: string;
+        text: string;
+        score: number;
+      }>;
+    }>;
   }>;
   type: string;
 }
