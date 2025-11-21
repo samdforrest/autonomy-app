@@ -97,7 +97,7 @@ export class AssessmentService {
   /**
    * Get priority level based on score
    */
-  private getModulePriority(score: number): 'high' | 'medium' | 'low' | 'minimal' {
+  getModulePriority(score: number): 'high' | 'medium' | 'low' | 'minimal' {
     if (score >= 15) return 'high';
     if (score >= 10) return 'medium'; 
     if (score >= 5) return 'low';
@@ -107,15 +107,16 @@ export class AssessmentService {
   /**
    * Calculate percentage for visualization
    */
-  private calculatePercentage(score: number): number {
-    const maxScore = Math.max(...Object.values(this.moduleScores));
+  calculatePercentage(score: number, moduleScores?: { [key: string]: number }): number {
+    const scores = moduleScores || this.moduleScores;
+    const maxScore = Math.max(...Object.values(scores));
     return maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
   }
 
   /**
    * Get module display names
    */
-  private getModuleDisplayName(moduleId: string): string {
+  getModuleDisplayName(moduleId: string): string {
     const names: { [key: string]: string } = {
       mistakes: 'Learning from Mistakes',
       regulation: 'Regulation & Control', 

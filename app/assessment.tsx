@@ -76,8 +76,18 @@ export default function AssessmentScreen() {
     const existingResults = assessmentService.loadAssessmentResults();
     if (existingResults && assessmentQuestions.length > 0) {
       // User has already completed assessment, show results
-      console.log('📊 Loading existing results');
-      const priorities = assessmentService.calculateModulePriorities([], assessmentQuestions);
+      console.log('📊 Loading existing results from localStorage');
+      // Use the stored results instead of recalculating with empty responses
+      const storedModuleScores = existingResults.moduleScores || {};
+      const priorities = Object.entries(storedModuleScores)
+        .sort(([,a], [,b]) => b - a)  // Descending order
+        .map(([moduleId, score]) => ({
+          moduleId,
+          score,
+          priority: assessmentService.getModulePriority(score),
+          percentage: assessmentService.calculatePercentage(score, storedModuleScores),
+          displayName: assessmentService.getModuleDisplayName(moduleId)
+        }));
       setResults(priorities);
     } else {
       // No existing results, show questions
