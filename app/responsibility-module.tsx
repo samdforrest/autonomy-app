@@ -23,7 +23,7 @@ interface DayModule {
   type: 'collaborative' | 'independent' | 'evaluation';
 }
 
-export default function JobModuleScreen() {
+export default function ResponsibilityModuleScreen() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [currentDay, setCurrentDay] = useState<number>(1);
   const [revealedAnswers, setRevealedAnswers] = useState<Set<number>>(new Set());
@@ -31,7 +31,7 @@ export default function JobModuleScreen() {
   // Google Docs content for the currently active day
   const { content, loading, error, refetch } = useGoogleDocsContent(
     DOCUMENT_REFS.MAIN_DOCUMENT,
-    'job',
+    'raw',
     { tab: 'My Job, Your Job', day: currentDay }
   );
 
@@ -525,9 +525,9 @@ export default function JobModuleScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.header}>
-        <ThemedText type="title" style={styles.moduleTitle}>💼 My Job, Your Job</ThemedText>
+        <ThemedText type="title" style={styles.moduleTitle}>💼 Responsibility Module</ThemedText>
         <ThemedText style={styles.moduleSubtitle}>
-          Understanding workplace roles and responsibilities through 5 focused days...
+          What is my job? Understanding workplace roles and responsibilities through 5 focused days...
         </ThemedText>
       </ThemedView>
 

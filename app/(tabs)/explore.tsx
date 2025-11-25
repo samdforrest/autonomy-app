@@ -19,51 +19,51 @@ export default function TabTwoScreen() {
   const modules: Module[] = [
     {
       id: '1',
-      title: 'Job',
+      title: 'Responsibility',
       emoji: '💼',
-      description: 'Work skills and career development',
+      description: 'What is my job?',
       isActive: true
     },
     {
       id: '2',
       title: 'Collaboration',
       emoji: '🤝',
-      description: 'Working together effectively',
+      description: 'Teamwork 101',
       isActive: true
     },
     {
       id: '3',
-      title: 'Growth',
+      title: 'Self-Monitoring',
       emoji: '🌱',
-      description: 'Personal development and progress',
+      description: 'Making sure I understand',
       isActive: false
     },
     {
       id: '4',
       title: 'Regulation',
       emoji: '📏',
-      description: 'Self-control and emotional balance',
+      description: 'Who is in control?',
       isActive: true
     },
     {
       id: '5',
       title: 'Curiosity',
       emoji: '❓',
-      description: 'Curiosity and inquiry skills',
+      description: 'Questions are expected',
       isActive: true
     },
     {
       id: '6',
       title: 'Shape of Learning',
       emoji: '🔄',
-      description: 'Understanding how learning works',
+      description: 'It is not a sprint',
       isActive: true
     },
     {
       id: '7',
       title: 'Self Coach',
       emoji: '🧘‍♂️',
-      description: 'Self-reflection and guidance',
+      description: 'Helpful self-talk',
       isActive: true
     },
     {
@@ -84,7 +84,7 @@ export default function TabTwoScreen() {
       id: '10',
       title: 'Mastery Moments',
       emoji: '🏆',
-      description: 'Celebrating achievements and success',
+      description: 'Celebrating success',
       isActive: false
     }
   ];
@@ -96,8 +96,8 @@ export default function TabTwoScreen() {
     }
     
     // Navigate to specific module
-    if (module.title === 'Job') {
-      router.push('/job-module');
+    if (module.title === 'Responsibility') {
+      router.push('/responsibility-module');
     } else if (module.title === 'Collaboration') {
       router.push('/collaboration-module');
     } else if (module.title === 'Mistakes') {
