@@ -103,6 +103,10 @@ export default function RootLayout() {
           name="shapeoflearning-module" 
           options={getModuleOptions("Shape of Learning Module")}
         />
+        <Stack.Screen 
+          name="neuroplasticity-module" 
+          options={getModuleOptions("Neuroplasticity Module")}
+        />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />

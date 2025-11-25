@@ -75,6 +75,13 @@ export default function TabTwoScreen() {
     },
     {
       id: '9',
+      title: 'Neuroplasticity',
+      emoji: '🧠',
+      description: 'How does my brain grow?',
+      isActive: true
+    },
+    {
+      id: '10',
       title: 'Mastery Moments',
       emoji: '🏆',
       description: 'Celebrating achievements and success',
@@ -103,6 +110,8 @@ export default function TabTwoScreen() {
       router.push('/curiosity-module');
     } else if (module.title === 'Shape of Learning') {
       router.push('/shapeoflearning-module');
+    } else if (module.title === 'Neuroplasticity') {
+      router.push('/neuroplasticity-module');
     } else {
       console.log(`${module.title} module pressed - coming soon`);
     }
