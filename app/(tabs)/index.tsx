@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import React from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
+import { AssessmentCard } from '@/components/AssessmentCard';
 import { ImageViewer } from '@/components/ImageViewer';
 import { TableViewer } from '@/components/TableViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
@@ -281,6 +282,9 @@ export default function HomeScreen() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
+        {/* Assessment Card - Always visible */}
+        <AssessmentCard userMode={userMode} />
+
         {/* Loading state */}
         {loading && (
           <ThemedView style={styles.loadingContainer}>

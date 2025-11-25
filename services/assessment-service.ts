@@ -47,6 +47,16 @@ export class AssessmentService {
     selfcoach: 0
   };
 
+  private getCurrentChildId(): string {
+    // For now, use a default child ID. In the future, this could be dynamic
+    // based on multiple children or user selection
+    return 'default_child';
+  }
+
+  private getStorageKey(): string {
+    return `autonomy_assessment_results_${this.getCurrentChildId()}`;
+  }
+
   /**
    * Calculate module priorities from assessment responses
    */
@@ -144,30 +154,31 @@ export class AssessmentService {
   }
 
   /**
-   * Save assessment results to local storage
+   * Save assessment results to local storage (child-specific)
    */
   saveAssessmentResults(summary: AssessmentSummary): void {
     try {
       const assessmentData = {
         ...summary,
-        version: '1.0'
+        version: '1.0',
+        childId: this.getCurrentChildId()
       };
-      localStorage.setItem('autonomy_assessment_results', JSON.stringify(assessmentData));
-      console.log('✅ Assessment results saved to local storage');
+      localStorage.setItem(this.getStorageKey(), JSON.stringify(assessmentData));
+      console.log('✅ Assessment results saved to local storage for child:', this.getCurrentChildId());
     } catch (error) {
       console.error('❌ Failed to save assessment results:', error);
     }
   }
 
   /**
-   * Load assessment results from local storage
+   * Load assessment results from local storage (child-specific)
    */
   loadAssessmentResults(): AssessmentSummary | null {
     try {
-      const stored = localStorage.getItem('autonomy_assessment_results');
+      const stored = localStorage.getItem(this.getStorageKey());
       if (stored) {
         const results = JSON.parse(stored);
-        console.log('✅ Assessment results loaded from local storage');
+        console.log('✅ Assessment results loaded from local storage for child:', this.getCurrentChildId());
         return results;
       }
     } catch (error) {
@@ -177,22 +188,47 @@ export class AssessmentService {
   }
 
   /**
-   * Check if user has completed assessment
+   * Check if user has completed assessment (child-specific)
    */
   hasCompletedAssessment(): boolean {
     return this.loadAssessmentResults() !== null;
   }
 
   /**
-   * Clear assessment results
+   * Clear assessment results (child-specific)
    */
   clearAssessmentResults(): void {
     try {
-      localStorage.removeItem('autonomy_assessment_results');
-      console.log('✅ Assessment results cleared');
+      localStorage.removeItem(this.getStorageKey());
+      console.log('✅ Assessment results cleared for child:', this.getCurrentChildId());
     } catch (error) {
       console.error('❌ Failed to clear assessment results:', error);
     }
+  }
+
+  /**
+   * Get assessment results for all children (for parent view)
+   */
+  getAllChildrenAssessments(): { [childId: string]: AssessmentSummary } {
+    const results: { [childId: string]: AssessmentSummary } = {};
+    
+    try {
+      // Get all localStorage keys that match our pattern
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('autonomy_assessment_results_')) {
+          const childId = key.replace('autonomy_assessment_results_', '');
+          const stored = localStorage.getItem(key);
+          if (stored) {
+            results[childId] = JSON.parse(stored);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to load all children assessments:', error);
+    }
+    
+    return results;
   }
 }
 
