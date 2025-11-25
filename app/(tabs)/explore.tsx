@@ -47,10 +47,10 @@ export default function TabTwoScreen() {
     },
     {
       id: '5',
-      title: 'Questions',
+      title: 'Curiosity',
       emoji: '❓',
       description: 'Curiosity and inquiry skills',
-      isActive: false
+      isActive: true
     },
     {
       id: '6',
@@ -99,6 +99,8 @@ export default function TabTwoScreen() {
       router.push('/regulation-module');
     } else if (module.title === 'Self Coach') {
       router.push('/selfcoach-module');
+    } else if (module.title === 'Curiosity') {
+      router.push('/curiosity-module');
     } else {
       console.log(`${module.title} module pressed - coming soon`);
     }
