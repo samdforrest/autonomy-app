@@ -95,6 +95,14 @@ export default function RootLayout() {
           name="selfcoach-module" 
           options={getModuleOptions("Self-Coaching Module")}
         />
+        <Stack.Screen 
+          name="curiosity-module" 
+          options={getModuleOptions("Curiosity Module")}
+        />
+        <Stack.Screen 
+          name="shapeoflearning-module" 
+          options={getModuleOptions("Shape of Learning Module")}
+        />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />

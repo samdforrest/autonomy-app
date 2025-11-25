@@ -54,10 +54,10 @@ export default function TabTwoScreen() {
     },
     {
       id: '6',
-      title: 'Process',
+      title: 'Shape of Learning',
       emoji: '🔄',
-      description: 'Systematic thinking and workflows',
-      isActive: false
+      description: 'Understanding how learning works',
+      isActive: true
     },
     {
       id: '7',
@@ -101,6 +101,8 @@ export default function TabTwoScreen() {
       router.push('/selfcoach-module');
     } else if (module.title === 'Curiosity') {
       router.push('/curiosity-module');
+    } else if (module.title === 'Shape of Learning') {
+      router.push('/shapeoflearning-module');
     } else {
       console.log(`${module.title} module pressed - coming soon`);
     }

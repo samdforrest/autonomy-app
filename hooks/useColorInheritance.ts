@@ -23,6 +23,12 @@ interface StyleMap {
   purple?: any;
   yellow?: any;
   teal?: any;
+  day1?: any;
+  day2?: any;
+  day3?: any;
+  day4?: any;
+  day5?: any;
+  [key: string]: any; // Allow any additional color keys
 }
 
 interface UseColorInheritanceReturn {

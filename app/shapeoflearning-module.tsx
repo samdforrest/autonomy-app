@@ -22,7 +22,7 @@ interface DayModule {
   type: 'collaborative' | 'independent' | 'evaluation';
 }
 
-export default function CuriosityModuleScreen() {
+export default function ShapeOfLearningModuleScreen() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [currentDay, setCurrentDay] = useState<number>(1);
   const [revealedAnswers, setRevealedAnswers] = useState<Set<string>>(new Set());
@@ -31,7 +31,7 @@ export default function CuriosityModuleScreen() {
   const { content, loading, error, refetch } = useGoogleDocsContent(
     DOCUMENT_REFS.MAIN_DOCUMENT,
     'raw',
-    { tab: 'Curiosity', day: currentDay }
+    { tab: 'Shape of Learning', day: currentDay }
   );
 
 
@@ -63,57 +63,57 @@ export default function CuriosityModuleScreen() {
   const dayModules: DayModule[] = [
     {
       id: 'day1',
-      title: 'Asking Questions',
-      description: 'Learning to ask thoughtful questions',
+      title: 'Understanding Learning Styles',
+      description: 'Discovering how you learn best',
       dayNumber: 1,
       isCompleted: false,
       isLocked: false,
       color: '#FFC93C',
-      icon: '❓',
+      icon: '📚',
       type: 'collaborative'
     },
     {
       id: 'day2',
-      title: 'Exploring Ideas',
-      description: 'Discovering new concepts and perspectives',
+      title: 'Learning Strategies',
+      description: 'Tools and techniques for effective learning',
       dayNumber: 2,
       isCompleted: false,
       isLocked: false,
       color: '#FF9A3C',
-      icon: '🔍',
+      icon: '🎯',
       type: 'collaborative'
     },
     {
       id: 'day3',
-      title: 'Critical Thinking',
-      description: 'Analyzing information thoughtfully',
+      title: 'Active Learning',
+      description: 'Engaging with material in meaningful ways',
       dayNumber: 3,
       isCompleted: false,
       isLocked: false,
       color: '#FF6F3C',
-      icon: '🧠',
+      icon: '⚡',
       type: 'collaborative'
     },
     {
       id: 'day4',
-      title: 'Problem Finding',
-      description: 'Identifying challenges and opportunities',
+      title: 'Metacognition',
+      description: 'Thinking about your thinking',
       dayNumber: 4,
       isCompleted: false,
       isLocked: false,
       color: '#155263',
-      icon: '💡',
+      icon: '🧠',
       type: 'collaborative'
     },
     {
       id: 'day5',
-      title: 'Curiosity in Action',
-      description: 'Applying curiosity skills in daily life',
+      title: 'Learning Reflection',
+      description: 'Reflecting on your learning journey',
       dayNumber: 5,
       isCompleted: false,
       isLocked: false,
       color: '#939393',
-      icon: '🌟',
+      icon: '💡',
       type: 'evaluation'
     }
   ];
@@ -371,9 +371,9 @@ export default function CuriosityModuleScreen() {
     <ThemedView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <ThemedView style={styles.header}>
-          <ThemedText style={styles.title}>❓ Curiosity Module</ThemedText>
+          <ThemedText style={styles.title}>🔄 Shape of Learning Module</ThemedText>
           <ThemedText style={styles.subtitle}>
-            Developing curiosity and inquiry skills
+            Understanding how learning works and how to optimize it
           </ThemedText>
         </ThemedView>
 
