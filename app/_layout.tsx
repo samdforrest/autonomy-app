@@ -84,8 +84,8 @@ export default function RootLayout() {
             options={getModuleOptions("Regulation & Control")}
           />
         <Stack.Screen 
-          name="job-module" 
-          options={getModuleOptions("My Job, Your Job")}
+          name="responsibility-module" 
+          options={getModuleOptions("Responsibility Module")}
         />
         <Stack.Screen 
           name="collaboration-module" 
@@ -107,6 +107,33 @@ export default function RootLayout() {
           name="neuroplasticity-module" 
           options={getModuleOptions("Neuroplasticity Module")}
         />
+        <Stack.Screen 
+          name="create-family" 
+          options={{
+            title: "Create Family",
+            headerBackTitle: "Home",
+            ...(Platform.OS === 'web' && {
+              headerLeft: () => <CustomBackButton />,
+              headerStyle: {
+                backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
+              },
+            }),
+          }}
+        />
+        <Stack.Screen 
+          name="join-family" 
+          options={{
+            title: "Join Family",
+            headerBackTitle: "Home",
+            ...(Platform.OS === 'web' && {
+              headerLeft: () => <CustomBackButton />,
+              headerStyle: {
+                backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
+              },
+            }),
+          }}
+        />
+        <Stack.Screen name="family/[code]" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />

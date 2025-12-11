@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
@@ -15,6 +16,7 @@ import { useGoogleDocsContent } from '@/hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '@/services/api';
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { userMode } = useAppMode();
   
   // Determine which tab to fetch based on current mode
@@ -65,7 +67,7 @@ export default function HomeScreen() {
   }, [content]);
 
   // Helper function to check if a string is a YouTube URL
-  const isYouTubeUrl = (url: string) => {
+  const isYouTubeUrl = (url: string | null | undefined) => {
     return url && (url.includes('youtube.com') || url.includes('youtu.be'));
   };
 
@@ -292,21 +294,14 @@ export default function HomeScreen() {
           <ThemedView style={styles.familyButtons}>
             <TouchableOpacity 
               style={styles.familyButton}
-              onPress={() => {
-                // Navigate to create family
-                // For now, we'll use router.push when we have proper routing
-                console.log('Navigate to create family');
-              }}
+              onPress={() => router.push('/create-family')}
             >
               <ThemedText style={styles.familyButtonText}>🆕 Create Family</ThemedText>
             </TouchableOpacity>
             
             <TouchableOpacity 
               style={[styles.familyButton, styles.familyButtonSecondary]}
-              onPress={() => {
-                // Navigate to join family
-                console.log('Navigate to join family');
-              }}
+              onPress={() => router.push('/join-family')}
             >
               <ThemedText style={[styles.familyButtonText, styles.familyButtonTextSecondary]}>
                 🔗 Join Family
