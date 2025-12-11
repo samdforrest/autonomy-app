@@ -1,10 +1,9 @@
 const { google } = require('googleapis');
-const functions = require('firebase-functions');
+require('dotenv').config();
 
 /**
  * Google Docs API Authentication Configuration
  * Uses service account for server-to-server authentication
- * Adapted for Firebase Functions environment
  */
 class GoogleDocsAuth {
   constructor() {
@@ -15,23 +14,11 @@ class GoogleDocsAuth {
 
   initializeAuth() {
     try {
-      // Get config from environment variables (Firebase Functions v2)
-      const serviceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-      const privateKey = process.env.GOOGLE_PRIVATE_KEY;
-      
-      // Check if required config exists
-      if (!serviceAccountEmail || !privateKey) {
-        console.warn('⚠️ Google Docs credentials not configured. Set them with:');
-        console.warn('Environment variables: GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_PRIVATE_KEY');
-        // Don't throw error - let the function start but API calls will fail gracefully
-        return;
-      }
-      
       // Create JWT auth client using service account credentials
       this.auth = new google.auth.JWT(
-        serviceAccountEmail,
+        process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
         null,
-        privateKey.replace(/\\n/g, '\n'),
+        process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
         ['https://www.googleapis.com/auth/documents.readonly']
       );
 
@@ -41,8 +28,7 @@ class GoogleDocsAuth {
       console.log('✅ Google Docs API client initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize Google Docs API:', error.message);
-      console.warn('⚠️ Function will start but Google Docs API calls will fail');
-      // Don't throw error - let the function start
+      throw error;
     }
   }
 

@@ -282,6 +282,39 @@ export default function HomeScreen() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
+        {/* Family Access Section */}
+        <ThemedView style={styles.familySection}>
+          <ThemedText style={styles.familySectionTitle}>👨‍👩‍👧‍👦 Family Access</ThemedText>
+          <ThemedText style={styles.familySectionSubtitle}>
+            Track progress across multiple children with family codes
+          </ThemedText>
+          
+          <ThemedView style={styles.familyButtons}>
+            <TouchableOpacity 
+              style={styles.familyButton}
+              onPress={() => {
+                // Navigate to create family
+                // For now, we'll use router.push when we have proper routing
+                console.log('Navigate to create family');
+              }}
+            >
+              <ThemedText style={styles.familyButtonText}>🆕 Create Family</ThemedText>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.familyButton, styles.familyButtonSecondary]}
+              onPress={() => {
+                // Navigate to join family
+                console.log('Navigate to join family');
+              }}
+            >
+              <ThemedText style={[styles.familyButtonText, styles.familyButtonTextSecondary]}>
+                🔗 Join Family
+              </ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
+        </ThemedView>
+
         {/* Assessment Card - Always visible */}
         <AssessmentCard userMode={userMode} />
 
@@ -631,5 +664,56 @@ const styles = StyleSheet.create({
     backgroundColor: '#E0F2F1',
     borderLeftWidth: 4,
     borderLeftColor: '#009688',
+  },
+  // Family section styles
+  familySection: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  familySectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  familySectionSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+  },
+  familyButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  familyButton: {
+    flex: 1,
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  familyButtonSecondary: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#007AFF',
+  },
+  familyButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  familyButtonTextSecondary: {
+    color: '#007AFF',
   },
 });

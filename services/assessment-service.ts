@@ -47,12 +47,41 @@ export class AssessmentService {
     selfcoach: 0
   };
 
+  // Family and child context
+  private currentFamilyCode: string | null = null;
+  private currentChildId: string | null = null;
+
+  /**
+   * Set the current family and child context
+   */
+  setContext(familyCode: string, childId: string): void {
+    this.currentFamilyCode = familyCode;
+    this.currentChildId = childId;
+    console.log('🎯 Assessment context set:', { familyCode, childId });
+  }
+
+  /**
+   * Get current child ID (with fallback to localStorage for backwards compatibility)
+   */
   private getCurrentChildId(): string {
-    // For now, use a default child ID. In the future, this could be dynamic
-    // based on multiple children or user selection
+    if (this.currentChildId) {
+      return this.currentChildId;
+    }
+    
+    // Fallback to localStorage for backwards compatibility
     return 'default_child';
   }
 
+  /**
+   * Get current family code
+   */
+  getCurrentFamilyCode(): string | null {
+    return this.currentFamilyCode;
+  }
+
+  /**
+   * Get storage key for localStorage (backwards compatibility)
+   */
   private getStorageKey(): string {
     return `autonomy_assessment_results_${this.getCurrentChildId()}`;
   }
@@ -154,31 +183,73 @@ export class AssessmentService {
   }
 
   /**
-   * Save assessment results to local storage (child-specific)
+   * Save assessment results (Firebase + localStorage for backwards compatibility)
    */
-  saveAssessmentResults(summary: AssessmentSummary): void {
+  async saveAssessmentResults(summary: AssessmentSummary): Promise<void> {
     try {
       const assessmentData = {
         ...summary,
         version: '1.0',
-        childId: this.getCurrentChildId()
+        childId: this.getCurrentChildId(),
+        familyCode: this.currentFamilyCode
       };
+
+      // Save to Firebase if we have family context
+      if (this.currentFamilyCode && this.currentChildId) {
+        try {
+          const { familyService } = await import('./family-service');
+          await familyService.saveAssessmentResults(
+            this.currentFamilyCode,
+            this.currentChildId,
+            assessmentData
+          );
+          console.log('✅ Assessment results saved to Firebase for:', this.currentChildId);
+        } catch (firebaseError) {
+          console.error('❌ Failed to save to Firebase:', firebaseError);
+          // Fall back to localStorage
+        }
+      }
+
+      // Always save to localStorage for backwards compatibility
       localStorage.setItem(this.getStorageKey(), JSON.stringify(assessmentData));
-      console.log('✅ Assessment results saved to local storage for child:', this.getCurrentChildId());
+      console.log('✅ Assessment results saved to localStorage for child:', this.getCurrentChildId());
     } catch (error) {
       console.error('❌ Failed to save assessment results:', error);
     }
   }
 
   /**
-   * Load assessment results from local storage (child-specific)
+   * Load assessment results (Firebase first, then localStorage fallback)
    */
-  loadAssessmentResults(): AssessmentSummary | null {
+  async loadAssessmentResults(): Promise<AssessmentSummary | null> {
     try {
+      // Try Firebase first if we have family context
+      if (this.currentFamilyCode && this.currentChildId) {
+        try {
+          const { familyService } = await import('./family-service');
+          const familyData = await familyService.getFamilyData(this.currentFamilyCode);
+          
+          if (familyData?.children?.[this.currentChildId]?.assessments) {
+            const assessments = familyData.children[this.currentChildId].assessments;
+            // Get the most recent assessment
+            const assessmentKeys = Object.keys(assessments);
+            if (assessmentKeys.length > 0) {
+              const latestKey = assessmentKeys.sort().pop();
+              const latestAssessment = assessments[latestKey!];
+              console.log('✅ Assessment results loaded from Firebase for:', this.currentChildId);
+              return latestAssessment;
+            }
+          }
+        } catch (firebaseError) {
+          console.warn('⚠️ Failed to load from Firebase, trying localStorage:', firebaseError);
+        }
+      }
+
+      // Fallback to localStorage
       const stored = localStorage.getItem(this.getStorageKey());
       if (stored) {
         const results = JSON.parse(stored);
-        console.log('✅ Assessment results loaded from local storage for child:', this.getCurrentChildId());
+        console.log('✅ Assessment results loaded from localStorage for child:', this.getCurrentChildId());
         return results;
       }
     } catch (error) {

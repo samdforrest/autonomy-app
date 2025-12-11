@@ -285,7 +285,7 @@ class DocumentParser {
 
     // Extract text and check formatting, also handle inline objects (images)
     elements.forEach(element => {
-      if (element && element.textRun && element.textRun.content) {
+      if (element && element.textRun) {
         text += element.textRun.content || '';
         
         // Check if this is a header (bold, larger font, etc.)
@@ -791,185 +791,6 @@ class DocumentParser {
   }
 
   /**
-   * Check if a table is an assessment table by looking for score patterns
-   * @param {Object} table - Table element from Google Docs
-   * @returns {boolean}
-   */
-  isAssessmentTable(table) {
-    if (!table.tableRows || table.tableRows.length < 2) return false;
-    
-    // Check if last column contains numeric scores (1-3 pattern)
-    let hasScoreColumn = false;
-    let scoreCount = 0;
-    
-    console.log('🔍 Checking table for assessment patterns...');
-    table.tableRows.forEach((row, index) => {
-      if (!row.tableCells) return;
-      const lastCell = row.tableCells[row.tableCells.length - 1];
-      const cellText = this.extractCellText(lastCell);
-      console.log(`   Row ${index + 1}: Last cell = "${cellText}"`);
-      if (cellText.match(/^[1-3]$/)) {
-        scoreCount++;
-        hasScoreColumn = true;
-        console.log(`   ✓ Found score: ${cellText}`);
-      }
-    });
-    
-    // Consider it an assessment table if at least 2 rows have scores
-    const isAssessment = hasScoreColumn && scoreCount >= 2;
-    console.log(`🔍 Assessment table check: ${isAssessment} (${scoreCount} score rows found)`);
-    return isAssessment;
-  }
-
-  /**
-   * Extract text content from a table cell
-   * @param {Object} cell - Table cell element
-   * @returns {string}
-   */
-  extractCellText(cell) {
-    let cellText = '';
-    if (cell.content) {
-      cell.content.forEach(element => {
-        if (element.paragraph && element.paragraph.elements) {
-          element.paragraph.elements.forEach(textElement => {
-            if (textElement.textRun && textElement.textRun.content) {
-              cellText += textElement.textRun.content;
-            }
-          });
-        }
-      });
-    }
-    return cellText.trim();
-  }
-
-  /**
-   * Parse assessment table with module tagging and multi-select support
-   * @param {Object} table - Table element from Google Docs
-   */
-  parseAssessmentTable(table) {
-    console.log('🎯 Parsing assessment table with module tagging support');
-    
-    if (!table || !table.tableRows) {
-      console.warn('⚠️ Assessment table has no rows');
-      return;
-    }
-
-    const assessmentData = {
-      type: 'assessment',
-      id: `assessment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      questions: []
-    };
-
-    let currentQuestion = null;
-    let currentModule = null;
-    // Use global counter to ensure uniqueness across all tables
-    
-    table.tableRows.forEach((row, rowIndex) => {
-      if (!row.tableCells) return;
-      
-      const cells = row.tableCells.map(cell => this.extractCellText(cell));
-      
-      // Skip empty rows
-      if (cells.every(cell => !cell)) return;
-      
-      // Detect module header (e.g., "Mistakes:", "My Job, Your Job:")
-      const moduleMatch = cells[0].match(/^(.*?):\s*(.*)$/);
-      if (moduleMatch && !cells[cells.length - 1].match(/^[1-3]$/)) {
-        const modulePrefix = moduleMatch[1].trim();
-        const questionText = moduleMatch[2].trim();
-        
-        // Map module prefixes to module IDs
-        currentModule = this.mapModulePrefix(modulePrefix);
-        console.log(`📋 Found module header: "${modulePrefix}" → ${currentModule}`);
-        
-        if (questionText) {
-          // This row contains both module tag and question
-          currentQuestion = {
-            id: `assessment_q_${this.globalQuestionCounter++}`,
-            question: questionText,
-            module: currentModule,
-            type: 'multi-select',
-            options: []
-          };
-          assessmentData.questions.push(currentQuestion);
-          console.log(`📝 Found question: "${questionText}" (Module: ${currentModule})`);
-        }
-        return;
-      }
-      
-      // Detect question row (longer text, no score in last cell)
-      const isQuestionRow = cells[0] && cells[0].length > 30 && !cells[cells.length - 1].match(/^[1-3]$/);
-      
-      if (isQuestionRow) {
-        currentQuestion = {
-          id: `assessment_q_${this.globalQuestionCounter++}`,
-          question: cells[0],
-          module: currentModule || 'general',
-          type: 'multi-select',
-          options: []
-        };
-        assessmentData.questions.push(currentQuestion);
-        console.log(`📝 Found question: "${cells[0].substring(0, 60)}..." (Module: ${currentModule || 'general'})`);
-      } else if (currentQuestion && cells[0] && cells[cells.length - 1].match(/^[1-3]$/)) {
-        // This is an option row (has text and ends with a score)
-        const optionText = cells[0];
-        const score = parseInt(cells[cells.length - 1]);
-        
-        const option = {
-          id: `${currentQuestion.id}_option_${currentQuestion.options.length}`,
-          text: optionText,
-          score: score
-        };
-        
-        currentQuestion.options.push(option);
-        console.log(`   ✓ Added option: "${optionText}" (Score: ${score})`);
-      }
-    });
-
-    console.log('🎯 Assessment parsing complete:', {
-      questionsFound: assessmentData.questions.length,
-      totalOptions: assessmentData.questions.reduce((sum, q) => sum + q.options.length, 0),
-      moduleBreakdown: this.getModuleBreakdown(assessmentData.questions)
-    });
-
-    // Add to current block
-    this.addContentToCurrentBlock(assessmentData);
-  }
-
-  /**
-   * Map module prefixes to standardized module IDs
-   * @param {string} prefix - Module prefix from Google Docs
-   * @returns {string} - Standardized module ID
-   */
-  mapModulePrefix(prefix) {
-    const lowerPrefix = prefix.toLowerCase();
-    
-    // Map various prefixes to module IDs
-    if (lowerPrefix.includes('mistake')) return 'mistakes';
-    if (lowerPrefix.includes('job') || lowerPrefix.includes('work')) return 'job';
-    if (lowerPrefix.includes('regulation') || lowerPrefix.includes('control') || lowerPrefix.includes('emotion')) return 'regulation';
-    if (lowerPrefix.includes('collaboration') || lowerPrefix.includes('team')) return 'collaboration';
-    if (lowerPrefix.includes('coach') || lowerPrefix.includes('self')) return 'selfcoach';
-    
-    // Return original if no match found
-    return prefix.toLowerCase().replace(/[^a-z0-9]/g, '');
-  }
-
-  /**
-   * Get breakdown of questions by module
-   * @param {Array} questions - Array of assessment questions
-   * @returns {Object} - Module breakdown
-   */
-  getModuleBreakdown(questions) {
-    const breakdown = {};
-    questions.forEach(q => {
-      if (!breakdown[q.module]) breakdown[q.module] = 0;
-      breakdown[q.module]++;
-    });
-    return breakdown;
-  }
-
-  /**
    * Helper method to add content to current block or create new block
    * @param {Object} contentData - The content data to add
    */
@@ -1127,123 +948,188 @@ class DocumentParser {
 
     return days.sort((a, b) => a.day - b.day);
   }
-}
 
-/**
- * Assessment Scorer - Calculates module priorities from assessment responses
- */
-class AssessmentScorer {
-  constructor() {
-    this.moduleScores = {
-      mistakes: 0,
-      regulation: 0,
-      job: 0,
-      collaboration: 0,
-      selfcoach: 0
-    };
+  /**
+   * Check if a table is an assessment table by looking for score patterns
+   * @param {Object} table - Table element from Google Docs
+   * @returns {boolean}
+   */
+  isAssessmentTable(table) {
+    if (!table.tableRows || table.tableRows.length < 2) return false;
+    
+    // Check if last column contains numeric scores (1-3 pattern)
+    let hasScoreColumn = false;
+    let scoreCount = 0;
+    
+    console.log('🔍 Checking table for assessment patterns...');
+    table.tableRows.forEach((row, index) => {
+      if (!row.tableCells) return;
+      const lastCell = row.tableCells[row.tableCells.length - 1];
+      const cellText = this.extractCellText(lastCell);
+      console.log(`   Row ${index + 1}: Last cell = "${cellText}"`);
+      if (cellText.match(/^[1-3]$/)) {
+        scoreCount++;
+        hasScoreColumn = true;
+        console.log(`   ✓ Found score: ${cellText}`);
+      }
+    });
+    
+    // Consider it an assessment table if at least 2 rows have scores
+    const isAssessment = hasScoreColumn && scoreCount >= 2;
+    console.log(`🔍 Assessment table check: ${isAssessment} (${scoreCount} score rows found)`);
+    return isAssessment;
   }
 
   /**
-   * Process multi-select assessment responses and calculate module priorities
-   * @param {Array} responses - Array of user responses
-   * @param {Array} questions - Array of assessment questions
-   * @returns {Array} - Sorted module priorities
+   * Extract text content from a table cell
+   * @param {Object} cell - Table cell element
+   * @returns {string}
    */
-  calculateModulePriorities(responses, questions) {
-    console.log('🧮 Calculating module priorities from', responses.length, 'responses');
+  extractCellText(cell) {
+    let cellText = '';
+    if (cell.content) {
+      cell.content.forEach(element => {
+        if (element.paragraph && element.paragraph.elements) {
+          element.paragraph.elements.forEach(textElement => {
+            if (textElement.textRun && textElement.textRun.content) {
+              cellText += textElement.textRun.content;
+            }
+          });
+        }
+      });
+    }
+    return cellText.trim();
+  }
+
+  /**
+   * Parse assessment table with module tagging and multi-select support
+   * @param {Object} table - Table element from Google Docs
+   */
+  parseAssessmentTable(table) {
+    console.log('🎯 Parsing assessment table with module tagging support');
     
-    // Reset scores
-    Object.keys(this.moduleScores).forEach(module => {
-      this.moduleScores[module] = 0;
-    });
+    if (!table || !table.tableRows) {
+      console.warn('⚠️ Assessment table has no rows');
+      return;
+    }
+
+    const assessmentData = {
+      type: 'assessment',
+      id: `assessment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      questions: []
+    };
+
+    let currentQuestion = null;
+    let currentModule = null;
+    // Use global counter to ensure uniqueness across all tables
     
-    // Process each response
-    responses.forEach(response => {
-      const question = questions.find(q => q.id === response.questionId);
-      if (!question) {
-        console.warn(`⚠️ Question not found: ${response.questionId}`);
+    table.tableRows.forEach((row, rowIndex) => {
+      if (!row.tableCells) return;
+      
+      const cells = row.tableCells.map(cell => this.extractCellText(cell));
+      
+      // Skip empty rows
+      if (cells.every(cell => !cell)) return;
+      
+      // Detect module header (e.g., "Mistakes:", "My Job, Your Job:")
+      const moduleMatch = cells[0].match(/^(.*?):\s*(.*)$/);
+      if (moduleMatch && !cells[cells.length - 1].match(/^[1-3]$/)) {
+        const modulePrefix = moduleMatch[1].trim();
+        const questionText = moduleMatch[2].trim();
+        
+        // Map module prefixes to module IDs
+        currentModule = this.mapModulePrefix(modulePrefix);
+        console.log(`📋 Found module header: "${modulePrefix}" → ${currentModule}`);
+        
+        if (questionText) {
+          // This row contains both module tag and question
+          const questionId = `assessment_q_${this.globalQuestionCounter++}`;
+          currentQuestion = {
+            id: questionId,
+            question: questionText,
+            module: currentModule,
+            type: 'multi-select',
+            options: []
+          };
+          assessmentData.questions.push(currentQuestion);
+          console.log(`📝 Found question: "${questionText}" (Module: ${currentModule}) - ID: ${questionId}`);
+        }
         return;
       }
       
-      // Add scores for each selected option to the question's module
-      response.selectedOptionIds.forEach(optionId => {
-        const option = question.options.find(opt => opt.id === optionId);
-        if (option) {
-          this.moduleScores[question.module] += option.score;
-          console.log(`   📊 Added ${option.score} to ${question.module} (${option.text.substring(0, 30)}...)`);
-        }
-      });
+      // Detect question row (longer text, no score in last cell)
+      const isQuestionRow = cells[0] && cells[0].length > 30 && !cells[cells.length - 1].match(/^[1-3]$/);
+      
+      if (isQuestionRow) {
+        const questionId = `assessment_q_${this.globalQuestionCounter++}`;
+        currentQuestion = {
+          id: questionId,
+          question: cells[0],
+          module: currentModule || 'general',
+          type: 'multi-select',
+          options: []
+        };
+        assessmentData.questions.push(currentQuestion);
+        console.log(`📝 Found question: "${cells[0].substring(0, 60)}..." (Module: ${currentModule || 'general'}) - ID: ${questionId}`);
+      } else if (currentQuestion && cells[0] && cells[cells.length - 1].match(/^[1-3]$/)) {
+        // This is an option row (has text and ends with a score)
+        const optionText = cells[0];
+        const score = parseInt(cells[cells.length - 1]);
+        
+        const option = {
+          id: `${currentQuestion.id}_option_${currentQuestion.options.length}`,
+          text: optionText,
+          score: score
+        };
+        
+        currentQuestion.options.push(option);
+        console.log(`   ✓ Added option: "${optionText}" (Score: ${score})`);
+      }
     });
+
+    console.log('🎯 Assessment parsing complete:', {
+      questionsFound: assessmentData.questions.length,
+      totalOptions: assessmentData.questions.reduce((sum, q) => sum + q.options.length, 0),
+      moduleBreakdown: this.getModuleBreakdown(assessmentData.questions),
+      questionIds: assessmentData.questions.map(q => q.id)
+    });
+
+    // Add to current block
+    this.addContentToCurrentBlock(assessmentData);
+  }
+
+  /**
+   * Map module prefixes to standardized module IDs
+   * @param {string} prefix - Module prefix from Google Docs
+   * @returns {string} - Standardized module ID
+   */
+  mapModulePrefix(prefix) {
+    const lowerPrefix = prefix.toLowerCase();
     
-    // Sort modules by total score (highest = highest priority)
-    const sortedModules = Object.entries(this.moduleScores)
-      .sort(([,a], [,b]) => b - a)  // Descending order
-      .map(([moduleId, score]) => ({
-        moduleId,
-        score,
-        priority: this.getModulePriority(score),
-        percentage: this.calculatePercentage(score)
-      }));
-
-    console.log('📊 Final module priorities:', sortedModules);
-    return sortedModules;
-  }
-
-  /**
-   * Get priority level based on score
-   * @param {number} score - Module score
-   * @returns {string} - Priority level
-   */
-  getModulePriority(score) {
-    if (score >= 15) return 'high';
-    if (score >= 10) return 'medium'; 
-    if (score >= 5) return 'low';
-    return 'minimal';
-  }
-
-  /**
-   * Calculate percentage for visualization
-   * @param {number} score - Module score
-   * @returns {number} - Percentage (0-100)
-   */
-  calculatePercentage(score) {
-    const maxScore = Math.max(...Object.values(this.moduleScores));
-    return maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
-  }
-
-  /**
-   * Get module display names
-   * @param {string} moduleId - Module ID
-   * @returns {string} - Display name
-   */
-  getModuleDisplayName(moduleId) {
-    const names = {
-      mistakes: 'Learning from Mistakes',
-      regulation: 'Regulation & Control', 
-      job: 'Job Skills',
-      collaboration: 'Collaboration & Teamwork',
-      selfcoach: 'Self-Coaching'
-    };
-    return names[moduleId] || moduleId;
-  }
-
-  /**
-   * Generate assessment summary
-   * @param {Array} sortedModules - Sorted module priorities
-   * @returns {Object} - Assessment summary
-   */
-  generateAssessmentSummary(sortedModules) {
-    const topModule = sortedModules[0];
-    const recommendedOrder = sortedModules.slice(0, 3).map(m => m.moduleId);
+    // Map various prefixes to module IDs
+    if (lowerPrefix.includes('mistake')) return 'mistakes';
+    if (lowerPrefix.includes('job') || lowerPrefix.includes('work')) return 'job';
+    if (lowerPrefix.includes('regulation') || lowerPrefix.includes('control') || lowerPrefix.includes('emotion')) return 'regulation';
+    if (lowerPrefix.includes('collaboration') || lowerPrefix.includes('team')) return 'collaboration';
+    if (lowerPrefix.includes('coach') || lowerPrefix.includes('self')) return 'selfcoach';
     
-    return {
-      recommendedStartModule: topModule.moduleId,
-      recommendedOrder,
-      moduleScores: this.moduleScores,
-      summary: `Based on your responses, we recommend starting with ${this.getModuleDisplayName(topModule.moduleId)} (Score: ${topModule.score}).`,
-      completedAt: new Date().toISOString()
-    };
+    // Return original if no match found
+    return prefix.toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  /**
+   * Get breakdown of questions by module
+   * @param {Array} questions - Array of assessment questions
+   * @returns {Object} - Module breakdown
+   */
+  getModuleBreakdown(questions) {
+    const breakdown = {};
+    questions.forEach(q => {
+      if (!breakdown[q.module]) breakdown[q.module] = 0;
+      breakdown[q.module]++;
+    });
+    return breakdown;
   }
 }
 
-module.exports = { DocumentParser, AssessmentScorer };
+module.exports = DocumentParser;
