@@ -61,11 +61,52 @@ export class AssessmentService {
   }
 
   /**
-   * Get current child ID (with fallback to localStorage for backwards compatibility)
+   * Auto-sync context from global app state
+   */
+  syncFromGlobalContext(): void {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('autonomy_current_family');
+        if (stored) {
+          const parsedData = JSON.parse(stored);
+          if (parsedData.familyCode && parsedData.isActive) {
+            this.currentFamilyCode = parsedData.familyCode;
+            if (parsedData.currentChildId) {
+              this.currentChildId = parsedData.currentChildId;
+            }
+            console.log('🔄 Assessment context synced from global state:', {
+              familyCode: this.currentFamilyCode,
+              childId: this.currentChildId
+            });
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not sync assessment context from global state:', error);
+      }
+    }
+  }
+
+  /**
+   * Get current child ID (with fallback to global context and localStorage)
    */
   private getCurrentChildId(): string {
     if (this.currentChildId) {
       return this.currentChildId;
+    }
+    
+    // Try to get from global app context if available
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('autonomy_current_family');
+        if (stored) {
+          const parsedData = JSON.parse(stored);
+          if (parsedData.currentChildId) {
+            return parsedData.currentChildId;
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not load child ID from storage:', error);
+      }
     }
     
     // Fallback to localStorage for backwards compatibility
@@ -73,10 +114,27 @@ export class AssessmentService {
   }
 
   /**
-   * Get current family code
+   * Get current family code (with fallback to global context)
    */
   getCurrentFamilyCode(): string | null {
-    return this.currentFamilyCode;
+    if (this.currentFamilyCode) {
+      return this.currentFamilyCode;
+    }
+    
+    // Try to get from global app context if available
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('autonomy_current_family');
+        if (stored) {
+          const parsedData = JSON.parse(stored);
+          return parsedData.familyCode || null;
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not load family code from storage:', error);
+      }
+    }
+    
+    return null;
   }
 
   /**
@@ -187,6 +245,10 @@ export class AssessmentService {
    */
   async saveAssessmentResults(summary: AssessmentSummary): Promise<void> {
     try {
+      // Auto-sync context from global state if not set
+      if (!this.currentFamilyCode || !this.currentChildId) {
+        this.syncFromGlobalContext();
+      }
       const assessmentData = {
         ...summary,
         version: '1.0',
@@ -223,6 +285,10 @@ export class AssessmentService {
    */
   async loadAssessmentResults(): Promise<AssessmentSummary | null> {
     try {
+      // Auto-sync context from global state if not set
+      if (!this.currentFamilyCode || !this.currentChildId) {
+        this.syncFromGlobalContext();
+      }
       // Try Firebase first if we have family context
       if (this.currentFamilyCode && this.currentChildId) {
         try {

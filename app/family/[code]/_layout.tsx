@@ -1,3 +1,4 @@
+import { useAppMode } from '@/contexts/AppModeContext';
 import { Slot, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
@@ -10,6 +11,7 @@ export default function FamilyLayout() {
 function FamilyLayoutContent() {
   const { code } = useLocalSearchParams<{ code: string }>();
   const router = useRouter();
+  const { setFamilyContext } = useAppMode();
   const [family, setFamily] = useState<FamilyData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +37,9 @@ function FamilyLayoutContent() {
       
       if (familyData) {
         setFamily(familyData);
-        console.log('✅ Loaded family:', code);
+        // Set global family context
+        setFamilyContext(code as string, familyData);
+        console.log('✅ Loaded family and set global context:', code);
       } else {
         setError(`Family "${code}" not found. Please check your family code.`);
       }

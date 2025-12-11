@@ -17,7 +17,7 @@ import { DOCUMENT_REFS } from '@/services/api';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { userMode } = useAppMode();
+  const { userMode, isInFamilyMode, currentFamilyCode, currentFamily, clearFamilyContext } = useAppMode();
   
   // Determine which tab to fetch based on current mode
   const tabName = userMode === 'parent' ? 'Parent Intro' : 'Student Intro';
@@ -284,6 +284,34 @@ export default function HomeScreen() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
+        {/* Family Context Indicator */}
+        {isInFamilyMode && currentFamilyCode && (
+          <ThemedView style={styles.familyContextIndicator}>
+            <ThemedText style={styles.familyContextTitle}>
+              👨‍👩‍👧‍👦 Currently in Family: {currentFamilyCode}
+            </ThemedText>
+            <ThemedText style={styles.familyContextSubtitle}>
+              Parent: {currentFamily?.settings?.parentName || 'Unknown'}
+            </ThemedText>
+            <ThemedView style={styles.familyContextActions}>
+              <TouchableOpacity 
+                style={styles.familyContextButton}
+                onPress={() => router.push(`/family/${currentFamilyCode}`)}
+              >
+                <ThemedText style={styles.familyContextButtonText}>Go to Dashboard</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.familyContextButton, styles.familyContextButtonSecondary]}
+                onPress={clearFamilyContext}
+              >
+                <ThemedText style={[styles.familyContextButtonText, styles.familyContextButtonTextSecondary]}>
+                  Leave Family
+                </ThemedText>
+              </TouchableOpacity>
+            </ThemedView>
+          </ThemedView>
+        )}
+
         {/* Family Access Section */}
         <ThemedView style={styles.familySection}>
           <ThemedText style={styles.familySectionTitle}>👨‍👩‍👧‍👦 Family Access</ThemedText>
@@ -710,5 +738,50 @@ const styles = StyleSheet.create({
   },
   familyButtonTextSecondary: {
     color: '#007AFF',
+  },
+  // Family Context Indicator styles
+  familyContextIndicator: {
+    backgroundColor: '#E3F2FD',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2196F3',
+  },
+  familyContextTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1976D2',
+    marginBottom: 4,
+  },
+  familyContextSubtitle: {
+    fontSize: 14,
+    color: '#1976D2',
+    marginBottom: 12,
+  },
+  familyContextActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  familyContextButton: {
+    flex: 1,
+    backgroundColor: '#2196F3',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  familyContextButtonSecondary: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#2196F3',
+  },
+  familyContextButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  familyContextButtonTextSecondary: {
+    color: '#2196F3',
   },
 });
