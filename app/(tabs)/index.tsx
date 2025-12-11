@@ -305,38 +305,40 @@ export default function HomeScreen() {
                 onPress={clearFamilyContext}
               >
                 <ThemedText style={[styles.familyContextButtonText, styles.familyContextButtonTextSecondary]}>
-                  Leave Family
+                  Logout
                 </ThemedText>
               </TouchableOpacity>
             </ThemedView>
           </ThemedView>
         )}
 
-        {/* Family Access Section */}
-        <ThemedView style={styles.familySection}>
-          <ThemedText style={styles.familySectionTitle}>👨‍👩‍👧‍👦 Family Access</ThemedText>
-          <ThemedText style={styles.familySectionSubtitle}>
-            Track progress across multiple children with family codes
-          </ThemedText>
-          
-          <ThemedView style={styles.familyButtons}>
-            <TouchableOpacity 
-              style={styles.familyButton}
-              onPress={() => router.push('/create-family')}
-            >
-              <ThemedText style={styles.familyButtonText}>🆕 Create Family</ThemedText>
-            </TouchableOpacity>
+        {/* Family Access Section - Only show if NOT in family mode */}
+        {!isInFamilyMode && (
+          <ThemedView style={styles.familySection}>
+            <ThemedText style={styles.familySectionTitle}>👨‍👩‍👧‍👦 Family Access</ThemedText>
+            <ThemedText style={styles.familySectionSubtitle}>
+              Track progress across multiple children with family codes
+            </ThemedText>
             
-            <TouchableOpacity 
-              style={[styles.familyButton, styles.familyButtonSecondary]}
-              onPress={() => router.push('/join-family')}
-            >
-              <ThemedText style={[styles.familyButtonText, styles.familyButtonTextSecondary]}>
-                🔗 Join Family
-              </ThemedText>
-            </TouchableOpacity>
+            <ThemedView style={styles.familyButtons}>
+              <TouchableOpacity 
+                style={styles.familyButton}
+                onPress={() => router.push('/create-family')}
+              >
+                <ThemedText style={styles.familyButtonText}>🆕 Create Family</ThemedText>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.familyButton, styles.familyButtonSecondary]}
+                onPress={() => router.push('/join-family')}
+              >
+                <ThemedText style={[styles.familyButtonText, styles.familyButtonTextSecondary]}>
+                  🔗 Join Family
+                </ThemedText>
+              </TouchableOpacity>
+            </ThemedView>
           </ThemedView>
-        </ThemedView>
+        )}
 
         {/* Assessment Card - Always visible */}
         <AssessmentCard userMode={userMode} />

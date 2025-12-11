@@ -140,6 +140,32 @@ export default function FamilyDashboard() {
           <Text style={styles.quickActionText}>🔗 Share Family Code</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Family Access Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>👨‍👩‍👧‍👦 Family Access</Text>
+        <Text style={styles.sectionSubtitle}>
+          Invite others to join your family or create a new family
+        </Text>
+        
+        <View style={styles.familyButtons}>
+          <TouchableOpacity 
+            style={styles.familyButton}
+            onPress={() => router.push('/create-family')}
+          >
+            <Text style={styles.familyButtonText}>🆕 Create New Family</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.familyButton, styles.familyButtonSecondary]}
+            onPress={() => router.push('/join-family')}
+          >
+            <Text style={[styles.familyButtonText, styles.familyButtonTextSecondary]}>
+              🔗 Join Different Family
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -295,6 +321,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginTop: 50,
+  },
+  // Family Access styles
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+  },
+  familyButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  familyButton: {
+    flex: 1,
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  familyButtonSecondary: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#007AFF',
+  },
+  familyButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  familyButtonTextSecondary: {
+    color: '#007AFF',
   },
 });
 
