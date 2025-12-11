@@ -114,7 +114,7 @@ class ApiService {
    */
   async fetchDocument(
     documentRef: string, 
-    format: 'raw' | 'job' | 'mistakes' | 'regulation' = 'raw',
+    format: 'raw' | 'job' | 'mistakes' | 'regulation' | 'selfcoach' | 'curiosity' | 'shapeoflearning' | 'neuroplasticity' | 'masterymoments' = 'raw',
     options: { tab?: string; day?: number } = {}
   ): Promise<DocumentResponse> {
     try {

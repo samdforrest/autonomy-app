@@ -9,6 +9,7 @@ export interface FamilyContext {
   familyData: FamilyData | null;
   currentChildId: string | null;
   isActive: boolean;
+  isAdmin: boolean; // NEW: Admin status
 }
 
 export interface ModuleProgress {
@@ -88,7 +89,8 @@ const initialState: AppModeState = {
     familyCode: null,
     familyData: null,
     currentChildId: null,
-    isActive: false
+    isActive: false,
+    isAdmin: false
   }
 };
 
@@ -154,7 +156,8 @@ function appModeReducer(state: AppModeState, action: AppModeAction): AppModeStat
         familyCode,
         familyData,
         currentChildId: childId || null,
-        isActive: true
+        isActive: true,
+        isAdmin: familyData?.settings?.isAdmin === true
       };
       
       // Persist to localStorage
@@ -217,7 +220,8 @@ function appModeReducer(state: AppModeState, action: AppModeAction): AppModeStat
           familyCode: null,
           familyData: null,
           currentChildId: null,
-          isActive: false
+          isActive: false,
+          isAdmin: false
         }
       };
     
@@ -363,6 +367,7 @@ export function useAppMode() {
     currentFamily: state.familyContext.familyData,
     currentFamilyCode: state.familyContext.familyCode,
     currentChildId: state.familyContext.currentChildId,
+    isAdminFamily: state.familyContext.isAdmin,
     
     // Actions
     switchMode,

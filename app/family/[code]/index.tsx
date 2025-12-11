@@ -1,4 +1,5 @@
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { useAppMode } from '@/contexts/AppModeContext';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -9,6 +10,7 @@ export default function FamilyDashboard() {
   console.log('🏠 FamilyDashboard rendering - about to call useFamilyContext');
   const { family, familyCode, refreshFamily } = useFamilyContext();
   console.log('🏠 FamilyDashboard got context:', { familyCode, hasFamily: !!family });
+  const { isAdminFamily } = useAppMode();
   const router = useRouter();
   const [addingChild, setAddingChild] = useState(false);
 
@@ -54,7 +56,9 @@ export default function FamilyDashboard() {
           <Text style={styles.homeButtonText}>Home</Text>
         </TouchableOpacity>
         
-        <Text style={styles.title}>Family Dashboard</Text>
+        <Text style={styles.title}>
+          Family Dashboard {isAdminFamily && <Text style={styles.adminBadge}>🔧 ADMIN</Text>}
+        </Text>
         <Text style={styles.familyCode}>Family Code: {familyCode}</Text>
         <Text style={styles.parentName}>
           Welcome, {family.settings?.parentName || 'Parent'}!
@@ -141,21 +145,35 @@ export default function FamilyDashboard() {
         </TouchableOpacity>
       </View>
 
+      {/* Admin Section - Only visible to admin families */}
+      {isAdminFamily && (
+        <View style={[styles.section, styles.adminSection]}>
+          <Text style={[styles.sectionTitle, styles.adminTitle]}>
+            🔧 Admin Controls
+          </Text>
+          <Text style={styles.sectionSubtitle}>
+            Administrative functions for managing the platform
+          </Text>
+          
+          <TouchableOpacity 
+            style={[styles.familyButton, styles.adminButton]}
+            onPress={() => router.push('/create-family')}
+          >
+            <Text style={[styles.familyButtonText, styles.adminButtonText]}>
+              🆕 Create New Family (Admin)
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Family Access Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>👨‍👩‍👧‍👦 Family Access</Text>
         <Text style={styles.sectionSubtitle}>
-          Invite others to join your family or create a new family
+          Invite others to join your family or switch between families
         </Text>
         
         <View style={styles.familyButtons}>
-          <TouchableOpacity 
-            style={styles.familyButton}
-            onPress={() => router.push('/create-family')}
-          >
-            <Text style={styles.familyButtonText}>🆕 Create New Family</Text>
-          </TouchableOpacity>
-          
           <TouchableOpacity 
             style={[styles.familyButton, styles.familyButtonSecondary]}
             onPress={() => router.push('/join-family')}
@@ -352,6 +370,27 @@ const styles = StyleSheet.create({
   },
   familyButtonTextSecondary: {
     color: '#007AFF',
+  },
+  // Admin-specific styles
+  adminSection: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF6B35',
+    backgroundColor: '#FFF8F5',
+  },
+  adminTitle: {
+    color: '#FF6B35',
+  },
+  adminButton: {
+    backgroundColor: '#FF6B35',
+  },
+  adminButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  adminBadge: {
+    fontSize: 14,
+    color: '#FF6B35',
+    fontWeight: 'bold',
   },
 });
 

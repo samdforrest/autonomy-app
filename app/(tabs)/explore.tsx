@@ -85,7 +85,7 @@ export default function TabTwoScreen() {
       title: 'Mastery Moments',
       emoji: '🏆',
       description: 'Celebrating success',
-      isActive: false
+      isActive: true
     }
   ];
 
@@ -112,6 +112,8 @@ export default function TabTwoScreen() {
       router.push('/shapeoflearning-module');
     } else if (module.title === 'Neuroplasticity') {
       router.push('/neuroplasticity-module');
+    } else if (module.title === 'Mastery Moments') {
+      router.push('/mastery-moments-module');
     } else {
       console.log(`${module.title} module pressed - coming soon`);
     }

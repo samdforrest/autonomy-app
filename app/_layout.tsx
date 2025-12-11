@@ -108,6 +108,10 @@ export default function RootLayout() {
           options={getModuleOptions("Neuroplasticity Module")}
         />
         <Stack.Screen 
+          name="mastery-moments-module" 
+          options={getModuleOptions("Mastery Moments Module")}
+        />
+        <Stack.Screen 
           name="create-family" 
           options={{
             title: "Create Family",

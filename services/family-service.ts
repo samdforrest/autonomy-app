@@ -13,6 +13,7 @@ export interface FamilyData {
     parentName?: string;
     createdAt: any;
     hasPassword: boolean;
+    isAdmin?: boolean; // NEW: Admin role flag
   };
   children: { [childId: string]: ChildData };
 }
@@ -160,6 +161,34 @@ export class FamilyService {
   async validateFamilyCode(familyCode: string): Promise<boolean> {
     const family = await this.getFamilyData(familyCode);
     return family !== null;
+  }
+
+  /**
+   * Assign admin role to a family
+   */
+  async setFamilyAdminStatus(familyCode: string, isAdmin: boolean): Promise<void> {
+    try {
+      await updateDoc(doc(db, 'families', familyCode), {
+        'settings.isAdmin': isAdmin
+      });
+      console.log(`✅ ${isAdmin ? 'Granted' : 'Revoked'} admin role for family:`, familyCode);
+    } catch (error) {
+      console.error('❌ Error updating admin status:', error);
+      throw new Error('Failed to update admin status');
+    }
+  }
+
+  /**
+   * Check if a family has admin privileges
+   */
+  async isAdminFamily(familyCode: string): Promise<boolean> {
+    try {
+      const familyData = await this.getFamilyData(familyCode);
+      return familyData?.settings?.isAdmin === true;
+    } catch (error) {
+      console.error('❌ Error checking admin status:', error);
+      return false;
+    }
   }
 }
 
