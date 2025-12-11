@@ -49,3 +49,5 @@ android/
 
 .firebase/hosting.ZGlzdA.cache
 .firebaserc
+
+/services/firebase-config.ts
