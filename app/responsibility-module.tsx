@@ -32,7 +32,7 @@ export default function ResponsibilityModuleScreen() {
   const { content, loading, error, refetch } = useGoogleDocsContent(
     DOCUMENT_REFS.MAIN_DOCUMENT,
     'raw',
-    { tab: 'My Job, Your Job', day: currentDay }
+    { tab: 'Responsibility', day: currentDay }
   );
 
 

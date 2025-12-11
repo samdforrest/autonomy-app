@@ -31,7 +31,7 @@ export default function RegulationModuleScreen() {
   const { content, loading, error, refetch } = useGoogleDocsContent(
     DOCUMENT_REFS.MAIN_DOCUMENT,
     'regulation',
-    { tab: 'Regulation', day: currentDay }
+    { tab: 'Self-regulation', day: currentDay }
   );
 
 
