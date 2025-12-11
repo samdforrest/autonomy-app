@@ -36,7 +36,7 @@ export default function TabTwoScreen() {
       title: 'Self-Monitoring',
       emoji: '🌱',
       description: 'Making sure I understand',
-      isActive: false
+      isActive: true
     },
     {
       id: '4',
@@ -100,6 +100,8 @@ export default function TabTwoScreen() {
       router.push('/responsibility-module');
     } else if (module.title === 'Collaboration') {
       router.push('/collaboration-module');
+    } else if (module.title === 'Self-Monitoring') {
+      router.push('/self-monitoring-module');
     } else if (module.title === 'Mistakes') {
       router.push('/mistakes-module');
     } else if (module.title === 'Regulation') {
