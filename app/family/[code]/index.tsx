@@ -1,3 +1,4 @@
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -44,6 +45,15 @@ export default function FamilyDashboard() {
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+        {/* Home Button */}
+        <TouchableOpacity 
+          style={styles.homeButton}
+          onPress={() => router.push('/(tabs)')}
+        >
+          <IconSymbol size={24} name="house.fill" color="#007AFF" />
+          <Text style={styles.homeButtonText}>Home</Text>
+        </TouchableOpacity>
+        
         <Text style={styles.title}>Family Dashboard</Text>
         <Text style={styles.familyCode}>Family Code: {familyCode}</Text>
         <Text style={styles.parentName}>
@@ -144,6 +154,24 @@ const styles = StyleSheet.create({
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+  },
+  homeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 20,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  homeButtonText: {
+    marginLeft: 6,
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
   },
   title: {
     fontSize: 24,
