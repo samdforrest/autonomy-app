@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
-  ActivityIndicator,
-  Alert 
-} from 'react-native';
 import { router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity
+} from 'react-native';
+import { AssessmentQuestionComponent } from '../components/AssessmentQuestion';
 import { ThemedText } from '../components/ThemedText';
 import { ThemedView } from '../components/ThemedView';
-import { AssessmentQuestionComponent } from '../components/AssessmentQuestion';
 import { useGoogleDocsContent } from '../hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '../services/api';
-import { 
-  assessmentService, 
-  type AssessmentQuestion, 
+import {
+  assessmentService,
+  type AssessmentQuestion,
   type AssessmentResponse,
-  type ModulePriority 
+  type ModulePriority
 } from '../services/assessment-service';
 
 export default function AssessmentScreen() {
@@ -61,39 +61,52 @@ export default function AssessmentScreen() {
 
   // Check if user has already completed assessment
   useEffect(() => {
-    console.log('🔍 Assessment useEffect:', { 
-      showQuestions, 
-      questionsLength: assessmentQuestions.length,
-      hasExistingResults: !!assessmentService.loadAssessmentResults()
-    });
-    
-    // If we're explicitly showing questions, don't load existing results
-    if (showQuestions) {
-      console.log('📝 Showing questions (showQuestions=true)');
-      return;
-    }
-    
-    const existingResults = assessmentService.loadAssessmentResults();
-    if (existingResults && assessmentQuestions.length > 0) {
-      // User has already completed assessment, show results
-      console.log('📊 Loading existing results from localStorage');
-      // Use the stored results instead of recalculating with empty responses
-      const storedModuleScores = existingResults.moduleScores || {};
-      const priorities = Object.entries(storedModuleScores)
-        .sort(([,a], [,b]) => b - a)  // Descending order
-        .map(([moduleId, score]) => ({
-          moduleId,
-          score,
-          priority: assessmentService.getModulePriority(score),
-          percentage: assessmentService.calculatePercentage(score, storedModuleScores),
-          displayName: assessmentService.getModuleDisplayName(moduleId)
-        }));
-      setResults(priorities);
-    } else {
-      // No existing results, show questions
-      console.log('📝 No existing results, showing questions');
-      setShowQuestions(true);
-    }
+    const loadExistingResults = async () => {
+      console.log('🔍 Assessment useEffect:', { 
+        showQuestions, 
+        questionsLength: assessmentQuestions.length
+      });
+      
+      // If we're explicitly showing questions, don't load existing results
+      if (showQuestions) {
+        console.log('📝 Showing questions (showQuestions=true)');
+        return;
+      }
+      
+      try {
+        // Make sure to sync context from global state
+        assessmentService.syncFromGlobalContext();
+        
+        const existingResults = await assessmentService.loadAssessmentResults();
+        console.log('🔍 Loaded existing results:', !!existingResults);
+        
+        if (existingResults && assessmentQuestions.length > 0) {
+          // User has already completed assessment, show results
+          console.log('📊 Loading existing results from localStorage');
+          // Use the stored results instead of recalculating with empty responses
+          const storedModuleScores = existingResults.moduleScores || {};
+          const priorities = Object.entries(storedModuleScores)
+            .sort(([,a], [,b]) => b - a)  // Descending order
+            .map(([moduleId, score]) => ({
+              moduleId,
+              score,
+              priority: assessmentService.getModulePriority(score),
+              percentage: assessmentService.calculatePercentage(score, storedModuleScores),
+              displayName: assessmentService.getModuleDisplayName(moduleId)
+            }));
+          setResults(priorities);
+        } else {
+          // No existing results, show questions
+          console.log('📝 No existing results, showing questions');
+          setShowQuestions(true);
+        }
+      } catch (error) {
+        console.error('❌ Error loading existing results:', error);
+        setShowQuestions(true);
+      }
+    };
+
+    loadExistingResults();
   }, [assessmentQuestions, showQuestions]);
 
   const handleSelectionChange = (questionId: string, selectedOptions: string[]) => {
@@ -137,12 +150,15 @@ export default function AssessmentScreen() {
     setIsSubmitting(true);
     
     try {
+      // Make sure to sync context from global state
+      assessmentService.syncFromGlobalContext();
+      
       // Calculate module priorities
       const priorities = assessmentService.calculateModulePriorities(responses, assessmentQuestions);
       
       // Generate and save summary
       const summary = assessmentService.generateAssessmentSummary(priorities);
-      assessmentService.saveAssessmentResults(summary);
+      await assessmentService.saveAssessmentResults(summary);
       
       setResults(priorities);
       setShowQuestions(false); // Switch to results view
@@ -179,7 +195,7 @@ export default function AssessmentScreen() {
         { 
           text: 'Retake', 
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
             console.log('✅ Retake confirmed, clearing data...');
             // Clear all assessment data
             assessmentService.clearAssessmentResults();

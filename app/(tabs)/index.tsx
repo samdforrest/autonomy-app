@@ -290,9 +290,7 @@ export default function HomeScreen() {
             <ThemedText style={styles.familyContextTitle}>
               👨‍👩‍👧‍👦 Currently in Family: {currentFamilyCode}
             </ThemedText>
-            <ThemedText style={styles.familyContextSubtitle}>
-              Parent: {currentFamily?.settings?.parentName || 'Unknown'}
-            </ThemedText>
+            <ThemedText style={styles.familyContextSubtitle} />
             <ThemedView style={styles.familyContextActions}>
               <TouchableOpacity 
                 style={styles.familyContextButton}

@@ -1107,13 +1107,19 @@ class DocumentParser {
     const lowerPrefix = prefix.toLowerCase();
     
     // Map various prefixes to module IDs
+    // NOTE: Order matters! More specific matches must come before general ones
     if (lowerPrefix.includes('mistake')) return 'mistakes';
     if (lowerPrefix.includes('job') || lowerPrefix.includes('work')) return 'job';
     if (lowerPrefix.includes('regulation') || lowerPrefix.includes('control') || lowerPrefix.includes('emotion')) return 'regulation';
     if (lowerPrefix.includes('collaboration') || lowerPrefix.includes('team')) return 'collaboration';
-    if (lowerPrefix.includes('coach') || lowerPrefix.includes('self')) return 'selfcoach';
+    if (lowerPrefix.includes('monitor') || lowerPrefix.includes('monitoring')) return 'selfmonitoring';
+    if (lowerPrefix.includes('coach') || (lowerPrefix.includes('self') && lowerPrefix.includes('coach'))) return 'selfcoach';
+    if (lowerPrefix.includes('curiosity') || lowerPrefix.includes('wonder')) return 'curiosity';
+    if (lowerPrefix.includes('shape') || lowerPrefix.includes('learning')) return 'shapeoflearning';
+    if (lowerPrefix.includes('neuroplasticity') || lowerPrefix.includes('growth') || lowerPrefix.includes('brain')) return 'neuroplasticity';
+    if (lowerPrefix.includes('mastery') || lowerPrefix.includes('moment')) return 'masterymoments';
     
-    // Return original if no match found
+    // Return original if no match found (cleaned up)
     return prefix.toLowerCase().replace(/[^a-z0-9]/g, '');
   }
 

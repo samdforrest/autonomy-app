@@ -36,11 +36,16 @@ The system automatically maps module prefixes to module IDs:
 
 | Prefix Pattern | Module ID | Display Name |
 |---------------|-----------|--------------|
-| "Mistakes" | `mistakes` | Learning from Mistakes |
-| "Job", "Work" | `job` | Job Skills |
-| "Regulation", "Control", "Emotion" | `regulation` | Regulation & Control |
-| "Collaboration", "Team" | `collaboration` | Collaboration & Teamwork |
-| "Coach", "Self" | `selfcoach` | Self-Coaching |
+| "Mistakes" | `mistakes` | Mistakes |
+| "Job", "Work" | `job` | Responsibility |
+| "Regulation", "Control", "Emotion" | `regulation` | Regulation |
+| "Collaboration", "Team" | `collaboration` | Collaboration |
+| "Monitor", "Monitoring" | `selfmonitoring` | Self-Monitoring |
+| "Coach", "Self-Coach" | `selfcoach` | Self-Coaching |
+| "Curiosity", "Wonder" | `curiosity` | Curiosity |
+| "Shape", "Learning" | `shapeoflearning` | Shape of Learning |
+| "Neuroplasticity", "Growth", "Brain" | `neuroplasticity` | Neuroplasticity |
+| "Mastery", "Moment" | `masterymoments` | Mastery Moments |
 
 ### 3. Scoring System
 

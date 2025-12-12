@@ -44,7 +44,12 @@ export class AssessmentService {
     regulation: 0,
     job: 0,
     collaboration: 0,
-    selfcoach: 0
+    selfcoach: 0,
+    curiosity: 0,
+    shapeoflearning: 0,
+    neuroplasticity: 0,
+    masterymoments: 0,
+    selfmonitoring: 0
   };
 
   // Family and child context
@@ -69,6 +74,8 @@ export class AssessmentService {
         const stored = localStorage.getItem('autonomy_current_family');
         if (stored) {
           const parsedData = JSON.parse(stored);
+          console.log('🔍 Raw stored family data:', parsedData);
+          
           if (parsedData.familyCode && parsedData.isActive) {
             this.currentFamilyCode = parsedData.familyCode;
             if (parsedData.currentChildId) {
@@ -78,7 +85,14 @@ export class AssessmentService {
               familyCode: this.currentFamilyCode,
               childId: this.currentChildId
             });
+          } else {
+            console.log('🔍 Family context not active or missing familyCode:', {
+              familyCode: parsedData.familyCode,
+              isActive: parsedData.isActive
+            });
           }
+        } else {
+          console.log('🔍 No stored family context found');
         }
       } catch (error) {
         console.warn('⚠️ Could not sync assessment context from global state:', error);
@@ -215,11 +229,16 @@ export class AssessmentService {
    */
   getModuleDisplayName(moduleId: string): string {
     const names: { [key: string]: string } = {
-      mistakes: 'Learning from Mistakes',
-      regulation: 'Regulation & Control', 
-      job: 'Job Skills',
-      collaboration: 'Collaboration & Teamwork',
-      selfcoach: 'Self-Coaching'
+      mistakes: 'Mistakes',
+      regulation: 'Regulation', 
+      job: 'Responsibility',
+      collaboration: 'Collaboration',
+      selfcoach: 'Self-Coaching',
+      curiosity: 'Curiosity',
+      shapeoflearning: 'Shape of Learning',
+      neuroplasticity: 'Neuroplasticity',
+      masterymoments: 'Mastery Moments',
+      selfmonitoring: 'Self-Monitoring'
     };
     return names[moduleId] || moduleId;
   }
@@ -247,18 +266,28 @@ export class AssessmentService {
     try {
       // Auto-sync context from global state if not set
       if (!this.currentFamilyCode || !this.currentChildId) {
+        console.log('🔄 Syncing context before saving...');
         this.syncFromGlobalContext();
       }
+      
+      const currentChildId = this.getCurrentChildId();
       const assessmentData = {
         ...summary,
         version: '1.0',
-        childId: this.getCurrentChildId(),
+        childId: currentChildId,
         familyCode: this.currentFamilyCode
       };
+
+      console.log('💾 Saving assessment results with context:', {
+        familyCode: this.currentFamilyCode,
+        childId: currentChildId,
+        storageKey: this.getStorageKey()
+      });
 
       // Save to Firebase if we have family context
       if (this.currentFamilyCode && this.currentChildId) {
         try {
+          console.log('☁️ Attempting to save to Firebase...');
           const { familyService } = await import('./family-service');
           await familyService.saveAssessmentResults(
             this.currentFamilyCode,
@@ -270,13 +299,16 @@ export class AssessmentService {
           console.error('❌ Failed to save to Firebase:', firebaseError);
           // Fall back to localStorage
         }
+      } else {
+        console.log('📝 No family context, saving only to localStorage');
       }
 
       // Always save to localStorage for backwards compatibility
       localStorage.setItem(this.getStorageKey(), JSON.stringify(assessmentData));
-      console.log('✅ Assessment results saved to localStorage for child:', this.getCurrentChildId());
+      console.log('✅ Assessment results saved to localStorage for child:', currentChildId);
     } catch (error) {
       console.error('❌ Failed to save assessment results:', error);
+      throw error; // Re-throw to let the caller handle it
     }
   }
 
@@ -287,11 +319,23 @@ export class AssessmentService {
     try {
       // Auto-sync context from global state if not set
       if (!this.currentFamilyCode || !this.currentChildId) {
+        console.log('🔄 Syncing context before loading...');
         this.syncFromGlobalContext();
       }
+      
+      const currentChildId = this.getCurrentChildId();
+      const storageKey = this.getStorageKey();
+      
+      console.log('📖 Loading assessment results with context:', {
+        familyCode: this.currentFamilyCode,
+        childId: currentChildId,
+        storageKey: storageKey
+      });
+      
       // Try Firebase first if we have family context
       if (this.currentFamilyCode && this.currentChildId) {
         try {
+          console.log('☁️ Attempting to load from Firebase...');
           const { familyService } = await import('./family-service');
           const familyData = await familyService.getFamilyData(this.currentFamilyCode);
           
@@ -305,18 +349,24 @@ export class AssessmentService {
               console.log('✅ Assessment results loaded from Firebase for:', this.currentChildId);
               return latestAssessment;
             }
+          } else {
+            console.log('📝 No assessments found in Firebase for child:', this.currentChildId);
           }
         } catch (firebaseError) {
           console.warn('⚠️ Failed to load from Firebase, trying localStorage:', firebaseError);
         }
+      } else {
+        console.log('📝 No family context, loading only from localStorage');
       }
 
       // Fallback to localStorage
-      const stored = localStorage.getItem(this.getStorageKey());
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
         const results = JSON.parse(stored);
-        console.log('✅ Assessment results loaded from localStorage for child:', this.getCurrentChildId());
+        console.log('✅ Assessment results loaded from localStorage for child:', currentChildId);
         return results;
+      } else {
+        console.log('📝 No assessment results found in localStorage for key:', storageKey);
       }
     } catch (error) {
       console.error('❌ Failed to load assessment results:', error);
