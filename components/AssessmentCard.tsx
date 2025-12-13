@@ -42,7 +42,7 @@ export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
         description: hasCompletedAssessment
           ? `Assessment completed. Recommended starting point: ${topModule}`
           : 'Complete a quick assessment to personalize the learning experience for your child.',
-        buttonText: hasCompletedAssessment ? 'View Results' : 'Start Assessment',
+        buttonText: hasCompletedAssessment ? 'Start Assessment' : 'View My Results',
         icon: hasCompletedAssessment ? '📈' : '🎯'
       };
     } else {

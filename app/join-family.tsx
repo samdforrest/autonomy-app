@@ -90,7 +90,7 @@ export default function JoinFamily() {
           <Text style={styles.examplesTitle}>Example Family Codes:</Text>
           <Text style={styles.exampleCode}>LION-3847</Text>
           <Text style={styles.exampleCode}>WOLF-1592</Text>
-          <Text style={styles.exampleCode}>EAGLE-7429</Text>
+          <Text style={styles.exampleCode}>BEAR-7429</Text>
         </View>
 
         <TouchableOpacity 

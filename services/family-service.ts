@@ -26,13 +26,27 @@ export interface ChildData {
 
 export class FamilyService {
   /**
-   * Generate a unique family code
+   * Generate a unique family code in format: XXXX-#### (4-letter animal + 4 digits)
+   * Examples: BEAR-1234, LION-5678, WOLF-9012
    */
   generateFamilyCode(): string {
-    const animals = ['BEAR', 'LION', 'WOLF', 'EAGLE', 'TIGER', 'HAWK', 'DEER', 'FOX'];
-    const numbers = Math.floor(1000 + Math.random() * 9000);
+    // Only 4-letter animal names for consistent formatting
+    const animals = [
+      'BEAR', 'LION', 'WOLF', 'DEER', 'DUCK', 'FROG', 
+      'GOAT', 'HAWK', 'LAMB', 'LYNX', 'PUMA', 'SEAL', 
+      'SWAN', 'TOAD', 'CRAB', 'FISH', 'BIRD', 'BULL'
+    ];
+    const numbers = Math.floor(1000 + Math.random() * 9000); // Ensures exactly 4 digits (1000-9999)
     const animal = animals[Math.floor(Math.random() * animals.length)];
     return `${animal}-${numbers}`;
+  }
+
+  /**
+   * Validate family code format (4-letter animal + hyphen + 4 digits)
+   */
+  isValidFamilyCodeFormat(code: string): boolean {
+    const pattern = /^[A-Z]{4}-\d{4}$/;
+    return pattern.test(code);
   }
 
   /**
