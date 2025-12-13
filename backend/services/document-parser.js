@@ -505,6 +505,12 @@ class DocumentParser {
     // Check if this text is an option (A:, B:, C:, D:, etc.)
     const optionMatch = text.match(/^([A-Z]):\s*(.+)$/);
     
+    // Check if this text is a numbered list option (1., 2., 3., etc.)
+    const numberedOptionMatch = text.match(/^(\d+)\.\s*(.+)$/);
+    
+    // Check if this text indicates an open-ended question
+    const isOpenEnded = text.match(/^\(Open-ended\)$/i) || text.match(/^\(open\s*ended\)$/i);
+    
     // Add to current content block
     if (this.currentBlock) {
       if (optionMatch) {
@@ -514,6 +520,22 @@ class DocumentParser {
           label: optionMatch[1], // A, B, C, etc.
           text: optionMatch[2].trim() // The text after the colon
         });
+      } else if (numberedOptionMatch) {
+        // This is a numbered option like "1. Great", "2. Good"
+        // Convert number to letter for consistency (1->A, 2->B, etc.)
+        const letterLabel = String.fromCharCode(64 + parseInt(numberedOptionMatch[1])); // 1->A, 2->B, etc.
+        this.currentBlock.content.push({
+          type: 'option',
+          label: letterLabel,
+          text: numberedOptionMatch[2].trim(),
+          originalNumber: parseInt(numberedOptionMatch[1]) // Keep original number for reference
+        });
+      } else if (isOpenEnded) {
+        // This indicates the previous question is open-ended
+        this.currentBlock.content.push({
+          type: 'open-ended-marker',
+          text: text.trim()
+        });
       } else {
         this.currentBlock.content.push({
           type: 'text',
@@ -522,13 +544,34 @@ class DocumentParser {
       }
     } else {
       // If no current block exists, create one for orphan content
+      let contentType = 'text';
+      let contentData = { text: text };
+      
+      if (optionMatch) {
+        contentType = 'option';
+        contentData = {
+          label: optionMatch[1],
+          text: optionMatch[2].trim()
+        };
+      } else if (numberedOptionMatch) {
+        contentType = 'option';
+        const letterLabel = String.fromCharCode(64 + parseInt(numberedOptionMatch[1]));
+        contentData = {
+          label: letterLabel,
+          text: numberedOptionMatch[2].trim(),
+          originalNumber: parseInt(numberedOptionMatch[1])
+        };
+      } else if (isOpenEnded) {
+        contentType = 'open-ended-marker';
+        contentData = { text: text.trim() };
+      }
+      
       this.currentBlock = {
         id: this.parsedContent.contentBlocks.length + 1,
         header: null,
         content: [{
-          type: optionMatch ? 'option' : 'text',
-          text: optionMatch ? optionMatch[2].trim() : text,
-          ...(optionMatch && { label: optionMatch[1] })
+          type: contentType,
+          ...contentData
         }],
         type: 'text'
       };
