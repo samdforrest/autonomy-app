@@ -1,9 +1,9 @@
+import { router } from 'expo-router';
 import React from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
-import { router } from 'expo-router';
+import { assessmentService } from '../services/assessment-service';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
-import { assessmentService } from '../services/assessment-service';
 
 interface AssessmentCardProps {
   userMode: 'parent' | 'child';
@@ -54,7 +54,7 @@ export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
         description: hasCompletedAssessment
           ? `Your recommended starting point: ${topModule}`
           : 'Take a quick assessment to find out which skills to focus on first.',
-        buttonText: hasCompletedAssessment ? 'View My Results' : 'Take Assessment',
+        buttonText: hasCompletedAssessment ? 'Take Assessment' : 'Take Assessment',
         icon: hasCompletedAssessment ? '🌟' : '🚀'
       };
     }

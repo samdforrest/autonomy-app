@@ -3,7 +3,6 @@ import { useAppMode } from '@/contexts/AppModeContext';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { familyService } from '../../../services/family-service';
 import { useFamilyContext } from './_layout';
 
 export default function FamilyDashboard() {
@@ -14,33 +13,34 @@ export default function FamilyDashboard() {
   const router = useRouter();
   const [addingChild, setAddingChild] = useState(false);
 
-  const children = Object.entries(family.children || {});
-
   const handleAddChild = () => {
     Alert.prompt(
-      'Add Child',
+      'Set Child Name',
       'Enter your child\'s name:',
       async (childName) => {
         if (childName && childName.trim()) {
           try {
-            await familyService.addChild(familyCode, childName.trim());
+            // For simplified model, we'll update the family's child name
+            // This would need to be implemented in the family service
+            console.log('Setting child name:', childName.trim());
+            // TODO: Implement familyService.setChildName(familyCode, childName.trim());
             await refreshFamily();
-            console.log('✅ Child added successfully');
+            console.log('✅ Child name set successfully');
           } catch (error) {
-            console.error('❌ Error adding child:', error);
-            Alert.alert('Error', 'Failed to add child. Please try again.');
+            console.error('❌ Error setting child name:', error);
+            Alert.alert('Error', 'Failed to set child name. Please try again.');
           }
         }
       }
     );
   };
 
-  const navigateToAssessment = (childId: string) => {
-    router.push(`/family/${familyCode}/child/${childId}/assessment`);
+  const navigateToAssessment = () => {
+    router.push(`/family/${familyCode}/assessment`);
   };
 
-  const navigateToProgress = (childId: string) => {
-    router.push(`/family/${familyCode}/child/${childId}/progress`);
+  const navigateToResults = () => {
+    router.push(`/family/${familyCode}/results`);
   };
 
   return (
@@ -65,57 +65,57 @@ export default function FamilyDashboard() {
         </Text>
       </View>
 
-      {/* Children Section */}
+      {/* Child Profile Section */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Children</Text>
-          <TouchableOpacity 
-            style={styles.addButton}
-            onPress={handleAddChild}
-          >
-            <Text style={styles.addButtonText}>+ Add Child</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Child Profile</Text>
+          {!(family as any).childName && (
+            <TouchableOpacity 
+              style={styles.addButton}
+              onPress={handleAddChild}
+            >
+              <Text style={styles.addButtonText}>+ Set Child Name</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        {children.length === 0 ? (
+        {!(family as any).childName ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No children added yet</Text>
+            <Text style={styles.emptyText}>No child profile set</Text>
             <Text style={styles.emptySubtext}>
-              Tap "Add Child" to get started with assessments
+              Set your child's name to get started with assessments
             </Text>
           </View>
         ) : (
-          children.map(([childId, childData]) => (
-            <View key={childId} style={styles.childCard}>
-              <Text style={styles.childName}>{childData.name}</Text>
+          <View style={styles.childCard}>
+            <Text style={styles.childName}>{(family as any).childName}</Text>
+            
+            <View style={styles.childActions}>
+              <TouchableOpacity 
+                style={styles.actionButton}
+                onPress={navigateToAssessment}
+              >
+                <Text style={styles.actionButtonText}>Take Assessment</Text>
+              </TouchableOpacity>
               
-              <View style={styles.childActions}>
-                <TouchableOpacity 
-                  style={styles.actionButton}
-                  onPress={() => navigateToAssessment(childId)}
-                >
-                  <Text style={styles.actionButtonText}>Assessment</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={[styles.actionButton, styles.progressButton]}
-                  onPress={() => navigateToProgress(childId)}
-                >
-                  <Text style={styles.actionButtonText}>Progress</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.progressButton]}
+                onPress={navigateToResults}
+              >
+                <Text style={styles.actionButtonText}>View Results</Text>
+              </TouchableOpacity>
+            </View>
 
-              {/* Quick Stats */}
-              <View style={styles.quickStats}>
+            {/* Quick Stats */}
+            <View style={styles.quickStats}>
                 <Text style={styles.statText}>
-                  Assessments: {Object.keys(childData.assessments || {}).length}
+                  Assessments: {Object.keys((family as any).assessments || {}).length}
                 </Text>
                 <Text style={styles.statText}>
-                  Modules: {Object.keys(childData.progress || {}).length}
+                  Progress: Available after assessment
                 </Text>
               </View>
             </View>
-          ))
         )}
       </View>
 

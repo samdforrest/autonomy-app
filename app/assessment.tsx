@@ -10,6 +10,7 @@ import {
 import { AssessmentQuestionComponent } from '../components/AssessmentQuestion';
 import { ThemedText } from '../components/ThemedText';
 import { ThemedView } from '../components/ThemedView';
+import { useAppMode } from '../contexts/AppModeContext';
 import { useGoogleDocsContent } from '../hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '../services/api';
 import {
@@ -24,6 +25,9 @@ export default function AssessmentScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [results, setResults] = useState<ModulePriority[] | null>(null);
   const [showQuestions, setShowQuestions] = useState(false);
+  
+  // Get family context for saving assessment to correct family
+  const { isInFamilyMode, currentFamilyCode } = useAppMode();
 
   // Debug current state
   console.log('🎯 AssessmentScreen render:', { 
@@ -36,7 +40,7 @@ export default function AssessmentScreen() {
   // Load assessment questions from Google Docs "Assessment Questions" tab
   const { content, loading, error, refetch } = useGoogleDocsContent(
     DOCUMENT_REFS.MAIN_DOCUMENT,
-    'assessment',
+    'raw',
     { tab: 'Assessment Questions' }
   );
 
@@ -74,8 +78,15 @@ export default function AssessmentScreen() {
       }
       
       try {
-        // Make sure to sync context from global state
-        assessmentService.syncFromGlobalContext();
+        // Set family context if user is in family mode
+        if (isInFamilyMode && currentFamilyCode) {
+          console.log('🏠 Assessment: Setting family context for loading:', currentFamilyCode);
+          assessmentService.setContext(currentFamilyCode, 'child'); // Simplified: one child per family
+        } else {
+          // Make sure to sync context from global state for non-family users
+          console.log('👤 Assessment: Syncing context for individual user');
+          assessmentService.syncFromGlobalContext();
+        }
         
         const existingResults = await assessmentService.loadAssessmentResults();
         console.log('🔍 Loaded existing results:', !!existingResults);
@@ -150,8 +161,15 @@ export default function AssessmentScreen() {
     setIsSubmitting(true);
     
     try {
-      // Make sure to sync context from global state
-      assessmentService.syncFromGlobalContext();
+      // Set family context if user is in family mode
+      if (isInFamilyMode && currentFamilyCode) {
+        console.log('🏠 Assessment: Setting family context for submission:', currentFamilyCode);
+        assessmentService.setContext(currentFamilyCode, 'child'); // Simplified: one child per family
+      } else {
+        // Make sure to sync context from global state for non-family users
+        console.log('👤 Assessment: Syncing context for individual user');
+        assessmentService.syncFromGlobalContext();
+      }
       
       // Calculate module priorities
       const priorities = assessmentService.calculateModulePriorities(responses, assessmentQuestions);
@@ -278,6 +296,13 @@ export default function AssessmentScreen() {
           <ThemedView style={styles.actionButtons}>
             <TouchableOpacity 
               style={styles.primaryButton} 
+              onPress={() => router.push('/(tabs)' as any)}
+            >
+              <ThemedText style={styles.primaryButtonText}>Back to Home</ThemedText>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.primaryButton, { backgroundColor: '#27AE60', marginTop: 8 }]} 
               onPress={() => router.push('/(tabs)/explore')}
             >
               <ThemedText style={styles.primaryButtonText}>Start Learning</ThemedText>

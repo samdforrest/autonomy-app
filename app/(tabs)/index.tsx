@@ -14,10 +14,13 @@ import { useAppMode } from '@/contexts/AppModeContext';
 import { useColorInheritance } from '@/hooks/useColorInheritance';
 import { useGoogleDocsContent } from '@/hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '@/services/api';
+import { assessmentService, type AssessmentSummary } from '@/services/assessment-service';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { userMode, isInFamilyMode, currentFamilyCode, currentFamily, clearFamilyContext } = useAppMode();
+  const [assessmentResults, setAssessmentResults] = React.useState<AssessmentSummary | null>(null);
+  const [loadingResults, setLoadingResults] = React.useState(false);
   
   // Determine which tab to fetch based on current mode
   const tabName = userMode === 'parent' ? 'Parent Intro' : 'Student Intro';
@@ -50,6 +53,31 @@ export default function HomeScreen() {
            lowerHeader.includes('overview') ||
            lowerHeader.includes('important:');
   };
+
+  // Load assessment results
+  React.useEffect(() => {
+    const loadAssessmentResults = async () => {
+      setLoadingResults(true);
+      try {
+        // Set context based on current mode
+        if (isInFamilyMode && currentFamilyCode) {
+          assessmentService.setContext(currentFamilyCode, 'child');
+        } else {
+          assessmentService.syncFromGlobalContext();
+        }
+        
+        const results = await assessmentService.loadAssessmentResults();
+        setAssessmentResults(results);
+        console.log('🏠 Loaded assessment results:', !!results);
+      } catch (error) {
+        console.error('❌ Error loading assessment results:', error);
+      } finally {
+        setLoadingResults(false);
+      }
+    };
+
+    loadAssessmentResults();
+  }, [isInFamilyMode, currentFamilyCode]);
 
   // Debug: Log content structure when content changes
   React.useEffect(() => {
@@ -258,6 +286,114 @@ export default function HomeScreen() {
     return iconMap[sectionKey] || (userMode === 'parent' ? '👨‍👩‍👧‍👦' : '🎓');
   };
 
+  const getModuleDisplayName = (moduleId: string): string => {
+    const names: { [key: string]: string } = {
+      mistakes: 'Mistakes',
+      regulation: 'Regulation', 
+      job: 'Responsibility',
+      collaboration: 'Collaboration',
+      selfcoach: 'Self-Coaching',
+      curiosity: 'Curiosity',
+      shapeoflearning: 'Shape of Learning',
+      neuroplasticity: 'Neuroplasticity',
+      masterymoments: 'Mastery Moments',
+      selfmonitoring: 'Self-Monitoring'
+    };
+    return names[moduleId] || moduleId;
+  };
+
+  const renderAssessmentResults = () => {
+    if (loadingResults) {
+      return (
+        <ThemedView style={styles.assessmentResultsSection}>
+          <ThemedText style={styles.sectionTitle}>📊 Your Learning Priorities</ThemedText>
+          <ThemedView style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color="#2196F3" />
+            <ThemedText style={styles.loadingText}>Loading results...</ThemedText>
+          </ThemedView>
+        </ThemedView>
+      );
+    }
+
+    if (!assessmentResults) {
+      return (
+        <ThemedView style={styles.assessmentResultsSection}>
+          <ThemedText style={styles.sectionTitle}>📊 Your Learning Priorities</ThemedText>
+          <ThemedText style={styles.noResultsText}>
+            Take the assessment to see your personalized learning priorities!
+          </ThemedText>
+          <TouchableOpacity 
+            style={styles.takeAssessmentButton}
+            onPress={() => router.push('/assessment')}
+          >
+            <ThemedText style={styles.takeAssessmentButtonText}>Take Assessment</ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
+      );
+    }
+
+    // Calculate module priorities from results
+    const moduleScores = Object.entries(assessmentResults.moduleScores || {})
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5) // Show top 5 priorities
+      .map(([moduleId, score]) => ({
+        moduleId,
+        score,
+        displayName: getModuleDisplayName(moduleId),
+        percentage: Math.round((score / Math.max(...Object.values(assessmentResults.moduleScores || {}))) * 100)
+      }));
+
+    return (
+      <ThemedView style={styles.assessmentResultsSection}>
+        <ThemedView style={styles.resultsHeader}>
+          <ThemedText style={styles.sectionTitle}>📊 Your Learning Priorities</ThemedText>
+          <TouchableOpacity 
+            style={styles.viewFullResultsButton}
+            onPress={() => {
+              if (isInFamilyMode && currentFamilyCode) {
+                router.push(`/family/${currentFamilyCode}/results`);
+              } else {
+                router.push('/assessment');
+              }
+            }}
+          >
+            <ThemedText style={styles.viewFullResultsButtonText}>View Results</ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
+        
+        <ThemedText style={styles.resultsSubtitle}>
+          Based on your assessment, here are your top learning priorities:
+        </ThemedText>
+
+        {moduleScores.map((module, index) => (
+          <ThemedView key={module.moduleId} style={styles.priorityItem}>
+            <ThemedView style={styles.priorityHeader}>
+              <ThemedText style={styles.priorityRank}>#{index + 1}</ThemedText>
+              <ThemedText style={styles.priorityName}>{module.displayName}</ThemedText>
+              <ThemedText style={styles.priorityScore}>{module.score} pts</ThemedText>
+            </ThemedView>
+            
+            <ThemedView style={styles.priorityProgressBar}>
+              <ThemedView 
+                style={[
+                  styles.priorityProgressFill, 
+                  { width: `${module.percentage}%` }
+                ]} 
+              />
+            </ThemedView>
+          </ThemedView>
+        ))}
+
+        <TouchableOpacity 
+          style={styles.retakeAssessmentButton}
+          onPress={() => router.push('/assessment')}
+        >
+          <ThemedText style={styles.retakeAssessmentButtonText}>🔄 Retake Assessment</ThemedText>
+        </TouchableOpacity>
+      </ThemedView>
+    );
+  };
+
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.header}>
@@ -340,6 +476,9 @@ export default function HomeScreen() {
 
         {/* Assessment Card - Always visible */}
         <AssessmentCard userMode={userMode} />
+
+        {/* Assessment Results Display */}
+        {renderAssessmentResults()}
 
         {/* Loading state */}
         {loading && (
@@ -783,5 +922,119 @@ const styles = StyleSheet.create({
   },
   familyContextButtonTextSecondary: {
     color: '#2196F3',
+  },
+  // Assessment Results Styles
+  assessmentResultsSection: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  resultsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+    backgroundColor: 'transparent',
+  },
+  resultsSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  noResultsText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 16,
+    lineHeight: 24,
+  },
+  takeAssessmentButton: {
+    backgroundColor: '#27AE60',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  takeAssessmentButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  viewFullResultsButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  viewFullResultsButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  priorityItem: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+  },
+  priorityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    backgroundColor: 'transparent',
+  },
+  priorityRank: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#3498DB',
+    marginRight: 8,
+    minWidth: 24,
+  },
+  priorityName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2C3E50',
+  },
+  priorityScore: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#27AE60',
+  },
+  priorityProgressBar: {
+    height: 4,
+    backgroundColor: '#ECF0F1',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  priorityProgressFill: {
+    height: '100%',
+    backgroundColor: '#3498DB',
+    borderRadius: 2,
+  },
+  retakeAssessmentButton: {
+    backgroundColor: 'transparent',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#BDC3C7',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  retakeAssessmentButtonText: {
+    color: '#7F8C8D',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
