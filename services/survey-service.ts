@@ -42,52 +42,92 @@ class SurveyService {
     console.log('🔍 DEBUG: Content blocks received:', JSON.stringify(contentBlocks, null, 2));
     
     const questions: SurveyQuestion[] = [];
-    let currentQuestion: SurveyQuestion | null = null;
+    let questionCounter = 1;
 
     contentBlocks.forEach((block, blockIndex) => {
       console.log(`🔍 DEBUG: Processing block ${blockIndex}:`, block);
-      if (!block.content) return;
-
-      block.content.forEach((item: any, itemIndex: number) => {
-        console.log(`🔍 DEBUG: Processing item ${itemIndex} in block ${blockIndex}:`, item);
+      
+      // Skip the first block if it's just the title
+      if (block.header && block.header.includes('Choose to Grow')) {
+        return;
+      }
+      
+      // Parse questions from block headers
+      if (block.header && block.header.trim()) {
+        const headerText = block.header;
+        console.log(`🔍 DEBUG: Processing header: "${headerText}"`);
         
-        // Check if this is a question (numbered text like "1. How did the lesson go...")
-        const questionMatch = item.text?.match(/^(\d+)\.\s*(.+)$/);
-        console.log(`🔍 DEBUG: Question match for "${item.text}":`, questionMatch);
+        // Split by vertical tab or newline characters to separate question from options
+        const parts = headerText.split(/[\u000b\n]+/).map(part => part.trim()).filter(part => part);
+        console.log(`🔍 DEBUG: Header parts:`, parts);
         
-        if (questionMatch && item.type === 'text') {
-          // Save previous question if it exists
-          if (currentQuestion) {
-            questions.push(currentQuestion);
-          }
-
-          // Start new question
-          currentQuestion = {
-            id: `q${questionMatch[1]}`,
-            text: questionMatch[2].trim(),
-            type: 'multiple-choice', // Default, will be changed if open-ended marker found
-            options: []
+        if (parts.length > 0) {
+          const questionText = parts[0];
+          const remainingParts = parts.slice(1);
+          
+          // Check if it's open-ended
+          const isOpenEnded = remainingParts.some(part => 
+            part.toLowerCase().includes('open-ended') || part.includes('(Open-ended)')
+          );
+          
+          // Extract options (lines that start with ☐)
+          const options = remainingParts
+            .filter(part => part.startsWith('☐'))
+            .map((option, index) => ({
+              label: String.fromCharCode(65 + index), // A, B, C, etc.
+              text: option.replace('☐', '').trim()
+            }));
+          
+          console.log(`🔍 DEBUG: Question "${questionText}", isOpenEnded: ${isOpenEnded}, options:`, options);
+          
+          const question: SurveyQuestion = {
+            id: `q${questionCounter}`,
+            text: questionText,
+            type: isOpenEnded ? 'open-ended' : 'multiple-choice',
+            options: isOpenEnded ? undefined : options
           };
-        } else if (item.type === 'option' && currentQuestion) {
-          // Add option to current question
-          currentQuestion.options = currentQuestion.options || [];
-          currentQuestion.options.push({
-            label: item.label,
-            text: item.text
-          });
-        } else if (item.type === 'open-ended-marker' && currentQuestion) {
-          // Mark current question as open-ended
-          currentQuestion.type = 'open-ended';
-          currentQuestion.options = undefined;
+          
+          questions.push(question);
+          questionCounter++;
         }
-      });
+      }
+      
+      // Also check content items (in case some questions are there)
+      if (block.content && block.content.length > 0) {
+        block.content.forEach((item: any, itemIndex: number) => {
+          console.log(`🔍 DEBUG: Processing content item ${itemIndex}:`, item);
+          
+          if (item.text && item.text.includes('☐')) {
+            // This might be a question with options in the content
+            const parts = item.text.split(/[\u000b\n]+/).map(part => part.trim()).filter(part => part);
+            
+            if (parts.length > 0) {
+              const questionText = parts[0];
+              const options = parts
+                .filter(part => part.startsWith('☐'))
+                .map((option, index) => ({
+                  label: String.fromCharCode(65 + index),
+                  text: option.replace('☐', '').trim()
+                }));
+              
+              if (options.length > 0) {
+                const question: SurveyQuestion = {
+                  id: `q${questionCounter}`,
+                  text: questionText,
+                  type: 'multiple-choice',
+                  options: options
+                };
+                
+                questions.push(question);
+                questionCounter++;
+              }
+            }
+          }
+        });
+      }
     });
 
-    // Don't forget to add the last question
-    if (currentQuestion) {
-      questions.push(currentQuestion);
-    }
-
+    console.log('🔍 DEBUG: Final parsed questions:', questions);
     return questions;
   }
 
