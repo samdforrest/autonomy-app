@@ -1,8 +1,9 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useAppMode } from '@/contexts/AppModeContext';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { FlatList, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface Module {
   id: string;
@@ -13,54 +14,56 @@ interface Module {
 }
 
 export default function TabTwoScreen() {
+  const { userMode, childProgress, parentInsights } = useAppMode();
+  
   const modules: Module[] = [
     {
       id: '1',
-      title: 'Job',
+      title: 'Responsibility',
       emoji: '💼',
-      description: 'Work skills and career development',
+      description: 'What is my job?',
       isActive: true
     },
     {
       id: '2',
       title: 'Collaboration',
       emoji: '🤝',
-      description: 'Working together effectively',
-      isActive: false
+      description: 'Teamwork 101',
+      isActive: true
     },
     {
       id: '3',
-      title: 'Growth',
+      title: 'Self-Monitoring',
       emoji: '🌱',
-      description: 'Personal development and progress',
-      isActive: false
+      description: 'Making sure I understand',
+      isActive: true
     },
     {
       id: '4',
       title: 'Regulation',
       emoji: '📏',
-      description: 'Self-control and emotional balance',
+      description: 'Who is in control?',
       isActive: true
     },
     {
       id: '5',
-      title: 'Questions',
+      title: 'Curiosity',
       emoji: '❓',
-      description: 'Curiosity and inquiry skills',
-      isActive: false
+      description: 'Questions are expected',
+      isActive: true
     },
     {
       id: '6',
-      title: 'Process',
+      title: 'Shape of Learning',
       emoji: '🔄',
-      description: 'Systematic thinking and workflows',
-      isActive: false
+      description: 'It is not a sprint',
+      isActive: true
     },
     {
       id: '7',
       title: 'Self Coach',
       emoji: '🧘‍♂️',
-      description: 'Self-reflection and guidance',
+      description: 'Helpful self-talk',
       isActive: true
     },
     {
@@ -72,10 +75,17 @@ export default function TabTwoScreen() {
     },
     {
       id: '9',
+      title: 'Neuroplasticity',
+      emoji: '🧠',
+      description: 'How does my brain grow?',
+      isActive: true
+    },
+    {
+      id: '10',
       title: 'Mastery Moments',
       emoji: '🏆',
-      description: 'Celebrating achievements and success',
-      isActive: false
+      description: 'Celebrating success',
+      isActive: true
     }
   ];
 
@@ -86,56 +96,160 @@ export default function TabTwoScreen() {
     }
     
     // Navigate to specific module
-    if (module.title === 'Job') {
-      router.push('/job-module');
+    if (module.title === 'Responsibility') {
+      router.push('/responsibility-module');
+    } else if (module.title === 'Collaboration') {
+      router.push('/collaboration-module');
+    } else if (module.title === 'Self-Monitoring') {
+      router.push('/self-monitoring-module');
     } else if (module.title === 'Mistakes') {
       router.push('/mistakes-module');
     } else if (module.title === 'Regulation') {
       router.push('/regulation-module');
     } else if (module.title === 'Self Coach') {
       router.push('/selfcoach-module');
+    } else if (module.title === 'Curiosity') {
+      router.push('/curiosity-module');
+    } else if (module.title === 'Shape of Learning') {
+      router.push('/shapeoflearning-module');
+    } else if (module.title === 'Neuroplasticity') {
+      router.push('/neuroplasticity-module');
+    } else if (module.title === 'Mastery Moments') {
+      router.push('/mastery-moments-module');
     } else {
       console.log(`${module.title} module pressed - coming soon`);
     }
   };
 
-  const renderModule = ({ item }: { item: Module }) => (
-    <TouchableOpacity 
-      style={[
-        styles.moduleCard,
-        !item.isActive && styles.moduleCardLocked
-      ]} 
-      onPress={() => handleModulePress(item)}
-      disabled={!item.isActive}
-    >
-      <View style={[
-        styles.progressCircle,
-        !item.isActive && styles.progressCircleLocked
-      ]}>
-        <View style={[
-          styles.progressInner,
-          !item.isActive && styles.progressInnerLocked
-        ]}>
-          <ThemedText style={styles.moduleIcon}>{item.emoji}</ThemedText>
-        </View>
-        <View style={styles.daysBadge}>
-          <ThemedText style={styles.daysText}>5</ThemedText>
-        </View>
-      </View>
-      <ThemedText style={[
-        styles.moduleTitle,
-        !item.isActive && styles.moduleTitleLocked
-      ]}>
-        {item.title}
-      </ThemedText>
-      <ThemedText style={[
-        styles.moduleDescription,
-        !item.isActive && styles.moduleDescriptionLocked
-      ]}>
-        {item.description}
-      </ThemedText>
-    </TouchableOpacity>
+  // Parent Dashboard Components
+  const renderParentInsights = () => (
+    <ThemedView style={styles.parentSection}>
+      <ThemedText style={styles.parentSectionTitle}>📊 Learning Insights</ThemedText>
+      
+      {/* Recommended Modules */}
+      <ThemedView style={styles.insightCard}>
+        <ThemedText style={styles.insightTitle}>🎯 Priority Modules</ThemedText>
+        {parentInsights.recommendedModules.slice(0, 3).map((moduleId, index) => {
+          const module = modules.find(m => m.title.toLowerCase() === moduleId);
+          return (
+            <ThemedText key={moduleId} style={styles.insightItem}>
+              {index + 1}. {module?.title || moduleId} {module?.emoji}
+            </ThemedText>
+          );
+        })}
+      </ThemedView>
+
+      {/* Strengths */}
+      {parentInsights.strengths.length > 0 && (
+        <ThemedView style={styles.insightCard}>
+          <ThemedText style={styles.insightTitle}>💪 Strengths</ThemedText>
+          {parentInsights.strengths.map(strength => (
+            <ThemedText key={strength} style={styles.strengthItem}>
+              ✅ {strength}
+            </ThemedText>
+          ))}
+        </ThemedView>
+      )}
+
+      {/* Areas for Growth */}
+      {parentInsights.strugglingAreas.length > 0 && (
+        <ThemedView style={styles.insightCard}>
+          <ThemedText style={styles.insightTitle}>🎯 Focus Areas</ThemedText>
+          {parentInsights.strugglingAreas.map(area => (
+            <ThemedText key={area} style={styles.strugglingItem}>
+              📈 {area}
+            </ThemedText>
+          ))}
+        </ThemedView>
+      )}
+    </ThemedView>
   );
+
+  const renderChildProgress = () => (
+    <ThemedView style={styles.parentSection}>
+      <ThemedText style={styles.parentSectionTitle}>📈 Child's Progress</ThemedText>
+      {Object.entries(childProgress).map(([moduleId, progress]) => {
+        const module = modules.find(m => m.title.toLowerCase() === moduleId);
+        const progressPercent = Math.round((progress.completedDays / progress.totalDays) * 100);
+        
+        return (
+          <ThemedView key={moduleId} style={styles.progressCard}>
+            <ThemedView style={styles.progressHeader}>
+              <ThemedText style={styles.progressModuleName}>
+                {module?.emoji} {module?.title || moduleId}
+              </ThemedText>
+              <ThemedText style={styles.progressPercent}>{progressPercent}%</ThemedText>
+            </ThemedView>
+            <ThemedView style={styles.progressBar}>
+              <ThemedView style={[styles.progressFill, { width: `${progressPercent}%` }]} />
+            </ThemedView>
+            <ThemedText style={styles.progressDetails}>
+              {progress.completedDays} of {progress.totalDays} days completed
+            </ThemedText>
+            {progress.assessmentScores && progress.assessmentScores.length > 0 && (
+              <ThemedText style={styles.progressScore}>
+                Avg Score: {Math.round(progress.assessmentScores.reduce((a, b) => a + b, 0) / progress.assessmentScores.length)}%
+              </ThemedText>
+            )}
+          </ThemedView>
+        );
+      })}
+    </ThemedView>
+  );
+
+  const renderModule = ({ item }: { item: Module }) => {
+    // In parent mode, show progress overlay
+    const progress = childProgress[item.title.toLowerCase()];
+    const progressPercent = progress ? Math.round((progress.completedDays / progress.totalDays) * 100) : 0;
+    
+    return (
+      <TouchableOpacity 
+        style={[
+          styles.moduleCard,
+          !item.isActive && styles.moduleCardLocked
+        ]} 
+        onPress={() => handleModulePress(item)}
+        disabled={!item.isActive}
+      >
+        <View style={[
+          styles.progressCircle,
+          !item.isActive && styles.progressCircleLocked
+        ]}>
+          <View style={[
+            styles.progressInner,
+            !item.isActive && styles.progressInnerLocked
+          ]}>
+            <ThemedText style={styles.moduleIcon}>{item.emoji}</ThemedText>
+          </View>
+          <View style={styles.daysBadge}>
+            <ThemedText style={styles.daysText}>5</ThemedText>
+          </View>
+          
+          {/* Parent Mode: Show progress overlay */}
+          {userMode === 'parent' && progress && (
+            <View style={styles.progressOverlay}>
+              <ThemedText style={styles.progressOverlayText}>{progressPercent}%</ThemedText>
+            </View>
+          )}
+        </View>
+        <ThemedText style={[
+          styles.moduleTitle,
+          !item.isActive && styles.moduleTitleLocked
+        ]}>
+          {item.title}
+        </ThemedText>
+        <ThemedText style={[
+          styles.moduleDescription,
+          !item.isActive && styles.moduleDescriptionLocked
+        ]}>
+          {userMode === 'parent' && progress 
+            ? `${progress.completedDays}/${progress.totalDays} days completed`
+            : item.description
+          }
+        </ThemedText>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -147,19 +261,36 @@ export default function TabTwoScreen() {
             contentFit="contain"
           />
         </ThemedView>
-        <ThemedText type="title" style={styles.title}>Learning Modules</ThemedText>
-        <ThemedText style={styles.subtitle}>Start your learning journey</ThemedText>
+        <ThemedText type="title" style={styles.title}>
+          {userMode === 'parent' ? 'Parent Dashboard' : 'Learning Modules'}
+        </ThemedText>
+        <ThemedText style={styles.subtitle}>
+          {userMode === 'parent' 
+            ? 'Monitor your child\'s learning progress' 
+            : 'Start your learning journey'
+          }
+        </ThemedText>
       </ThemedView>
       
-      <FlatList
-        data={modules}
-        renderItem={renderModule}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        contentContainerStyle={styles.moduleGrid}
-        columnWrapperStyle={styles.moduleRow}
-        showsVerticalScrollIndicator={false}
-      />
+      {userMode === 'parent' ? (
+        <ScrollView 
+          style={styles.parentContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {renderParentInsights()}
+          {renderChildProgress()}
+        </ScrollView>
+      ) : (
+        <FlatList
+          data={modules}
+          renderItem={renderModule}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={styles.moduleGrid}
+          columnWrapperStyle={styles.moduleRow}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </ThemedView>
   );
 }
@@ -301,5 +432,120 @@ const styles = StyleSheet.create({
   },
   moduleDescriptionLocked: {
     color: '#adb5bd',
+  },
+  // Parent Dashboard Styles
+  parentContainer: {
+    flex: 1,
+    paddingHorizontal: 10,
+  },
+  parentSection: {
+    marginBottom: 30,
+    backgroundColor: 'transparent',
+  },
+  parentSectionTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#333',
+  },
+  insightCard: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  insightTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  insightItem: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  strengthItem: {
+    fontSize: 14,
+    color: '#2ECC71',
+    marginBottom: 4,
+  },
+  strugglingItem: {
+    fontSize: 14,
+    color: '#E74C3C',
+    marginBottom: 4,
+  },
+  progressCard: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  progressModuleName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  progressPercent: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2196F3',
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#e9ecef',
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#2196F3',
+    borderRadius: 4,
+  },
+  progressDetails: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  progressScore: {
+    fontSize: 12,
+    color: '#28a745',
+    fontWeight: '600',
+  },
+  progressOverlay: {
+    position: 'absolute',
+    top: -5,
+    left: -5,
+    backgroundColor: '#2196F3',
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  progressOverlayText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });

@@ -2,12 +2,12 @@
  * Document ID Mapping
  * Maps frontend document references to actual Google Docs IDs
  * Keeps sensitive document IDs secure on backend only
- * Adapted for Firebase Functions environment
  */
 
-// Get config from environment variables (Firebase Functions v2)
+require('dotenv').config();
+
 const DOCUMENT_MAPPING = {
-  'main_document': process.env.MAIN_DOCUMENT_ID || 'DOCUMENT_ID_NOT_SET',
+  'main_document': process.env.MAIN_DOCUMENT_ID,
   // Add more mappings as needed
   // 'secondary_document': process.env.SECONDARY_DOCUMENT_ID,
 };

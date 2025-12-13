@@ -22,7 +22,7 @@ interface DayModule {
   type: 'collaborative' | 'independent' | 'evaluation';
 }
 
-export default function MistakesModuleScreen() {
+export default function CollaborationModuleScreen() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [currentDay, setCurrentDay] = useState<number>(1);
   const [revealedAnswers, setRevealedAnswers] = useState<Set<number>>(new Set());
@@ -30,8 +30,8 @@ export default function MistakesModuleScreen() {
   // Google Docs content for the currently active day
   const { content, loading, error, refetch } = useGoogleDocsContent(
     DOCUMENT_REFS.MAIN_DOCUMENT,
-    'mistakes',
-    { tab: 'Mistakes', day: currentDay }
+    'raw',
+    { tab: 'Collaboration', day: currentDay }
   );
 
 
@@ -63,52 +63,52 @@ export default function MistakesModuleScreen() {
   const dayModules: DayModule[] = [
     {
       id: 'day1',
-      title: 'Understanding Mistakes',
-      description: 'What can I learn from mistakes?',
+      title: 'Building Connections',
+      description: 'Learning to connect and communicate with others',
       dayNumber: 1,
       isCompleted: false,
       isLocked: false,
       color: '#FFC93C',
-      icon: '🤔',
+      icon: '🤝',
       type: 'collaborative'
     },
     {
       id: 'day2',
-      title: 'Owning Our Mistakes',
-      description: 'Taking responsibility and accountability',
+      title: 'Active Listening',
+      description: 'Developing skills to truly hear and understand others',
       dayNumber: 2,
       isCompleted: false,
       isLocked: false,
       color: '#FF9A3C',
-      icon: '🙋‍♂️',
+      icon: '👂',
       type: 'collaborative'
     },
     {
       id: 'day3',
-      title: 'Learning from Errors',
-      description: 'Turning mistakes into learning opportunities',
+      title: 'Teamwork Skills',
+      description: 'Working together effectively toward common goals',
       dayNumber: 3,
       isCompleted: false,
       isLocked: false,
       color: '#FF6F3C',
-      icon: '💡',
+      icon: '👥',
       type: 'collaborative'
     },
     {
       id: 'day4',
-      title: 'Making It Right',
-      description: 'Fixing mistakes and moving forward',
+      title: 'Conflict Resolution',
+      description: 'Handling disagreements and finding solutions together',
       dayNumber: 4,
       isCompleted: false,
       isLocked: false,
       color: '#155263',
-      icon: '🔧',
+      icon: '🤲',
       type: 'collaborative'
     },
     {
       id: 'day5',
-      title: 'Growing Stronger',
-      description: 'Building resilience and confidence',
+      title: 'Collaborative Success',
+      description: 'Celebrating achievements and strengthening partnerships',
       dayNumber: 5,
       isCompleted: false,
       isLocked: false,
@@ -380,11 +380,12 @@ export default function MistakesModuleScreen() {
       rules: '📋',
       instructions: '💭', 
       activities: '🎯',
-      what_are_mistakes: '🤔',
-      think_together: '💭',
+      collaboration_basics: '🤝',
+      teamwork: '👥',
+      communication: '💬',
       todays_activities: '🎯',
     };
-    return iconMap[sectionKey] || '📝';
+    return iconMap[sectionKey] || '🤝';
   };
 
   const renderDayContent = (day: DayModule) => {
@@ -437,7 +438,7 @@ export default function MistakesModuleScreen() {
           ) : (
             // Fallback content if no Google Docs content is available
             <ThemedView style={styles.section}>
-              <ThemedText style={styles.sectionTitle}>📝 Day {day.dayNumber} Content</ThemedText>
+              <ThemedText style={styles.sectionTitle}>🤝 Day {day.dayNumber} Content</ThemedText>
               <ThemedText style={styles.contentText}>
                 Content is loading from Google Docs...
               </ThemedText>
@@ -474,9 +475,9 @@ export default function MistakesModuleScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.header}>
-        <ThemedText type="title" style={styles.moduleTitle}>Mistakes & Learning</ThemedText>
+        <ThemedText type="title" style={styles.moduleTitle}>Collaboration & Teamwork</ThemedText>
         <ThemedText style={styles.moduleSubtitle}>
-          Transform mistakes into growth opportunities through 5 focused days...
+          Build strong relationships and work effectively with others through 5 focused days...
         </ThemedText>
       </ThemedView>
 
@@ -507,7 +508,7 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    paddingTop: 20,
+    paddingTop: 60,
     alignItems: 'center',
   },
   moduleTitle: {
@@ -721,31 +722,31 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: '#009688', // Teal border
   },
-  // Day-specific bubble styles that match day card colors
+  // Day-specific bubble styles that match day card colors (collaboration theme)
   bubbleDay1: {
     backgroundColor: '#FFF8E1', // Light version of #FFC93C
     borderLeftWidth: 4,
-    borderLeftColor: '#FFC93C', // Day 1 golden yellow
+    borderLeftColor: '#FFC93C', // Day 1 golden yellow (Building Connections)
   },
   bubbleDay2: {
     backgroundColor: '#FFF3E0', // Light version of #FF9A3C  
     borderLeftWidth: 4,
-    borderLeftColor: '#FF9A3C', // Day 2 orange
+    borderLeftColor: '#FF9A3C', // Day 2 orange (Active Listening)
   },
   bubbleDay3: {
     backgroundColor: '#FFEBE0', // Light version of #FF6F3C
     borderLeftWidth: 4, 
-    borderLeftColor: '#FF6F3C', // Day 3 red-orange
+    borderLeftColor: '#FF6F3C', // Day 3 red-orange (Teamwork Skills)
   },
   bubbleDay4: {
     backgroundColor: '#E0F4F3', // Light version of #155263
     borderLeftWidth: 4,
-    borderLeftColor: '#155263', // Day 4 dark teal  
+    borderLeftColor: '#155263', // Day 4 dark teal (Conflict Resolution)
   },
   bubbleDay5: {
     backgroundColor: '#F5F5F5', // Light version of #939393
     borderLeftWidth: 4,
-    borderLeftColor: '#939393', // Day 5 gray
+    borderLeftColor: '#939393', // Day 5 gray (Collaborative Success)
   },
   // Bold header style
   bubbleHeaderBold: {

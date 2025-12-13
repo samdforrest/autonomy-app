@@ -22,16 +22,16 @@ interface DayModule {
   type: 'collaborative' | 'independent' | 'evaluation';
 }
 
-export default function MistakesModuleScreen() {
+export default function ShapeOfLearningModuleScreen() {
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [currentDay, setCurrentDay] = useState<number>(1);
-  const [revealedAnswers, setRevealedAnswers] = useState<Set<number>>(new Set());
+  const [revealedAnswers, setRevealedAnswers] = useState<Set<string>>(new Set());
   
   // Google Docs content for the currently active day
   const { content, loading, error, refetch } = useGoogleDocsContent(
     DOCUMENT_REFS.MAIN_DOCUMENT,
-    'mistakes',
-    { tab: 'Mistakes', day: currentDay }
+    'raw',
+    { tab: 'Shape of Learning', day: currentDay }
   );
 
 
@@ -63,57 +63,57 @@ export default function MistakesModuleScreen() {
   const dayModules: DayModule[] = [
     {
       id: 'day1',
-      title: 'Understanding Mistakes',
-      description: 'What can I learn from mistakes?',
+      title: 'Understanding Learning Styles',
+      description: 'Discovering how you learn best',
       dayNumber: 1,
       isCompleted: false,
       isLocked: false,
       color: '#FFC93C',
-      icon: '🤔',
+      icon: '📚',
       type: 'collaborative'
     },
     {
       id: 'day2',
-      title: 'Owning Our Mistakes',
-      description: 'Taking responsibility and accountability',
+      title: 'Learning Strategies',
+      description: 'Tools and techniques for effective learning',
       dayNumber: 2,
       isCompleted: false,
       isLocked: false,
       color: '#FF9A3C',
-      icon: '🙋‍♂️',
+      icon: '🎯',
       type: 'collaborative'
     },
     {
       id: 'day3',
-      title: 'Learning from Errors',
-      description: 'Turning mistakes into learning opportunities',
+      title: 'Active Learning',
+      description: 'Engaging with material in meaningful ways',
       dayNumber: 3,
       isCompleted: false,
       isLocked: false,
       color: '#FF6F3C',
-      icon: '💡',
+      icon: '⚡',
       type: 'collaborative'
     },
     {
       id: 'day4',
-      title: 'Making It Right',
-      description: 'Fixing mistakes and moving forward',
+      title: 'Metacognition',
+      description: 'Thinking about your thinking',
       dayNumber: 4,
       isCompleted: false,
       isLocked: false,
       color: '#155263',
-      icon: '🔧',
+      icon: '🧠',
       type: 'collaborative'
     },
     {
       id: 'day5',
-      title: 'Growing Stronger',
-      description: 'Building resilience and confidence',
+      title: 'Learning Reflection',
+      description: 'Reflecting on your learning journey',
       dayNumber: 5,
       isCompleted: false,
       isLocked: false,
       color: '#939393',
-      icon: '🌟',
+      icon: '💡',
       type: 'evaluation'
     }
   ];
@@ -121,30 +121,36 @@ export default function MistakesModuleScreen() {
   const handleDayToggle = (dayId: string) => {
     const dayNumber = parseInt(dayId.replace('day', ''));
     
-    // If clicking the same day, collapse it
     if (expandedDay === dayId) {
       setExpandedDay(null);
     } else {
-      // Expanding a new day - set it as current and load its content
-      setCurrentDay(dayNumber);
       setExpandedDay(dayId);
+      setCurrentDay(dayNumber);
     }
   };
 
-  const toggleRevealAnswer = (blockId: number) => {
-    console.log('🔄 Toggle Answer for block:', blockId);
+  const toggleRevealAnswer = (blockId: string) => {
     setRevealedAnswers(prev => {
       const newSet = new Set(prev);
       if (newSet.has(blockId)) {
-        console.log('➖ Hiding answer for block:', blockId);
         newSet.delete(blockId);
       } else {
-        console.log('➕ Revealing answer for block:', blockId);
         newSet.add(blockId);
       }
-      console.log('📊 Updated revealed answers:', Array.from(newSet));
       return newSet;
     });
+  };
+
+  // Helper function to determine if a header should be bold
+  const shouldBoldHeader = (header: string) => {
+    const boldPatterns = [
+      /^Activity:/i,
+      /^Scenario:/i,
+      /^Instructions:/i,
+      /^Question:/i,
+      /^Answer:/i
+    ];
+    return boldPatterns.some(pattern => pattern.test(header));
   };
 
   // Color inheritance hook
@@ -163,36 +169,22 @@ export default function MistakesModuleScreen() {
     teal: styles.bubbleTeal,
   });
 
-  // Check if header should be bold
-  const shouldBoldHeader = (header: string) => {
-    if (!header) return false;
-    
-    const lowerHeader = header.toLowerCase();
-    return lowerHeader.includes('activity:') || 
-           lowerHeader.includes('learning:') || 
-           lowerHeader.includes('opener:') || 
-           lowerHeader.includes('connect and share:') ||
-           lowerHeader.includes('closing conversation:') ||
-           lowerHeader.includes('read the purpose together:') ||
-           lowerHeader.includes('scenario:') ||
-           lowerHeader.includes('instructions:') ||
-           lowerHeader.includes('answer:');
-  };
-
   const renderContentBlock = (block: any, index: number) => {
-    const isScenario = block.header && block.header.toLowerCase().includes('scenario:');
+    if (!block || !block.content) return null;
+
+    const isScenario = block.header?.toLowerCase().includes('scenario:');
     const isAnswerRevealed = revealedAnswers.has(block.id);
     
-    // For scenario blocks, separate content into question, options, and answer
+    // Parse scenario content if this is a scenario block
     let scenarioQuestion: string | null = null;
     let scenarioOptions: any[] = [];
-    let answerText: string | null = null;
+    let answerText = null;
     let otherContent: any[] = [];
     
     if (isScenario && block.content) {
       block.content.forEach((item: any) => {
-        if (item.type === 'option') {
-          // This is an A:, B:, C: option
+        if (item.label && ['A', 'B', 'C', 'D'].includes(item.label)) {
+          // This is an option
           scenarioOptions.push(item);
         } else if (item.text && item.text.toLowerCase().includes('answer:')) {
           // This is the answer
@@ -375,126 +367,87 @@ export default function MistakesModuleScreen() {
     </ThemedView>
   );
 
-  const getSectionIcon = (sectionKey: string): string => {
-    const iconMap: Record<string, string> = {
-      rules: '📋',
-      instructions: '💭', 
-      activities: '🎯',
-      what_are_mistakes: '🤔',
-      think_together: '💭',
-      todays_activities: '🎯',
-    };
-    return iconMap[sectionKey] || '📝';
-  };
-
-  const renderDayContent = (day: DayModule) => {
-    // Only render content for the currently expanded day
-    if (expandedDay !== day.id) {
-      return null;
-    }
-
-    // Check if this is the day we're currently loading content for
-    if (day.dayNumber === currentDay) {
-      // Loading state
-      if (loading) {
-        return (
-          <ThemedView style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={day.color} />
-            <ThemedText style={styles.loadingText}>Loading Day {day.dayNumber} content from Google Docs...</ThemedText>
-          </ThemedView>
-        );
-      }
-
-      // Error state
-      if (error) {
-        return (
-          <ThemedView style={styles.errorContainer}>
-            <ThemedText style={styles.errorTitle}>⚠️ Content Unavailable</ThemedText>
-            <ThemedText style={styles.errorText}>{error}</ThemedText>
-            <TouchableOpacity style={styles.retryButton} onPress={refetch}>
-              <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>
-            </TouchableOpacity>
-          </ThemedView>
-        );
-      }
-
-      // Content state - render dynamic content for any day
-      return (
-        <ThemedView>
-          {/* Refresh button */}
-          <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
-            <ThemedText style={styles.refreshButtonText}>🔄 Refresh Content</ThemedText>
-          </TouchableOpacity>
-
-          {content?.contentBlocks && content.contentBlocks.length > 0 ? (
-            // Render content blocks from Google Docs (includes images)
-            content.contentBlocks.map((block, index) => renderContentBlock(block, index))
-          ) : content?.sections ? (
-            // Fallback: Render sections from Google Docs (old format)
-            Object.entries(content.sections).map(([sectionKey, section]) =>
-              renderSection(sectionKey, section, getSectionIcon(sectionKey))
-            )
-          ) : (
-            // Fallback content if no Google Docs content is available
-            <ThemedView style={styles.section}>
-              <ThemedText style={styles.sectionTitle}>📝 Day {day.dayNumber} Content</ThemedText>
-              <ThemedText style={styles.contentText}>
-                Content is loading from Google Docs...
-              </ThemedText>
-            </ThemedView>
-          )}
-
-          
-          {/* Content metadata */}
-          {content?.metadata && (
-            <ThemedView style={styles.metadataContainer}>
-              <ThemedText style={styles.metadataText}>
-                Last updated: {new Date(content.metadata.lastModified).toLocaleDateString()}
-              </ThemedText>
-              <ThemedText style={styles.metadataText}>
-                Sections: {content.metadata.totalSections}
-              </ThemedText>
-            </ThemedView>
-          )}
-        </ThemedView>
-      );
-    }
-    
-    // This shouldn't happen with our new logic, but keeping as fallback
-    return (
-      <ThemedView>
-        <ThemedText style={styles.contentTitle}>🚀 Loading...</ThemedText>
-        <ThemedText style={styles.contentText}>
-          Preparing Day {day.dayNumber} content...
-        </ThemedText>
-      </ThemedView>
-    );
-  };
-
   return (
     <ThemedView style={styles.container}>
-      <ThemedView style={styles.header}>
-        <ThemedText type="title" style={styles.moduleTitle}>Mistakes & Learning</ThemedText>
-        <ThemedText style={styles.moduleSubtitle}>
-          Transform mistakes into growth opportunities through 5 focused days...
-        </ThemedText>
-      </ThemedView>
+      <ScrollView style={styles.scrollView}>
+        <ThemedView style={styles.header}>
+          <ThemedText style={styles.title}>🔄 Shape of Learning Module</ThemedText>
+          <ThemedText style={styles.subtitle}>
+            Understanding how learning works and how to optimize it
+          </ThemedText>
+        </ThemedView>
 
-      <ScrollView 
-        style={styles.scrollContainer}
-        contentContainerStyle={styles.daysContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {dayModules.map((day) => (
-          <CollapsibleDayCard
-            key={day.id}
-            day={day}
-            isExpanded={expandedDay === day.id}
-            onToggle={handleDayToggle}
-          >
-            {renderDayContent(day)}
-          </CollapsibleDayCard>
-        ))}
+        <ThemedView style={styles.daysContainer}>
+          {dayModules.map((day) => (
+            <CollapsibleDayCard
+              key={day.id}
+              day={day}
+              isExpanded={expandedDay === day.id}
+              onToggle={() => handleDayToggle(day.id)}
+            >
+              {/* Content for the expanded day */}
+              {expandedDay === day.id && (
+                <ThemedView style={styles.dayContent}>
+                  {loading && (
+                    <ThemedView style={styles.loadingContainer}>
+                      <ActivityIndicator size="large" color="#0a7ea4" />
+                      <ThemedText style={styles.loadingText}>Loading content...</ThemedText>
+                    </ThemedView>
+                  )}
+
+                  {error && (
+                    <ThemedView style={styles.errorContainer}>
+                      <ThemedText style={styles.errorText}>⚠️ {error}</ThemedText>
+                      <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
+                        <ThemedText style={styles.refreshButtonText}>🔄 Retry</ThemedText>
+                      </TouchableOpacity>
+                    </ThemedView>
+                  )}
+
+                  {!loading && !error && content && (
+                    <ThemedView>
+                      {/* Render content blocks (new bubble-based format) */}
+                      {content.contentBlocks && content.contentBlocks.length > 0 && (
+                        <ThemedView style={styles.contentBlocksContainer}>
+                          {content.contentBlocks.map((block: any, index: number) => 
+                            renderContentBlock(block, index)
+                          )}
+                        </ThemedView>
+                      )}
+
+                      {/* Fallback: Render legacy sections format if no content blocks */}
+                      {(!content.contentBlocks || content.contentBlocks.length === 0) && content.sections && (
+                        <ThemedView style={styles.sectionsContainer}>
+                          {content.sections.learning_goals && renderSection('learning_goals', content.sections.learning_goals, '🎯')}
+                          {content.sections.vocabulary && renderSection('vocabulary', content.sections.vocabulary, '📖')}
+                          {content.sections.activity && renderSection('activity', content.sections.activity, '🎨')}
+                          {content.sections.reflection && renderSection('reflection', content.sections.reflection, '💭')}
+                        </ThemedView>
+                      )}
+
+                      {/* Debug/Metadata info */}
+                      {content.metadata && (
+                        <ThemedView style={styles.metadataContainer}>
+                          <ThemedText style={styles.metadataText}>
+                            📄 Sections: {content.metadata.totalSections}
+                          </ThemedText>
+                        </ThemedView>
+                      )}
+                    </ThemedView>
+                  )}
+
+                  {!loading && !error && !content && (
+                    <ThemedView style={styles.errorContainer}>
+                      <ThemedText style={styles.errorText}>
+                        No content available for this day yet.
+                      </ThemedText>
+                    </ThemedView>
+                  )}
+                </ThemedView>
+              )}
+            </CollapsibleDayCard>
+          ))}
+        </ThemedView>
       </ScrollView>
     </ThemedView>
   );
@@ -503,104 +456,77 @@ export default function MistakesModuleScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+  },
+  scrollView: {
+    flex: 1,
   },
   header: {
     padding: 20,
     paddingTop: 20,
     alignItems: 'center',
   },
-  moduleTitle: {
-    fontSize: 32,
+  title: {
+    fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#333',
-  },
-  moduleSubtitle: {
-    fontSize: 16,
-    opacity: 0.7,
     textAlign: 'center',
-    color: '#666',
   },
-  scrollContainer: {
-    flex: 1,
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
   daysContainer: {
-    padding: 20,
-    paddingTop: 10,
+    padding: 16,
   },
-  contentTitle: {
+  dayContent: {
+    padding: 16,
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#D63031',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 12,
-    color: '#333',
-  },
-  contentText: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#666',
-    marginBottom: 16,
-  },
-  section: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#333',
   },
   bulletContainer: {
-    marginTop: 8,
+    marginLeft: 8,
   },
   bulletPoint: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#666',
-    marginBottom: 4,
+    marginBottom: 8,
   },
-  loadingContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  loadingText: {
-    marginTop: 16,
+  contentText: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    lineHeight: 24,
+    marginTop: 8,
   },
-  errorContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
+  contentBlocksContainer: {
+    gap: 12,
   },
-  errorTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#E74C3C',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: '#E74C3C',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+  sectionsContainer: {
+    gap: 20,
   },
   refreshButton: {
     backgroundColor: '#f8f9fa',
@@ -803,3 +729,4 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+

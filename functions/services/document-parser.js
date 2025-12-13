@@ -7,6 +7,7 @@ class DocumentParser {
   constructor() {
     this.currentSection = null;
     this.parsedContent = {};
+    this.globalQuestionCounter = 0; // Global counter for unique question IDs
   }
 
   /**
@@ -29,6 +30,7 @@ class DocumentParser {
       }
     };
     this.currentBlock = null; // Track current content block
+    this.globalQuestionCounter = 0; // Reset question counter for each document
     this.inlineObjects = document.inlineObjects || {}; // Store inline objects (images) for reference
     
     // Debug: Log inline objects found in document
@@ -254,6 +256,11 @@ class DocumentParser {
       try {
         if (element && element.paragraph) {
           this.parseParagraph(element.paragraph);
+        } else if (element && element.table) {
+          console.log('📊 Found table element at index', index);
+          this.parseTable(element.table);
+        } else if (element) {
+          console.log(`⚠️ Skipping element at index ${index}:`, Object.keys(element));
         }
       } catch (error) {
         console.error(`❌ Error parsing element at index ${index}:`, error.message);
@@ -530,7 +537,7 @@ class DocumentParser {
   }
 
   /**
-   * Process inline objects (images) - optimized for copied/pasted images
+   * Process inline objects (images, tables, charts) - optimized for copied/pasted content
    * @param {Object} inlineObjectElement - Inline object element from Google Docs
    */
   processInlineObject(inlineObjectElement) {
@@ -547,18 +554,33 @@ class DocumentParser {
     const inlineObject = this.inlineObjects[inlineObjectId];
     const embeddedObject = inlineObject.inlineObjectProperties?.embeddedObject;
     
-    if (!embeddedObject || !embeddedObject.imageProperties) {
-      console.warn('⚠️ Inline object is not an image:', inlineObjectId);
-      console.warn('   Object type:', embeddedObject ? Object.keys(embeddedObject) : 'No embeddedObject');
-      if (embeddedObject) {
-        console.warn('   Available properties:', Object.keys(embeddedObject));
-        if (embeddedObject.table) console.warn('   -> This is a TABLE');
-        if (embeddedObject.drawing) console.warn('   -> This is a DRAWING');
-        if (embeddedObject.chart) console.warn('   -> This is a CHART');
-      }
+    if (!embeddedObject) {
+      console.warn('⚠️ No embedded object found:', inlineObjectId);
       return;
     }
     
+    // Handle different types of embedded objects
+    if (embeddedObject.imageProperties) {
+      this.processImageObject(embeddedObject, inlineObjectId);
+    } else if (embeddedObject.table) {
+      console.log('📊 Processing TABLE object:', inlineObjectId);
+      this.processTableObject(embeddedObject.table, inlineObjectId);
+    } else if (embeddedObject.chart) {
+      console.log('📈 Processing CHART object:', inlineObjectId);
+      this.processChartObject(embeddedObject.chart, inlineObjectId);
+    } else {
+      console.warn('⚠️ Unknown inline object type:', inlineObjectId);
+      console.warn('   Available properties:', Object.keys(embeddedObject));
+      return;
+    }
+  }
+
+  /**
+   * Process image objects
+   * @param {Object} embeddedObject - The embedded object containing image properties
+   * @param {string} inlineObjectId - The inline object ID
+   */
+  processImageObject(embeddedObject, inlineObjectId) {
     const imageProperties = embeddedObject.imageProperties;
     const contentUri = imageProperties.contentUri || imageProperties.sourceUri;
     
@@ -586,16 +608,202 @@ class DocumentParser {
       dimensions: imageData.width && imageData.height ? `${imageData.width}x${imageData.height}` : 'unknown'
     });
     
-    // Add to current content block
+    // Add to current block
+    this.addContentToCurrentBlock(imageData);
+  }
+
+  /**
+   * Process table objects
+   * @param {Object} table - The table object from Google Docs
+   * @param {string} inlineObjectId - The inline object ID
+   */
+  processTableObject(table, inlineObjectId) {
+    if (!table || !table.tableRows) {
+      console.warn('⚠️ Table has no rows:', inlineObjectId);
+      return;
+    }
+
+    const tableData = {
+      type: 'table',
+      id: inlineObjectId,
+      rows: [],
+      columns: 0
+    };
+
+    // Process each row
+    table.tableRows.forEach((row, rowIndex) => {
+      if (!row.tableCells) return;
+      
+      const rowData = {
+        cells: [],
+        isHeader: false // Don't automatically treat first row as header
+      };
+
+      row.tableCells.forEach((cell, cellIndex) => {
+        let cellText = '';
+        
+        // Extract text from cell content
+        if (cell.content) {
+          cell.content.forEach(element => {
+            if (element.paragraph && element.paragraph.elements) {
+              element.paragraph.elements.forEach(textElement => {
+                if (textElement.textRun && textElement.textRun.content) {
+                  cellText += textElement.textRun.content;
+                }
+              });
+            }
+          });
+        }
+
+        rowData.cells.push({
+          text: cellText.trim(),
+          columnIndex: cellIndex
+        });
+      });
+
+      // Update column count
+      tableData.columns = Math.max(tableData.columns, rowData.cells.length);
+      tableData.rows.push(rowData);
+    });
+
+    console.log('📊 Found table:', {
+      rows: tableData.rows.length,
+      columns: tableData.columns,
+      id: inlineObjectId
+    });
+
+    // Add to current block
+    this.addContentToCurrentBlock(tableData);
+  }
+
+  /**
+   * Process chart objects (charts are often rendered as images by Google Docs API)
+   * @param {Object} chart - The chart object from Google Docs
+   * @param {string} inlineObjectId - The inline object ID
+   */
+  processChartObject(chart, inlineObjectId) {
+    // Charts in Google Docs are often complex and may need special handling
+    // For now, we'll extract basic information and potentially treat as image
+    const chartData = {
+      type: 'chart',
+      id: inlineObjectId,
+      title: chart.title || 'Chart',
+      chartType: chart.chartType || 'unknown'
+    };
+
+    console.log('📈 Found chart:', {
+      title: chartData.title,
+      type: chartData.chartType,
+      id: inlineObjectId
+    });
+
+    // Add to current block
+    this.addContentToCurrentBlock(chartData);
+  }
+
+  /**
+   * Parse table elements directly from Google Docs content structure
+   * @param {Object} table - Table element from Google Docs
+   */
+  parseTable(table) {
+    if (!table || !table.tableRows) {
+      console.warn('⚠️ Table has no rows');
+      return;
+    }
+
+    // Check if this is an assessment table (in Assessment Questions tab)
+    console.log('🔍 Table detection check:', {
+      currentTab: this.parsedContent.metadata.tab,
+      isAssessmentTab: this.parsedContent.metadata.tab === 'Assessment Questions',
+      tableRowCount: table.tableRows.length
+    });
+    
+    const isAssessmentByTab = this.parsedContent.metadata.tab === 'Assessment Questions';
+    const isAssessmentByContent = this.isAssessmentTable(table);
+    
+    if (isAssessmentByTab || isAssessmentByContent) {
+      console.log('🎯 Detected assessment table - parsing as assessment');
+      console.log('   - By tab:', isAssessmentByTab);
+      console.log('   - By content:', isAssessmentByContent);
+      this.parseAssessmentTable(table);
+      return;
+    }
+
+    // Regular table parsing
+    const tableData = {
+      type: 'table',
+      id: `table-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      rows: [],
+      columns: 0
+    };
+
+    console.log('📊 Processing regular table with', table.tableRows.length, 'rows');
+
+    // Process each row
+    table.tableRows.forEach((row, rowIndex) => {
+      if (!row.tableCells) {
+        console.warn(`⚠️ Row ${rowIndex} has no cells`);
+        return;
+      }
+      
+      const rowData = {
+        cells: [],
+        isHeader: false // Don't automatically treat first row as header
+      };
+
+      row.tableCells.forEach((cell, cellIndex) => {
+        let cellText = '';
+        
+        // Extract text from cell content (cells contain content elements like paragraphs)
+        if (cell.content) {
+          cell.content.forEach(element => {
+            if (element.paragraph && element.paragraph.elements) {
+              element.paragraph.elements.forEach(textElement => {
+                if (textElement.textRun && textElement.textRun.content) {
+                  cellText += textElement.textRun.content;
+                }
+              });
+            }
+          });
+        }
+
+        rowData.cells.push({
+          text: cellText.trim(),
+          columnIndex: cellIndex
+        });
+      });
+
+      // Update column count
+      tableData.columns = Math.max(tableData.columns, rowData.cells.length);
+      tableData.rows.push(rowData);
+      
+      console.log(`   Row ${rowIndex + 1}: ${rowData.cells.length} cells, header: ${rowData.isHeader}`);
+    });
+
+    console.log('📊 Table processed:', {
+      rows: tableData.rows.length,
+      columns: tableData.columns,
+      id: tableData.id
+    });
+
+    // Add to current block
+    this.addContentToCurrentBlock(tableData);
+  }
+
+  /**
+   * Helper method to add content to current block or create new block
+   * @param {Object} contentData - The content data to add
+   */
+  addContentToCurrentBlock(contentData) {
     if (this.currentBlock) {
-      this.currentBlock.content.push(imageData);
+      this.currentBlock.content = this.currentBlock.content || [];
+      this.currentBlock.content.push(contentData);
     } else {
-      // Create a new block for orphan images
+      // Create new block for standalone content
       this.currentBlock = {
         id: this.parsedContent.contentBlocks.length + 1,
         header: null,
-        content: [imageData],
-        type: 'image'
+        content: [contentData]
       };
       this.parsedContent.contentBlocks.push(this.currentBlock);
     }
@@ -739,6 +947,194 @@ class DocumentParser {
     }
 
     return days.sort((a, b) => a.day - b.day);
+  }
+
+  /**
+   * Check if a table is an assessment table by looking for score patterns
+   * @param {Object} table - Table element from Google Docs
+   * @returns {boolean}
+   */
+  isAssessmentTable(table) {
+    if (!table.tableRows || table.tableRows.length < 2) return false;
+    
+    // Check if last column contains numeric scores (1-3 pattern)
+    let hasScoreColumn = false;
+    let scoreCount = 0;
+    
+    console.log('🔍 Checking table for assessment patterns...');
+    table.tableRows.forEach((row, index) => {
+      if (!row.tableCells) return;
+      const lastCell = row.tableCells[row.tableCells.length - 1];
+      const cellText = this.extractCellText(lastCell);
+      console.log(`   Row ${index + 1}: Last cell = "${cellText}"`);
+      if (cellText.match(/^[1-3]$/)) {
+        scoreCount++;
+        hasScoreColumn = true;
+        console.log(`   ✓ Found score: ${cellText}`);
+      }
+    });
+    
+    // Consider it an assessment table if at least 2 rows have scores
+    const isAssessment = hasScoreColumn && scoreCount >= 2;
+    console.log(`🔍 Assessment table check: ${isAssessment} (${scoreCount} score rows found)`);
+    return isAssessment;
+  }
+
+  /**
+   * Extract text content from a table cell
+   * @param {Object} cell - Table cell element
+   * @returns {string}
+   */
+  extractCellText(cell) {
+    let cellText = '';
+    if (cell.content) {
+      cell.content.forEach(element => {
+        if (element.paragraph && element.paragraph.elements) {
+          element.paragraph.elements.forEach(textElement => {
+            if (textElement.textRun && textElement.textRun.content) {
+              cellText += textElement.textRun.content;
+            }
+          });
+        }
+      });
+    }
+    return cellText.trim();
+  }
+
+  /**
+   * Parse assessment table with module tagging and multi-select support
+   * @param {Object} table - Table element from Google Docs
+   */
+  parseAssessmentTable(table) {
+    console.log('🎯 Parsing assessment table with module tagging support');
+    
+    if (!table || !table.tableRows) {
+      console.warn('⚠️ Assessment table has no rows');
+      return;
+    }
+
+    const assessmentData = {
+      type: 'assessment',
+      id: `assessment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      questions: []
+    };
+
+    let currentQuestion = null;
+    let currentModule = null;
+    // Use global counter to ensure uniqueness across all tables
+    
+    table.tableRows.forEach((row, rowIndex) => {
+      if (!row.tableCells) return;
+      
+      const cells = row.tableCells.map(cell => this.extractCellText(cell));
+      
+      // Skip empty rows
+      if (cells.every(cell => !cell)) return;
+      
+      // Detect module header (e.g., "Mistakes:", "My Job, Your Job:")
+      const moduleMatch = cells[0].match(/^(.*?):\s*(.*)$/);
+      if (moduleMatch && !cells[cells.length - 1].match(/^[1-3]$/)) {
+        const modulePrefix = moduleMatch[1].trim();
+        const questionText = moduleMatch[2].trim();
+        
+        // Map module prefixes to module IDs
+        currentModule = this.mapModulePrefix(modulePrefix);
+        console.log(`📋 Found module header: "${modulePrefix}" → ${currentModule}`);
+        
+        if (questionText) {
+          // This row contains both module tag and question
+          const questionId = `assessment_q_${this.globalQuestionCounter++}`;
+          currentQuestion = {
+            id: questionId,
+            question: questionText,
+            module: currentModule,
+            type: 'multi-select',
+            options: []
+          };
+          assessmentData.questions.push(currentQuestion);
+          console.log(`📝 Found question: "${questionText}" (Module: ${currentModule}) - ID: ${questionId}`);
+        }
+        return;
+      }
+      
+      // Detect question row (longer text, no score in last cell)
+      const isQuestionRow = cells[0] && cells[0].length > 30 && !cells[cells.length - 1].match(/^[1-3]$/);
+      
+      if (isQuestionRow) {
+        const questionId = `assessment_q_${this.globalQuestionCounter++}`;
+        currentQuestion = {
+          id: questionId,
+          question: cells[0],
+          module: currentModule || 'general',
+          type: 'multi-select',
+          options: []
+        };
+        assessmentData.questions.push(currentQuestion);
+        console.log(`📝 Found question: "${cells[0].substring(0, 60)}..." (Module: ${currentModule || 'general'}) - ID: ${questionId}`);
+      } else if (currentQuestion && cells[0] && cells[cells.length - 1].match(/^[1-3]$/)) {
+        // This is an option row (has text and ends with a score)
+        const optionText = cells[0];
+        const score = parseInt(cells[cells.length - 1]);
+        
+        const option = {
+          id: `${currentQuestion.id}_option_${currentQuestion.options.length}`,
+          text: optionText,
+          score: score
+        };
+        
+        currentQuestion.options.push(option);
+        console.log(`   ✓ Added option: "${optionText}" (Score: ${score})`);
+      }
+    });
+
+    console.log('🎯 Assessment parsing complete:', {
+      questionsFound: assessmentData.questions.length,
+      totalOptions: assessmentData.questions.reduce((sum, q) => sum + q.options.length, 0),
+      moduleBreakdown: this.getModuleBreakdown(assessmentData.questions),
+      questionIds: assessmentData.questions.map(q => q.id)
+    });
+
+    // Add to current block
+    this.addContentToCurrentBlock(assessmentData);
+  }
+
+  /**
+   * Map module prefixes to standardized module IDs
+   * @param {string} prefix - Module prefix from Google Docs
+   * @returns {string} - Standardized module ID
+   */
+  mapModulePrefix(prefix) {
+    const lowerPrefix = prefix.toLowerCase();
+    
+    // Map various prefixes to module IDs
+    // NOTE: Order matters! More specific matches must come before general ones
+    if (lowerPrefix.includes('mistake')) return 'mistakes';
+    if (lowerPrefix.includes('job') || lowerPrefix.includes('work')) return 'job';
+    if (lowerPrefix.includes('regulation') || lowerPrefix.includes('control') || lowerPrefix.includes('emotion')) return 'regulation';
+    if (lowerPrefix.includes('collaboration') || lowerPrefix.includes('team')) return 'collaboration';
+    if (lowerPrefix.includes('monitor') || lowerPrefix.includes('monitoring')) return 'selfmonitoring';
+    if (lowerPrefix.includes('coach') || (lowerPrefix.includes('self') && lowerPrefix.includes('coach'))) return 'selfcoach';
+    if (lowerPrefix.includes('curiosity') || lowerPrefix.includes('wonder')) return 'curiosity';
+    if (lowerPrefix.includes('shape') || lowerPrefix.includes('learning')) return 'shapeoflearning';
+    if (lowerPrefix.includes('neuroplasticity') || lowerPrefix.includes('growth') || lowerPrefix.includes('brain')) return 'neuroplasticity';
+    if (lowerPrefix.includes('mastery') || lowerPrefix.includes('moment')) return 'masterymoments';
+    
+    // Return original if no match found (cleaned up)
+    return prefix.toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  /**
+   * Get breakdown of questions by module
+   * @param {Array} questions - Array of assessment questions
+   * @returns {Object} - Module breakdown
+   */
+  getModuleBreakdown(questions) {
+    const breakdown = {};
+    questions.forEach(q => {
+      if (!breakdown[q.module]) breakdown[q.module] = 0;
+      breakdown[q.module]++;
+    });
+    return breakdown;
   }
 }
 
