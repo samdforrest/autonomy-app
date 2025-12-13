@@ -25,26 +25,9 @@ export const AssessmentQuestionComponent: React.FC<AssessmentQuestionProps> = ({
     onSelectionChange(question.id, newSelection);
   };
 
-  const getModuleColor = (module: string) => {
-    const colors: { [key: string]: string } = {
-      mistakes: '#E74C3C',
-      regulation: '#3498DB', 
-      job: '#F39C12',
-      collaboration: '#27AE60',
-      selfcoach: '#9B59B6'
-    };
-    return colors[module] || '#95A5A6';
-  };
 
   return (
     <ThemedView style={styles.questionContainer}>
-      {/* Module Tag */}
-      <ThemedView style={[styles.moduleTag, { backgroundColor: getModuleColor(question.module) }]}>
-        <ThemedText style={styles.moduleTagText}>
-          {question.module.toUpperCase()}
-        </ThemedText>
-      </ThemedView>
-
       {/* Question Text */}
       <ThemedText style={styles.questionText}>{question.question}</ThemedText>
       
@@ -77,27 +60,12 @@ export const AssessmentQuestionComponent: React.FC<AssessmentQuestionProps> = ({
               </ThemedView>
               
               {/* Option Text */}
-              <ThemedView style={styles.optionTextContainer}>
-                <ThemedText style={[
-                  styles.optionText,
-                  isSelected && styles.selectedOptionText
-                ]}>
-                  {option.text}
-                </ThemedText>
-                
-                {/* Score Badge */}
-                <ThemedView style={[
-                  styles.scoreBadge,
-                  isSelected && styles.selectedScoreBadge
-                ]}>
-                  <ThemedText style={[
-                    styles.scoreText,
-                    isSelected && styles.selectedScoreText
-                  ]}>
-                    {option.score}
-                  </ThemedText>
-                </ThemedView>
-              </ThemedView>
+              <ThemedText style={[
+                styles.optionText,
+                isSelected && styles.selectedOptionText
+              ]}>
+                {option.text}
+              </ThemedText>
             </ThemedView>
           </TouchableOpacity>
         );
@@ -130,19 +98,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  moduleTag: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  moduleTagText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-  },
   questionText: {
     fontSize: 18,
     fontWeight: '600',
@@ -172,6 +127,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     backgroundColor: 'transparent',
+    flex: 1,
   },
   checkbox: {
     width: 24,
@@ -193,42 +149,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  optionTextContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    backgroundColor: 'transparent',
-  },
   optionText: {
     fontSize: 16,
     lineHeight: 22,
     color: '#34495E',
     flex: 1,
-    marginRight: 12,
+    marginLeft: 12,
   },
   selectedOptionText: {
     color: '#2980B9',
     fontWeight: '500',
-  },
-  scoreBadge: {
-    backgroundColor: '#ECF0F1',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    minWidth: 28,
-    alignItems: 'center',
-  },
-  selectedScoreBadge: {
-    backgroundColor: '#3498DB',
-  },
-  scoreText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#7F8C8D',
-  },
-  selectedScoreText: {
-    color: 'white',
   },
   selectionInfo: {
     marginTop: 12,
