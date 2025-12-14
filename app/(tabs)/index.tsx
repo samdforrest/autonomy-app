@@ -455,12 +455,12 @@ export default function HomeScreen() {
             </ThemedText>
             
             <ThemedView style={styles.familyButtons}>
-              <TouchableOpacity 
+              {/* <TouchableOpacity 
                 style={styles.familyButton}
                 onPress={() => router.push('/create-family')}
               >
                 <ThemedText style={styles.familyButtonText}>🆕 Create Family</ThemedText>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
               
               <TouchableOpacity 
                 style={[styles.familyButton, styles.familyButtonSecondary]}

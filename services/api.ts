@@ -14,9 +14,10 @@ export interface ContentBlock {
   id: number;
   header: string | null;
   content: Array<{
-    type: 'text' | 'bullet' | 'image' | 'subheader' | 'option' | 'table' | 'assessment';
+    type: 'text' | 'bullet' | 'image' | 'subheader' | 'option' | 'table' | 'assessment' | 'open-ended-marker';
     text?: string;
     label?: string; // For options: A, B, C, etc.
+    originalNumber?: number; // For numbered list options: 1, 2, 3, etc.
     uri?: string; // For copied/pasted images, this will be a data URL (base64)
     alt?: string;
     width?: number | null;
@@ -114,7 +115,7 @@ class ApiService {
    */
   async fetchDocument(
     documentRef: string, 
-    format: 'raw' | 'job' | 'mistakes' | 'regulation' | 'selfcoach' | 'curiosity' | 'shapeoflearning' | 'neuroplasticity' | 'masterymoments' = 'raw',
+    format: 'raw' | 'job' | 'mistakes' | 'regulation' | 'selfcoach' | 'curiosity' | 'shapeoflearning' | 'neuroplasticity' | 'masterymoments' | 'selfmonitoring' = 'raw',
     options: { tab?: string; day?: number } = {}
   ): Promise<DocumentResponse> {
     try {
