@@ -42,12 +42,9 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName }: 
   // Parse questions when content loads
   useEffect(() => {
     if (content?.contentBlocks) {
-      console.log('📋 DEBUG: Raw content received:', content);
-      console.log('📋 DEBUG: Content blocks:', content.contentBlocks);
       console.log('📋 Parsing survey questions from content blocks...');
       const parsedQuestions = surveyService.parseSurveyQuestions(content.contentBlocks);
-      console.log('📋 Parsed questions:', parsedQuestions);
-      console.log('📋 DEBUG: Questions count:', parsedQuestions.length);
+      console.log('📋 Parsed questions:', parsedQuestions.length, 'questions found');
       setQuestions(parsedQuestions);
       
       // Initialize responses object
@@ -101,8 +98,8 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName }: 
 
       // Convert responses to SurveyResponse format
       const surveyResponses: SurveyResponse[] = questions.map(question => {
-        const answer = responses[question.id];
-        let answerLabel: string | undefined;
+        const answer = responses[question.id] || '';
+        let answerLabel: string | undefined = undefined;
 
         // For multiple choice, find the label of the selected option
         if (question.type === 'multiple-choice' && question.options) {
@@ -114,7 +111,7 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName }: 
           questionId: question.id,
           questionText: question.text,
           answer,
-          answerLabel,
+          answerLabel: answerLabel || undefined, // Keep undefined here, will be cleaned in service
           timestamp: new Date()
         };
       });
