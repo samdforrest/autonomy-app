@@ -1,10 +1,11 @@
 import {
-    addDoc,
     collection,
+    doc,
     getDocs,
     orderBy,
     query,
     serverTimestamp,
+    setDoc,
     Timestamp,
     where
 } from 'firebase/firestore';
@@ -40,6 +41,16 @@ export interface SurveySubmission {
 
 class SurveyService {
   private readonly COLLECTION_NAME = 'survey_responses';
+
+  /**
+   * Generate a meaningful submission ID in format: FAMILY-CODE-LESSON-NAME
+   * Examples: BEAR-1234-mistakes, LION-5678-collaboration, individual-regulation
+   */
+  private generateSubmissionId(familyCode: string | null, moduleId: string): string {
+    const family = familyCode || 'individual';
+    const lesson = moduleId.toLowerCase();
+    return `${family}-${lesson}`;
+  }
 
   /**
    * Remove undefined values from an object recursively
@@ -188,6 +199,9 @@ class SurveyService {
         return cleaned;
       });
 
+      // Create a meaningful document ID: FAMILY-CODE-LESSON-NAME
+      const customDocId = this.generateSubmissionId(familyCode, moduleId);
+
       const submission: SurveySubmission = {
         familyCode: familyCode || null, // Use null instead of undefined
         moduleId: moduleId || '',
@@ -202,17 +216,18 @@ class SurveyService {
 
       // Log the submission data for debugging
       console.log('📋 Submitting survey data:', {
+        customDocId,
         familyCode: cleanedSubmission.familyCode,
         moduleId: cleanedSubmission.moduleId,
         responsesCount: cleanedSubmission.responses.length,
         sampleResponse: cleanedSubmission.responses[0]
       });
 
-      // Save to Firebase Firestore
-      const docRef = await addDoc(collection(db, this.COLLECTION_NAME), cleanedSubmission);
+      // Save to Firebase Firestore with custom document ID
+      await setDoc(doc(db, this.COLLECTION_NAME, customDocId), cleanedSubmission);
       
       console.log('✅ Survey submitted successfully to Firebase:', {
-        submissionId: docRef.id,
+        submissionId: customDocId,
         familyCode,
         moduleId,
         responsesCount: responses.length
