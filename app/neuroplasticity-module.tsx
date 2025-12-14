@@ -1,5 +1,6 @@
 import CollapsibleDayCard from '@/components/CollapsibleDayCard';
 import { ImageViewer } from '@/components/ImageViewer';
+import SurveyButton from '@/components/SurveyButton';
 import { TableViewer } from '@/components/TableViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
 import { ThemedText } from '@/components/ThemedText';
@@ -433,6 +434,13 @@ export default function NeuroplasticityModuleScreen() {
                           </ThemedText>
                         </ThemedView>
                       )}
+
+                      {/* Survey Button - Only show for Day 5 */}
+                      <SurveyButton 
+                        moduleId="neuroplasticity"
+                        moduleName="Neuroplasticity & Growth"
+                        dayNumber={day.dayNumber}
+                      />
                     </ThemedView>
                   )}
 
