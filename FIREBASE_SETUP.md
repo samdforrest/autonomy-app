@@ -71,8 +71,8 @@ EXPO_PUBLIC_FIREBASE_APP_ID=your-app-id
 
 ✅ **Family URL System**: `yourapp.web.app/family/BEAR-2024`  
 ✅ **Real-time Data Sync**: Instant updates across devices  
-✅ **Child Management**: Add/remove children per family  
-✅ **Assessment Storage**: Per-child assessment results  
+✅ **Student Management**: Add/remove students per family
+✅ **Assessment Storage**: Per-student assessment results
 ✅ **Progress Tracking**: Module completion tracking  
 
 ## Next Steps

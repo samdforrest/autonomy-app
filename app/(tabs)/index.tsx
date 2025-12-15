@@ -61,7 +61,7 @@ export default function HomeScreen() {
       try {
         // Set context based on current mode
         if (isInFamilyMode && currentFamilyCode) {
-          assessmentService.setContext(currentFamilyCode, 'child');
+          assessmentService.setContext(currentFamilyCode, 'student');
         } else {
           assessmentService.syncFromGlobalContext();
         }
@@ -409,7 +409,7 @@ export default function HomeScreen() {
         </ThemedText>
         <ThemedText style={styles.subtitle}>
           {userMode === 'parent' 
-            ? 'Supporting your child\'s learning journey' 
+            ? 'Supporting your student\'s learning journey' 
             : 'Begin your autonomy learning adventure'
           }
         </ThemedText>
@@ -451,7 +451,7 @@ export default function HomeScreen() {
           <ThemedView style={styles.familySection}>
             <ThemedText style={styles.familySectionTitle}>👨‍👩‍👧‍👦 Family Access</ThemedText>
             <ThemedText style={styles.familySectionSubtitle}>
-              Track progress across multiple children with family codes
+              Track progress across multiple students with family codes
             </ThemedText>
             
             <ThemedView style={styles.familyButtons}>

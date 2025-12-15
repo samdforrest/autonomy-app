@@ -14,7 +14,7 @@ interface Module {
 }
 
 export default function TabTwoScreen() {
-  const { userMode, childProgress, parentInsights } = useAppMode();
+  const { userMode, studentProgress, parentInsights } = useAppMode();
   
   const modules: Module[] = [
     {
@@ -167,8 +167,8 @@ export default function TabTwoScreen() {
 
   const renderChildProgress = () => (
     <ThemedView style={styles.parentSection}>
-      <ThemedText style={styles.parentSectionTitle}>📈 Child's Progress</ThemedText>
-      {Object.entries(childProgress).map(([moduleId, progress]) => {
+      <ThemedText style={styles.parentSectionTitle}>📈 Student's Progress</ThemedText>
+      {Object.entries(studentProgress).map(([moduleId, progress]) => {
         const module = modules.find(m => m.title.toLowerCase() === moduleId);
         const progressPercent = Math.round((progress.completedDays / progress.totalDays) * 100);
         
@@ -199,7 +199,7 @@ export default function TabTwoScreen() {
 
   const renderModule = ({ item }: { item: Module }) => {
     // In parent mode, show progress overlay
-    const progress = childProgress[item.title.toLowerCase()];
+    const progress = studentProgress[item.title.toLowerCase()];
     const progressPercent = progress ? Math.round((progress.completedDays / progress.totalDays) * 100) : 0;
     
     return (
@@ -266,7 +266,7 @@ export default function TabTwoScreen() {
         </ThemedText>
         <ThemedText style={styles.subtitle}>
           {userMode === 'parent' 
-            ? 'Monitor your child\'s learning progress' 
+            ? 'Monitor your student\'s learning progress' 
             : 'Start your learning journey'
           }
         </ThemedText>

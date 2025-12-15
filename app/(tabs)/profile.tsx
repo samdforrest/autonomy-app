@@ -8,7 +8,7 @@ export default function ProfileScreen() {
   const { userMode, switchMode } = useAppMode();
 
   const handleModeToggle = () => {
-    switchMode(userMode === 'parent' ? 'child' : 'parent');
+    switchMode(userMode === 'parent' ? 'student' : 'parent');
   };
 
   return (
@@ -23,7 +23,7 @@ export default function ProfileScreen() {
         {/* Mode Switcher */}
         <ThemedView style={styles.modeSwitcher}>
           <ThemedText style={styles.modeLabel}>
-            {userMode === 'parent' ? '👨‍👩‍👧‍👦 Parent View' : '🧒 Child View'}
+            {userMode === 'parent' ? '👨‍👩‍👧‍👦 Parent View' : '🧒 Student View'}
           </ThemedText>
           <TouchableOpacity 
             style={[
@@ -40,7 +40,7 @@ export default function ProfileScreen() {
               styles.modeToggleText,
               userMode === 'parent' ? styles.textParent : styles.textChild
             ]}>
-              {userMode === 'parent' ? 'Parent' : 'Child'}
+              {userMode === 'parent' ? 'Parent' : 'Student'}
             </ThemedText>
           </TouchableOpacity>
         </ThemedView>
@@ -52,7 +52,7 @@ export default function ProfileScreen() {
         </ThemedText>
         <ThemedText style={styles.description}>
           Here you'll be able to:
-          {'\n'}• Switch between parent and child profiles
+          {'\n'}• Switch between parent and student profiles
           {'\n'}• View learning progress
           {'\n'}• Manage account settings
           {'\n'}• Track completed modules
@@ -139,8 +139,8 @@ const styles = StyleSheet.create({
   modeToggleParent: {
     backgroundColor: '#E3F2FD', // Light blue for parent
   },
-  modeToggleChild: {
-    backgroundColor: '#FFF3E0', // Light orange for child
+  modeToggleStudent: {
+    backgroundColor: '#FFF3E0', // Light orange for student
   },
   modeToggleIndicator: {
     position: 'absolute',
@@ -161,9 +161,9 @@ const styles = StyleSheet.create({
     left: 4,
     backgroundColor: '#2196F3', // Blue for parent
   },
-  indicatorChild: {
+  indicatorStudent: {
     right: 4,
-    backgroundColor: '#FF9800', // Orange for child
+    backgroundColor: '#FF9800', // Orange for student
   },
   modeToggleText: {
     flex: 1,

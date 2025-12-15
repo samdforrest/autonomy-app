@@ -41,7 +41,7 @@ export default function CreateFamily() {
       <View style={styles.content}>
         <Text style={styles.title}>Create Your Family</Text>
         <Text style={styles.subtitle}>
-          Get started with personalized learning assessments for your children
+          Get started with personalized learning assessments for your students
         </Text>
 
         <View style={styles.form}>
@@ -69,7 +69,7 @@ export default function CreateFamily() {
           <Text style={styles.infoTitle}>What happens next?</Text>
           <Text style={styles.infoText}>
             • You'll get a unique family code{'\n'}
-            • Add your children to the family{'\n'}
+            • Add your students to the family{'\n'}
             • Start personalized assessments{'\n'}
             • Track learning progress
           </Text>

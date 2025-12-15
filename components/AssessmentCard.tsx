@@ -6,7 +6,7 @@ import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
 
 interface AssessmentCardProps {
-  userMode: 'parent' | 'child';
+  userMode: 'parent' | 'student';
 }
 
 export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
@@ -35,13 +35,13 @@ export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
 
     if (userMode === 'parent') {
       return {
-        title: '📊 Child Assessment',
-        subtitle: hasCompletedAssessment 
-          ? 'View your child\'s learning priorities'
-          : 'Help determine your child\'s learning path',
+        title: '📊 Student Assessment',
+        subtitle: hasCompletedAssessment
+          ? 'View your student\'s learning priorities'
+          : 'Help determine your student\'s learning path',
         description: hasCompletedAssessment
           ? `Assessment completed. Recommended starting point: ${topModule}`
-          : 'Complete a quick assessment to personalize the learning experience for your child.',
+          : 'Complete a quick assessment to personalize the learning experience for your student.',
         buttonText: hasCompletedAssessment ? 'Start Assessment' : 'View My Results',
         icon: hasCompletedAssessment ? '📈' : '🎯'
       };

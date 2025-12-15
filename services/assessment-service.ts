@@ -52,17 +52,17 @@ export class AssessmentService {
     selfmonitoring: 0
   };
 
-  // Family and child context
+  // Family and student context
   private currentFamilyCode: string | null = null;
-  private currentChildId: string | null = null;
+  private currentStudentId: string | null = null;
 
   /**
-   * Set the current family and child context
+   * Set the current family and student context
    */
-  setContext(familyCode: string, childId: string): void {
+  setContext(familyCode: string, studentId: string): void {
     this.currentFamilyCode = familyCode;
-    this.currentChildId = childId;
-    console.log('🎯 Assessment context set:', { familyCode, childId });
+    this.currentStudentId = studentId;
+    console.log('🎯 Assessment context set:', { familyCode, studentId });
   }
 
   /**
@@ -78,12 +78,12 @@ export class AssessmentService {
           
           if (parsedData.familyCode && parsedData.isActive) {
             this.currentFamilyCode = parsedData.familyCode;
-            if (parsedData.currentChildId) {
-              this.currentChildId = parsedData.currentChildId;
+            if (parsedData.currentStudentId) {
+              this.currentStudentId = parsedData.currentStudentId;
             }
             console.log('🔄 Assessment context synced from global state:', {
               familyCode: this.currentFamilyCode,
-              childId: this.currentChildId
+              studentId: this.currentStudentId
             });
           } else {
             console.log('🔍 Family context not active or missing familyCode:', {
@@ -101,11 +101,11 @@ export class AssessmentService {
   }
 
   /**
-   * Get current child ID (with fallback to global context and localStorage)
+   * Get current student ID (with fallback to global context and localStorage)
    */
-  private getCurrentChildId(): string {
-    if (this.currentChildId) {
-      return this.currentChildId;
+  private getCurrentStudentId(): string {
+    if (this.currentStudentId) {
+      return this.currentStudentId;
     }
     
     // Try to get from global app context if available
@@ -114,17 +114,17 @@ export class AssessmentService {
         const stored = localStorage.getItem('autonomy_current_family');
         if (stored) {
           const parsedData = JSON.parse(stored);
-          if (parsedData.currentChildId) {
-            return parsedData.currentChildId;
+          if (parsedData.currentStudentId) {
+            return parsedData.currentStudentId;
           }
         }
       } catch (error) {
-        console.warn('⚠️ Could not load child ID from storage:', error);
+        console.warn('⚠️ Could not load student ID from storage:', error);
       }
     }
     
     // Fallback to localStorage for backwards compatibility
-    return 'default_child';
+    return 'default_student';
   }
 
   /**
@@ -155,7 +155,7 @@ export class AssessmentService {
    * Get storage key for localStorage (backwards compatibility)
    */
   private getStorageKey(): string {
-    return `autonomy_assessment_results_${this.getCurrentChildId()}`;
+    return `autonomy_assessment_results_${this.getCurrentStudentId()}`;
   }
 
   /**
@@ -265,36 +265,36 @@ export class AssessmentService {
   async saveAssessmentResults(summary: AssessmentSummary): Promise<void> {
     try {
       // Auto-sync context from global state if not set
-      if (!this.currentFamilyCode || !this.currentChildId) {
+      if (!this.currentFamilyCode || !this.currentStudentId) {
         console.log('🔄 Syncing context before saving...');
         this.syncFromGlobalContext();
       }
       
-      const currentChildId = this.getCurrentChildId();
+      const currentStudentId = this.getCurrentStudentId();
       const assessmentData = {
         ...summary,
         version: '1.0',
-        childId: currentChildId,
+        studentId: currentStudentId,
         familyCode: this.currentFamilyCode
       };
 
       console.log('💾 Saving assessment results with context:', {
         familyCode: this.currentFamilyCode,
-        childId: currentChildId,
+        studentId: currentStudentId,
         storageKey: this.getStorageKey()
       });
 
       // Save to Firebase if we have family context
-      if (this.currentFamilyCode && this.currentChildId) {
+      if (this.currentFamilyCode && this.currentStudentId) {
         try {
           console.log('☁️ Attempting to save to Firebase...');
           const { familyService } = await import('./family-service');
           await familyService.saveAssessmentResults(
             this.currentFamilyCode,
-            this.currentChildId,
+            this.currentStudentId,
             assessmentData
           );
-          console.log('✅ Assessment results saved to Firebase for:', this.currentChildId);
+          console.log('✅ Assessment results saved to Firebase for:', this.currentStudentId);
         } catch (firebaseError) {
           console.error('❌ Failed to save to Firebase:', firebaseError);
           // Fall back to localStorage
@@ -305,7 +305,7 @@ export class AssessmentService {
 
       // Always save to localStorage for backwards compatibility
       localStorage.setItem(this.getStorageKey(), JSON.stringify(assessmentData));
-      console.log('✅ Assessment results saved to localStorage for child:', currentChildId);
+      console.log('✅ Assessment results saved to localStorage for student:', currentStudentId);
     } catch (error) {
       console.error('❌ Failed to save assessment results:', error);
       throw error; // Re-throw to let the caller handle it
@@ -318,39 +318,39 @@ export class AssessmentService {
   async loadAssessmentResults(): Promise<AssessmentSummary | null> {
     try {
       // Auto-sync context from global state if not set
-      if (!this.currentFamilyCode || !this.currentChildId) {
+      if (!this.currentFamilyCode || !this.currentStudentId) {
         console.log('🔄 Syncing context before loading...');
         this.syncFromGlobalContext();
       }
       
-      const currentChildId = this.getCurrentChildId();
+      const currentStudentId = this.getCurrentStudentId();
       const storageKey = this.getStorageKey();
       
       console.log('📖 Loading assessment results with context:', {
         familyCode: this.currentFamilyCode,
-        childId: currentChildId,
+        studentId: currentStudentId,
         storageKey: storageKey
       });
       
       // Try Firebase first if we have family context
-      if (this.currentFamilyCode && this.currentChildId) {
+      if (this.currentFamilyCode && this.currentStudentId) {
         try {
           console.log('☁️ Attempting to load from Firebase...');
           const { familyService } = await import('./family-service');
           const familyData = await familyService.getFamilyData(this.currentFamilyCode);
           
-          if (familyData?.children?.[this.currentChildId]?.assessments) {
-            const assessments = familyData.children[this.currentChildId].assessments;
+          if (familyData?.students?.[this.currentStudentId]?.assessments) {
+            const assessments = familyData.students[this.currentStudentId].assessments;
             // Get the most recent assessment
             const assessmentKeys = Object.keys(assessments);
             if (assessmentKeys.length > 0) {
               const latestKey = assessmentKeys.sort().pop();
               const latestAssessment = assessments[latestKey!];
-              console.log('✅ Assessment results loaded from Firebase for:', this.currentChildId);
+              console.log('✅ Assessment results loaded from Firebase for:', this.currentStudentId);
               return latestAssessment;
             }
           } else {
-            console.log('📝 No assessments found in Firebase for child:', this.currentChildId);
+            console.log('📝 No assessments found in Firebase for student:', this.currentStudentId);
           }
         } catch (firebaseError) {
           console.warn('⚠️ Failed to load from Firebase, trying localStorage:', firebaseError);
@@ -363,7 +363,7 @@ export class AssessmentService {
       const stored = localStorage.getItem(storageKey);
       if (stored) {
         const results = JSON.parse(stored);
-        console.log('✅ Assessment results loaded from localStorage for child:', currentChildId);
+        console.log('✅ Assessment results loaded from localStorage for student:', currentStudentId);
         return results;
       } else {
         console.log('📝 No assessment results found in localStorage for key:', storageKey);
@@ -375,28 +375,28 @@ export class AssessmentService {
   }
 
   /**
-   * Check if user has completed assessment (child-specific)
+   * Check if user has completed assessment (student-specific)
    */
   hasCompletedAssessment(): boolean {
     return this.loadAssessmentResults() !== null;
   }
 
   /**
-   * Clear assessment results (child-specific)
+   * Clear assessment results (student-specific)
    */
   clearAssessmentResults(): void {
     try {
       localStorage.removeItem(this.getStorageKey());
-      console.log('✅ Assessment results cleared for child:', this.getCurrentChildId());
+      console.log('✅ Assessment results cleared for student:', this.getCurrentStudentId());
     } catch (error) {
       console.error('❌ Failed to clear assessment results:', error);
     }
   }
 
   /**
-   * Get assessment results for all children (for parent view)
+   * Get assessment results for all students (for parent view)
    */
-  getAllChildrenAssessments(): { [childId: string]: AssessmentSummary } {
+  getAllStudentsAssessments(): { [studentId: string]: AssessmentSummary } {
     const results: { [childId: string]: AssessmentSummary } = {};
     
     try {
@@ -412,7 +412,7 @@ export class AssessmentService {
         }
       }
     } catch (error) {
-      console.error('❌ Failed to load all children assessments:', error);
+      console.error('❌ Failed to load all students assessments:', error);
     }
     
     return results;

@@ -81,7 +81,7 @@ export default function AssessmentScreen() {
         // Set family context if user is in family mode
         if (isInFamilyMode && currentFamilyCode) {
           console.log('🏠 Assessment: Setting family context for loading:', currentFamilyCode);
-          assessmentService.setContext(currentFamilyCode, 'child'); // Simplified: one child per family
+          assessmentService.setContext(currentFamilyCode, 'student'); // Simplified: one student per family
         } else {
           // Make sure to sync context from global state for non-family users
           console.log('👤 Assessment: Syncing context for individual user');
@@ -164,7 +164,7 @@ export default function AssessmentScreen() {
       // Set family context if user is in family mode
       if (isInFamilyMode && currentFamilyCode) {
         console.log('🏠 Assessment: Setting family context for submission:', currentFamilyCode);
-        assessmentService.setContext(currentFamilyCode, 'child'); // Simplified: one child per family
+        assessmentService.setContext(currentFamilyCode, 'student'); // Simplified: one student per family
       } else {
         // Make sure to sync context from global state for non-family users
         console.log('👤 Assessment: Syncing context for individual user');

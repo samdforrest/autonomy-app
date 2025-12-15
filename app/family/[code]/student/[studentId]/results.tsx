@@ -4,28 +4,28 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { assessmentService, AssessmentSummary } from '../../../../../services/assessment-service';
 import { useFamilyContext } from '../../_layout';
 
-export default function ChildResults() {
-  const { code, childId } = useLocalSearchParams<{ code: string; childId: string }>();
+export default function StudentResults() {
+  const { code, studentId } = useLocalSearchParams<{ code: string; studentId: string }>();
   const { family } = useFamilyContext();
   const router = useRouter();
   
   const [results, setResults] = useState<AssessmentSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const child = family.children[childId as string];
+  const student = family.students[studentId as string];
 
   useEffect(() => {
-    if (code && childId) {
+    if (code && studentId) {
       loadResults();
     }
-  }, [code, childId]);
+  }, [code, studentId]);
 
   const loadResults = async () => {
     try {
       setLoading(true);
       
       // Set assessment service context
-      assessmentService.setContext(code as string, childId as string);
+      assessmentService.setContext(code as string, studentId as string);
       
       // Load results
       const assessmentResults = await assessmentService.loadAssessmentResults();
@@ -37,10 +37,10 @@ export default function ChildResults() {
     }
   };
 
-  if (!child) {
+  if (!student) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Child not found</Text>
+        <Text style={styles.errorText}>Student not found</Text>
       </View>
     );
   }
@@ -59,12 +59,12 @@ export default function ChildResults() {
         <View style={styles.noResultsContainer}>
           <Text style={styles.title}>No Assessment Results</Text>
           <Text style={styles.subtitle}>
-            {child.name} hasn't completed an assessment yet.
+            {student.name} hasn't completed an assessment yet.
           </Text>
           
           <TouchableOpacity 
             style={styles.button}
-            onPress={() => router.push(`/family/${code}/child/${childId}/assessment`)}
+            onPress={() => router.push(`/family/${code}/student/${studentId}/assessment`)}
           >
             <Text style={styles.buttonText}>Take Assessment</Text>
           </TouchableOpacity>
@@ -85,7 +85,7 @@ export default function ChildResults() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{child.name}'s Results</Text>
+        <Text style={styles.title}>{student.name}'s Results</Text>
         <Text style={styles.subtitle}>
           Personalized learning recommendations based on assessment
         </Text>
@@ -103,7 +103,7 @@ export default function ChildResults() {
           {getModuleDisplayName(results.recommendedStartModule)}
         </Text>
         <Text style={styles.recommendationText}>
-          Based on the assessment, this is the best module to start with for {child.name}.
+          Based on the assessment, this is the best module to start with for {student.name}.
         </Text>
       </View>
 
@@ -147,14 +147,14 @@ export default function ChildResults() {
       <View style={styles.actionsCard}>
         <TouchableOpacity 
           style={styles.button}
-          onPress={() => router.push(`/family/${code}/child/${childId}/modules`)}
+          onPress={() => router.push(`/family/${code}/student/${studentId}/modules`)}
         >
           <Text style={styles.buttonText}>Start Learning Modules</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={[styles.button, styles.secondaryButton]}
-          onPress={() => router.push(`/family/${code}/child/${childId}/assessment`)}
+          onPress={() => router.push(`/family/${code}/student/${studentId}/assessment`)}
         >
           <Text style={[styles.buttonText, styles.secondaryButtonText]}>
             Retake Assessment
@@ -389,4 +389,3 @@ const styles = StyleSheet.create({
     color: '#007AFF',
   },
 });
-

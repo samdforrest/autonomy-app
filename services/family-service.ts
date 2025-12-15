@@ -15,10 +15,10 @@ export interface FamilyData {
     hasPassword: boolean;
     isAdmin?: boolean; // NEW: Admin role flag
   };
-  children: { [childId: string]: ChildData };
+  students: { [studentId: string]: StudentData };
 }
 
-export interface ChildData {
+export interface StudentData {
   name: string;
   assessments: { [assessmentId: string]: any };
   progress: { [moduleId: string]: any };
@@ -69,7 +69,7 @@ export class FamilyService {
         createdAt: serverTimestamp(),
         hasPassword: false
       },
-      children: {}
+      students: {}
     };
 
     await setDoc(doc(db, 'families', familyCode), familyData);
@@ -111,62 +111,62 @@ export class FamilyService {
   }
 
   /**
-   * Add a child to a family
+   * Add a student to a family
    */
-  async addChild(familyCode: string, childName: string): Promise<string> {
-    const childId = childName.toLowerCase().replace(/\s+/g, '-');
+  async addStudent(familyCode: string, studentName: string): Promise<string> {
+    const studentId = studentName.toLowerCase().replace(/\s+/g, '-');
     
-    const childData: ChildData = {
-      name: childName,
+    const studentData: StudentData = {
+      name: studentName,
       assessments: {},
       progress: {}
     };
 
     await updateDoc(doc(db, 'families', familyCode), {
-      [`children.${childId}`]: childData
+      [`students.${studentId}`]: studentData
     });
 
-    console.log('✅ Added child to family:', childName, 'in', familyCode);
-    return childId;
+    console.log('✅ Added student to family:', studentName, 'in', familyCode);
+    return studentId;
   }
 
   /**
-   * Save assessment results for a child
+   * Save assessment results for a student
    */
   async saveAssessmentResults(
     familyCode: string, 
-    childId: string, 
+    studentId: string, 
     assessmentData: any
   ): Promise<void> {
     const assessmentId = `assessment_${Date.now()}`;
     
     await updateDoc(doc(db, 'families', familyCode), {
-      [`children.${childId}.assessments.${assessmentId}`]: {
+      [`students.${studentId}.assessments.${assessmentId}`]: {
         ...assessmentData,
         completedAt: serverTimestamp()
       }
     });
 
-    console.log('✅ Saved assessment results for:', childId, 'in family:', familyCode);
+    console.log('✅ Saved assessment results for:', studentId, 'in family:', familyCode);
   }
 
   /**
-   * Update child progress for a module
+   * Update student progress for a module
    */
-  async updateChildProgress(
+  async updateStudentProgress(
     familyCode: string,
-    childId: string,
+    studentId: string,
     moduleId: string,
     progressData: any
   ): Promise<void> {
     await updateDoc(doc(db, 'families', familyCode), {
-      [`children.${childId}.progress.${moduleId}`]: {
+      [`students.${studentId}.progress.${moduleId}`]: {
         ...progressData,
         lastUpdated: serverTimestamp()
       }
     });
 
-    console.log('✅ Updated progress for:', childId, moduleId, 'in family:', familyCode);
+    console.log('✅ Updated progress for:', studentId, moduleId, 'in family:', familyCode);
   }
 
   /**

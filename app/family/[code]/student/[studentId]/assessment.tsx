@@ -6,8 +6,8 @@ import { DOCUMENT_REFS } from '../../../../../services/api';
 import { AssessmentQuestion, AssessmentResponse, assessmentService } from '../../../../../services/assessment-service';
 import { useFamilyContext } from '../../_layout';
 
-export default function ChildAssessment() {
-  const { code, childId } = useLocalSearchParams<{ code: string; childId: string }>();
+export default function StudentAssessment() {
+  const { code, studentId } = useLocalSearchParams<{ code: string; studentId: string }>();
   const { family, refreshFamily } = useFamilyContext();
   const router = useRouter();
   
@@ -21,18 +21,18 @@ export default function ChildAssessment() {
     'assessment'
   );
 
-  const child = family.children[childId as string];
+  const student = family.students[studentId as string];
   const assessmentQuestions: AssessmentQuestion[] = assessmentContent?.questions || [];
 
   useEffect(() => {
-    if (code && childId) {
+    if (code && studentId) {
       // Set assessment service context
-      assessmentService.setContext(code as string, childId as string);
+      assessmentService.setContext(code as string, studentId as string);
       
       // Check for existing results
       checkExistingResults();
     }
-  }, [code, childId]);
+  }, [code, studentId]);
 
   const checkExistingResults = async () => {
     try {
@@ -89,11 +89,11 @@ export default function ChildAssessment() {
       
       Alert.alert(
         'Assessment Complete!',
-        `Assessment completed for ${child.name}. You can now view their personalized learning modules.`,
+        `Assessment completed for ${student.name}. You can now view their personalized learning modules.`,
         [
           {
             text: 'View Results',
-            onPress: () => router.push(`/family/${code}/child/${childId}/results`)
+            onPress: () => router.push(`/family/${code}/student/${studentId}/results`)
           }
         ]
       );
@@ -122,10 +122,10 @@ export default function ChildAssessment() {
     );
   };
 
-  if (!child) {
+  if (!student) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Child not found</Text>
+        <Text style={styles.errorText}>Student not found</Text>
       </View>
     );
   }
@@ -144,12 +144,12 @@ export default function ChildAssessment() {
         <View style={styles.existingResultsContainer}>
           <Text style={styles.title}>Assessment Complete</Text>
           <Text style={styles.subtitle}>
-            {child.name} has already completed their assessment.
+            {student.name} has already completed their assessment.
           </Text>
           
           <TouchableOpacity 
             style={styles.button}
-            onPress={() => router.push(`/family/${code}/child/${childId}/results`)}
+            onPress={() => router.push(`/family/${code}/student/${studentId}/results`)}
           >
             <Text style={styles.buttonText}>View Results</Text>
           </TouchableOpacity>
@@ -170,7 +170,7 @@ export default function ChildAssessment() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Assessment for {child.name}</Text>
+        <Text style={styles.title}>Assessment for {student.name}</Text>
         <Text style={styles.subtitle}>
           Answer these questions to get personalized learning recommendations
         </Text>
@@ -402,4 +402,3 @@ const styles = StyleSheet.create({
     color: '#007AFF',
   },
 });
-
