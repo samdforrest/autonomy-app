@@ -92,6 +92,10 @@ export default function RootLayout() {
           options={getModuleOptions("Collaboration & Teamwork")}
         />
         <Stack.Screen 
+          name="self-monitoring-module" 
+          options={getModuleOptions("Self-Monitoring Module")}
+        />
+        <Stack.Screen 
           name="selfcoach-module" 
           options={getModuleOptions("Self-Coaching Module")}
         />
