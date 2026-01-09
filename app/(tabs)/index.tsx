@@ -430,9 +430,9 @@ export default function HomeScreen() {
             <ThemedView style={styles.familyContextActions}>
               <TouchableOpacity 
                 style={styles.familyContextButton}
-                onPress={() => router.push(`/family/${currentFamilyCode}`)}
+                onPress={() => router.push('/(tabs)/profile')}
               >
-                <ThemedText style={styles.familyContextButtonText}>Go to Dashboard</ThemedText>
+                <ThemedText style={styles.familyContextButtonText}>Go to Profile</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.familyContextButton, styles.familyContextButtonSecondary]}

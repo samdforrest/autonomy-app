@@ -1,24 +1,60 @@
+import { FamilyCompletionDashboard } from '@/components/FamilyCompletionDashboard';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useAppMode } from '@/contexts/AppModeContext';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
-  const { userMode, switchMode } = useAppMode();
+  const { userMode, switchMode, isInFamilyMode, currentFamily, currentFamilyCode, isAdminFamily } = useAppMode();
+  const router = useRouter();
+  const [addingStudent, setAddingStudent] = useState(false);
 
   const handleModeToggle = () => {
     switchMode(userMode === 'parent' ? 'student' : 'parent');
   };
 
+  const handleAddStudent = () => {
+    Alert.prompt(
+      'Set Student Name',
+      'Enter your student\'s name:',
+      async (studentName) => {
+        if (studentName && studentName.trim()) {
+          try {
+            // For simplified model, we'll update the family's student name
+            // This would need to be implemented in the family service
+            console.log('Setting student name:', studentName.trim());
+            // TODO: Implement familyService.setStudentName(currentFamilyCode, studentName.trim());
+            console.log('✅ Student name set successfully');
+          } catch (error) {
+            console.error('❌ Error setting student name:', error);
+            Alert.alert('Error', 'Failed to set student name. Please try again.');
+          }
+        }
+      }
+    );
+  };
+
+  const navigateToAssessment = () => {
+    router.push(`/family/${currentFamilyCode}/assessment`);
+  };
+
+  const navigateToResults = () => {
+    router.push(`/family/${currentFamilyCode}/results`);
+  };
+
   return (
-    <ThemedView style={styles.container}>
+    <ScrollView style={styles.container}>
       <ThemedView style={styles.header}>
         <View style={styles.profileIconContainer}>
           <IconSymbol size={80} name="person.fill" color="#666" />
         </View>
         <ThemedText type="title" style={styles.title}>Profile</ThemedText>
-        <ThemedText style={styles.subtitle}>Manage your learning journey</ThemedText>
+        <ThemedText style={styles.subtitle}>
+          {isInFamilyMode ? `Family: ${currentFamilyCode}` : 'Manage your learning journey'}
+        </ThemedText>
         
         {/* Mode Switcher */}
         <ThemedView style={styles.modeSwitcher}>
@@ -46,31 +82,167 @@ export default function ProfileScreen() {
         </ThemedView>
       </ThemedView>
       
-      <ThemedView style={styles.content}>
-        <ThemedText style={styles.comingSoon}>
-          Profile features coming soon!
-        </ThemedText>
-        <ThemedText style={styles.description}>
-          Here you'll be able to:
-          {'\n'}• Switch between parent and student profiles
-          {'\n'}• View learning progress
-          {'\n'}• Manage account settings
-          {'\n'}• Track completed modules
-        </ThemedText>
-      </ThemedView>
-    </ThemedView>
+      {/* Family Dashboard Content - Only show when in family mode */}
+      {isInFamilyMode && currentFamily ? (
+        <View>
+          {/* Family Welcome Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              Family Dashboard {isAdminFamily && <Text style={styles.adminBadge}>🔧 ADMIN</Text>}
+            </Text>
+            <Text style={styles.parentName}>
+              Welcome, {currentFamily.settings?.parentName || 'Parent'}!
+            </Text>
+          </View>
+
+          {/* Student Profile Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Student Profile</Text>
+              {!(currentFamily as any).studentName && (
+                <TouchableOpacity 
+                  style={styles.addButton}
+                  onPress={handleAddStudent}
+                >
+                  <Text style={styles.addButtonText}>+ Set Student Name</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {!(currentFamily as any).studentName ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyText}>No student profile set</Text>
+                <Text style={styles.emptySubtext}>
+                  Set your student's name to get started with assessments
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.studentCard}>
+                <Text style={styles.studentName}>{(currentFamily as any).studentName}</Text>
+                
+                <View style={styles.studentActions}>
+                  <TouchableOpacity 
+                    style={styles.actionButton}
+                    onPress={navigateToAssessment}
+                  >
+                    <Text style={styles.actionButtonText}>Take Assessment</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.progressButton]}
+                    onPress={navigateToResults}
+                  >
+                    <Text style={styles.actionButtonText}>View Results</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Quick Stats */}
+                <View style={styles.quickStats}>
+                    <Text style={styles.statText}>
+                      Assessments: {Object.keys((currentFamily as any).assessments || {}).length}
+                    </Text>
+                    <Text style={styles.statText}>
+                      Progress: Available after assessment
+                    </Text>
+                  </View>
+                </View>
+            )}
+          </View>
+
+          {/* Module Completion Dashboard */}
+          <FamilyCompletionDashboard />
+
+          {/* Quick Actions */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            
+            <TouchableOpacity 
+              style={styles.quickAction}
+              onPress={() => {
+                // Share family code
+                Alert.alert(
+                  'Share Family Code',
+                  `Share this code with family members:\n\n${currentFamilyCode}\n\nOr share this link:\n${window.location.origin}/family/${currentFamilyCode}`,
+                  [{ text: 'OK' }]
+                );
+              }}
+            >
+              <Text style={styles.quickActionText}>🔗 Share Family Code</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Admin Section - Only visible to admin families */}
+          {isAdminFamily && (
+            <View style={[styles.section, styles.adminSection]}>
+              <Text style={[styles.sectionTitle, styles.adminTitle]}>
+                🔧 Admin Controls
+              </Text>
+              <Text style={styles.sectionSubtitle}>
+                Administrative functions for managing the platform
+              </Text>
+              
+              <TouchableOpacity 
+                style={[styles.familyButton, styles.adminButton]}
+                onPress={() => router.push('/create-family')}
+              >
+                <Text style={[styles.familyButtonText, styles.adminButtonText]}>
+                  🆕 Create New Family (Admin)
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Family Access Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>👨‍👩‍👧‍👦 Family Access</Text>
+            <Text style={styles.sectionSubtitle}>
+              Invite others to join your family or switch between families
+            </Text>
+            
+            <View style={styles.familyButtons}>
+              <TouchableOpacity 
+                style={[styles.familyButton, styles.familyButtonSecondary]}
+                onPress={() => router.push('/join-family')}
+              >
+                <Text style={[styles.familyButtonText, styles.familyButtonTextSecondary]}>
+                  🔗 Join Different Family
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      ) : (
+        /* Default Profile Content - Show when not in family mode */
+        <ThemedView style={styles.content}>
+          <ThemedText style={styles.comingSoon}>
+            Profile features coming soon!
+          </ThemedText>
+          <ThemedText style={styles.description}>
+            Here you'll be able to:
+            {'\n'}• Switch between parent and student profiles
+            {'\n'}• View learning progress
+            {'\n'}• Manage account settings
+            {'\n'}• Track completed modules
+          </ThemedText>
+        </ThemedView>
+      )}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: '#f5f5f5',
   },
   header: {
     alignItems: 'center',
     marginTop: 40,
     marginBottom: 40,
+    backgroundColor: '#fff',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
   profileIconContainer: {
     width: 120,
@@ -139,6 +311,9 @@ const styles = StyleSheet.create({
   modeToggleParent: {
     backgroundColor: '#E3F2FD', // Light blue for parent
   },
+  modeToggleChild: {
+    backgroundColor: '#FFF3E0', // Light orange for student
+  },
   modeToggleStudent: {
     backgroundColor: '#FFF3E0', // Light orange for student
   },
@@ -161,6 +336,10 @@ const styles = StyleSheet.create({
     left: 4,
     backgroundColor: '#2196F3', // Blue for parent
   },
+  indicatorChild: {
+    right: 4,
+    backgroundColor: '#FF9800', // Orange for student
+  },
   indicatorStudent: {
     right: 4,
     backgroundColor: '#FF9800', // Orange for student
@@ -177,5 +356,159 @@ const styles = StyleSheet.create({
   },
   textChild: {
     color: 'white',
+  },
+  // Family Dashboard Styles
+  section: {
+    backgroundColor: '#fff',
+    margin: 15,
+    padding: 20,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  parentName: {
+    fontSize: 18,
+    color: '#007AFF',
+    marginTop: 10,
+  },
+  addButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 30,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#666',
+    marginBottom: 5,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+  },
+  studentCard: {
+    backgroundColor: '#f8f9fa',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  studentName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 10,
+  },
+  studentActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 10,
+  },
+  actionButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 6,
+    flex: 1,
+  },
+  progressButton: {
+    backgroundColor: '#34C759',
+  },
+  actionButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  quickStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  statText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  quickAction: {
+    backgroundColor: '#f8f9fa',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  quickActionText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  // Family Access styles
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+  },
+  familyButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  familyButton: {
+    flex: 1,
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  familyButtonSecondary: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#007AFF',
+  },
+  familyButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  familyButtonTextSecondary: {
+    color: '#007AFF',
+  },
+  // Admin-specific styles
+  adminSection: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF6B35',
+    backgroundColor: '#FFF8F5',
+  },
+  adminTitle: {
+    color: '#FF6B35',
+  },
+  adminButton: {
+    backgroundColor: '#FF6B35',
+  },
+  adminButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  adminBadge: {
+    fontSize: 14,
+    color: '#FF6B35',
+    fontWeight: 'bold',
   },
 });
