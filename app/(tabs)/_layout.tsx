@@ -44,8 +44,7 @@ export default function TabLayout() {
         options={{
           title: 'Explore',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-          // Hide tab for parents by setting href to null
-          href: userMode === 'student' ? '/explore' : null,
+          // Show explore tab for both students and parents
         }}
       />
       <Tabs.Screen

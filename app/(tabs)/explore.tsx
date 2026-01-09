@@ -17,25 +17,9 @@ interface Module {
 export default function TabTwoScreen() {
   const { userMode } = useAppMode();
   
-  // Route guard: Don't render explore content for parents
-  if (userMode === 'parent') {
-    console.log('🚫 Parent attempted to access explore page');
-    // Return a redirect component or empty view
-    React.useEffect(() => {
-      const timer = setTimeout(() => {
-        router.replace('/(tabs)');
-      }, 100); // Small delay to ensure router is ready
-      return () => clearTimeout(timer);
-    }, []);
-    
-    return (
-      <ThemedView style={styles.container}>
-        <ThemedText>Redirecting...</ThemedText>
-      </ThemedView>
-    );
-  }
+  // No redirect needed - parents can access explore page
   
-  const modules: Module[] = [
+  const studentModules: Module[] = [
     {
       id: '1',
       title: 'Responsibility',
@@ -59,7 +43,7 @@ export default function TabTwoScreen() {
     },
     {
       id: '4',
-      title: 'Regulation',
+      title: 'Self-Regulation',
       emoji: '📏',
       description: 'Who is in control?',
       isActive: true
@@ -108,33 +92,104 @@ export default function TabTwoScreen() {
     }
   ];
 
+  const parentModules: Module[] = [
+    {
+      id: '1',
+      title: 'Responsibility',
+      emoji: '💼',
+      description: 'How to guide responsibility development',
+      isActive: true
+    },
+    {
+      id: '2',
+      title: 'Collaboration',
+      emoji: '🤝',
+      description: 'Supporting teamwork skills',
+      isActive: true
+    },
+    {
+      id: '3',
+      title: 'Self-Monitoring',
+      emoji: '🌱',
+      description: 'Helping your child self-assess',
+      isActive: true
+    },
+    {
+      id: '4',
+      title: 'Self-Regulation',
+      emoji: '📏',
+      description: 'Teaching self-control strategies',
+      isActive: true
+    },
+    {
+      id: '5',
+      title: 'Curiosity',
+      emoji: '❓',
+      description: 'Encouraging questions and exploration',
+      isActive: true
+    },
+    {
+      id: '6',
+      title: 'Shape of Learning',
+      emoji: '🔄',
+      description: 'Understanding the learning process',
+      isActive: true
+    },
+    {
+      id: '7',
+      title: 'Self Coach',
+      emoji: '🧘‍♂️',
+      description: 'Modeling positive self-talk',
+      isActive: true
+    },
+    {
+      id: '8',
+      title: 'Mistakes',
+      emoji: '❌',
+      description: 'Helping process errors constructively',
+      isActive: true
+    },
+    {
+      id: '9',
+      title: 'Neuroplasticity',
+      emoji: '🧠',
+      description: 'Explaining brain growth to your child',
+      isActive: true
+    },
+    {
+      id: '10',
+      title: 'Mastery Moments',
+      emoji: '🏆',
+      description: 'Celebrating achievements effectively',
+      isActive: true
+    }
+  ];
+
+  const modules = userMode === 'parent' ? parentModules : studentModules;
+
   const handleModulePress = (module: Module) => {
     if (!module.isActive) {
       console.log(`${module.title} module is locked`);
       return;
     }
     
-    // Navigate to specific module
-    if (module.title === 'Responsibility') {
-      router.push('/responsibility-module');
-    } else if (module.title === 'Collaboration') {
-      router.push('/collaboration-module');
-    } else if (module.title === 'Self-Monitoring') {
-      router.push('/self-monitoring-module');
-    } else if (module.title === 'Mistakes') {
-      router.push('/mistakes-module');
-    } else if (module.title === 'Regulation') {
-      router.push('/regulation-module');
-    } else if (module.title === 'Self Coach') {
-      router.push('/selfcoach-module');
-    } else if (module.title === 'Curiosity') {
-      router.push('/curiosity-module');
-    } else if (module.title === 'Shape of Learning') {
-      router.push('/shapeoflearning-module');
-    } else if (module.title === 'Neuroplasticity') {
-      router.push('/neuroplasticity-module');
-    } else if (module.title === 'Mastery Moments') {
-      router.push('/mastery-moments-module');
+    // Navigate to specific module - different routes for parent vs student
+    const moduleRoutes = {
+      'Responsibility': userMode === 'parent' ? '/responsibility-parent-module' : '/responsibility-module',
+      'Collaboration': userMode === 'parent' ? '/collaboration-parent-module' : '/collaboration-module',
+      'Self-Monitoring': userMode === 'parent' ? '/self-monitoring-parent-module' : '/self-monitoring-module',
+      'Mistakes': userMode === 'parent' ? '/mistakes-parent-module' : '/mistakes-module',
+      'Self-Regulation': userMode === 'parent' ? '/regulation-parent-module' : '/regulation-module',
+      'Self Coach': userMode === 'parent' ? '/selfcoach-parent-module' : '/selfcoach-module',
+      'Curiosity': userMode === 'parent' ? '/curiosity-parent-module' : '/curiosity-module',
+      'Shape of Learning': userMode === 'parent' ? '/shapeoflearning-parent-module' : '/shapeoflearning-module',
+      'Neuroplasticity': userMode === 'parent' ? '/neuroplasticity-parent-module' : '/neuroplasticity-module',
+      'Mastery Moments': userMode === 'parent' ? '/mastery-moments-parent-module' : '/mastery-moments-module'
+    };
+
+    const route = moduleRoutes[module.title as keyof typeof moduleRoutes];
+    if (route) {
+      router.push(route as any); // Type assertion needed for dynamic routes
     } else {
       console.log(`${module.title} module pressed - coming soon`);
     }
@@ -194,10 +249,10 @@ export default function TabTwoScreen() {
           />
         </ThemedView>
         <ThemedText type="title" style={styles.title}>
-          Learning Modules
+          {userMode === 'parent' ? 'How To Modules' : 'Learning Modules'}
         </ThemedText>
         <ThemedText style={styles.subtitle}>
-          Start your learning journey
+          {userMode === 'parent' ? 'Guide your child\'s learning journey' : 'Start your learning journey'}
         </ThemedText>
       </ThemedView>
       

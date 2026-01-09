@@ -186,7 +186,14 @@ export default function AssessmentScreen() {
         summary.summary,
         [
           { text: 'View Results', onPress: () => {} },
-          { text: 'Start Learning', onPress: () => router.push('/(tabs)/explore') }
+          { text: 'Start Learning', onPress: () => {
+            // Only navigate to explore for students, parents go to home
+            if (userMode === 'student') {
+              router.push('/(tabs)/explore');
+            } else {
+                  router.push('/(tabs)');
+            }
+          } }
         ]
       );
       
@@ -303,7 +310,14 @@ export default function AssessmentScreen() {
             
             <TouchableOpacity 
               style={[styles.primaryButton, { backgroundColor: '#27AE60', marginTop: 8 }]} 
-              onPress={() => router.push('/(tabs)/explore')}
+              onPress={() => {
+                // Only navigate to explore for students, parents go to home
+                if (userMode === 'student') {
+                  router.push('/(tabs)/explore');
+                } else {
+                  router.push('/(tabs)');
+                }
+              }}
             >
               <ThemedText style={styles.primaryButtonText}>Start Learning</ThemedText>
             </TouchableOpacity>

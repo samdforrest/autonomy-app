@@ -463,7 +463,7 @@ export default function RegulationModuleScreen() {
           {/* Survey Button - Only show for Day 5 */}
           <SurveyButton 
             moduleId="regulation"
-            moduleName="Regulation & Control"
+            moduleName="Self-Regulation & Control"
             dayNumber={day.dayNumber}
           />
         </ThemedView>
@@ -484,7 +484,7 @@ export default function RegulationModuleScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.header}>
-        <ThemedText type="title" style={styles.moduleTitle}>Regulation & Control</ThemedText>
+        <ThemedText type="title" style={styles.moduleTitle}>Self-Regulation & Control</ThemedText>
         <ThemedText style={styles.moduleSubtitle}>
           Build emotional awareness and self-regulation skills through 5 focused days...
         </ThemedText>

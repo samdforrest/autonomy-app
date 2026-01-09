@@ -1,8 +1,8 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
+import type { AssessmentQuestion, AssessmentResponse } from '../services/assessment-service';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
-import type { AssessmentQuestion, AssessmentResponse } from '../services/assessment-service';
 
 interface AssessmentQuestionProps {
   question: AssessmentQuestion;
