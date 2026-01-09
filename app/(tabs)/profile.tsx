@@ -4,46 +4,19 @@ import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useAppMode } from '@/contexts/AppModeContext';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
   const { userMode, switchMode, isInFamilyMode, currentFamily, currentFamilyCode, isAdminFamily } = useAppMode();
   const router = useRouter();
-  const [addingStudent, setAddingStudent] = useState(false);
+  // Student-related state removed for now
 
   const handleModeToggle = () => {
     switchMode(userMode === 'parent' ? 'student' : 'parent');
   };
 
-  const handleAddStudent = () => {
-    Alert.prompt(
-      'Set Student Name',
-      'Enter your student\'s name:',
-      async (studentName) => {
-        if (studentName && studentName.trim()) {
-          try {
-            // For simplified model, we'll update the family's student name
-            // This would need to be implemented in the family service
-            console.log('Setting student name:', studentName.trim());
-            // TODO: Implement familyService.setStudentName(currentFamilyCode, studentName.trim());
-            console.log('✅ Student name set successfully');
-          } catch (error) {
-            console.error('❌ Error setting student name:', error);
-            Alert.alert('Error', 'Failed to set student name. Please try again.');
-          }
-        }
-      }
-    );
-  };
-
-  const navigateToAssessment = () => {
-    router.push(`/family/${currentFamilyCode}/assessment`);
-  };
-
-  const navigateToResults = () => {
-    router.push(`/family/${currentFamilyCode}/results`);
-  };
+  // Student profile functions removed for now
 
   return (
     <ScrollView style={styles.container}>
@@ -95,59 +68,7 @@ export default function ProfileScreen() {
             </Text>
           </View>
 
-          {/* Student Profile Section */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Student Profile</Text>
-              {!(currentFamily as any).studentName && (
-                <TouchableOpacity 
-                  style={styles.addButton}
-                  onPress={handleAddStudent}
-                >
-                  <Text style={styles.addButtonText}>+ Set Student Name</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {!(currentFamily as any).studentName ? (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>No student profile set</Text>
-                <Text style={styles.emptySubtext}>
-                  Set your student's name to get started with assessments
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.studentCard}>
-                <Text style={styles.studentName}>{(currentFamily as any).studentName}</Text>
-                
-                <View style={styles.studentActions}>
-                  <TouchableOpacity 
-                    style={styles.actionButton}
-                    onPress={navigateToAssessment}
-                  >
-                    <Text style={styles.actionButtonText}>Take Assessment</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity 
-                    style={[styles.actionButton, styles.progressButton]}
-                    onPress={navigateToResults}
-                  >
-                    <Text style={styles.actionButtonText}>View Results</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Quick Stats */}
-                <View style={styles.quickStats}>
-                    <Text style={styles.statText}>
-                      Assessments: {Object.keys((currentFamily as any).assessments || {}).length}
-                    </Text>
-                    <Text style={styles.statText}>
-                      Progress: Available after assessment
-                    </Text>
-                  </View>
-                </View>
-            )}
-          </View>
+          {/* Student Profile Section - Temporarily removed */}
 
           {/* Module Completion Dashboard */}
           <FamilyCompletionDashboard />
