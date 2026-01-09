@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Platform, ScrollView, StyleSheet } from 'react-native';
+import { EnhancedYouTubePlayer } from '@/components/EnhancedYouTubePlayer';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { YouTubeVideoCard } from '@/components/YouTubeVideoCard';
-import { EnhancedYouTubePlayer } from '@/components/EnhancedYouTubePlayer';
+import React, { useState } from 'react';
+import { Platform, ScrollView, StyleSheet } from 'react-native';
 
 /**
  * Demo screen showing the new YouTube video card UI
