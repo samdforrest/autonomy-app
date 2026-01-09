@@ -3,7 +3,8 @@ import { ThemedView } from '@/components/ThemedView';
 import { useAppMode } from '@/contexts/AppModeContext';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { FlatList, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface Module {
   id: string;
@@ -14,7 +15,25 @@ interface Module {
 }
 
 export default function TabTwoScreen() {
-  const { userMode, studentProgress, parentInsights } = useAppMode();
+  const { userMode } = useAppMode();
+  
+  // Route guard: Don't render explore content for parents
+  if (userMode === 'parent') {
+    console.log('🚫 Parent attempted to access explore page');
+    // Return a redirect component or empty view
+    React.useEffect(() => {
+      const timer = setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 100); // Small delay to ensure router is ready
+      return () => clearTimeout(timer);
+    }, []);
+    
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedText>Redirecting...</ThemedText>
+      </ThemedView>
+    );
+  }
   
   const modules: Module[] = [
     {
@@ -122,85 +141,7 @@ export default function TabTwoScreen() {
   };
 
   // Parent Dashboard Components
-  const renderParentInsights = () => (
-    <ThemedView style={styles.parentSection}>
-      <ThemedText style={styles.parentSectionTitle}>📊 Learning Insights</ThemedText>
-      
-      {/* Recommended Modules */}
-      <ThemedView style={styles.insightCard}>
-        <ThemedText style={styles.insightTitle}>🎯 Priority Modules</ThemedText>
-        {parentInsights.recommendedModules.slice(0, 3).map((moduleId, index) => {
-          const module = modules.find(m => m.title.toLowerCase() === moduleId);
-          return (
-            <ThemedText key={moduleId} style={styles.insightItem}>
-              {index + 1}. {module?.title || moduleId} {module?.emoji}
-            </ThemedText>
-          );
-        })}
-      </ThemedView>
-
-      {/* Strengths */}
-      {parentInsights.strengths.length > 0 && (
-        <ThemedView style={styles.insightCard}>
-          <ThemedText style={styles.insightTitle}>💪 Strengths</ThemedText>
-          {parentInsights.strengths.map(strength => (
-            <ThemedText key={strength} style={styles.strengthItem}>
-              ✅ {strength}
-            </ThemedText>
-          ))}
-        </ThemedView>
-      )}
-
-      {/* Areas for Growth */}
-      {parentInsights.strugglingAreas.length > 0 && (
-        <ThemedView style={styles.insightCard}>
-          <ThemedText style={styles.insightTitle}>🎯 Focus Areas</ThemedText>
-          {parentInsights.strugglingAreas.map(area => (
-            <ThemedText key={area} style={styles.strugglingItem}>
-              📈 {area}
-            </ThemedText>
-          ))}
-        </ThemedView>
-      )}
-    </ThemedView>
-  );
-
-  const renderChildProgress = () => (
-    <ThemedView style={styles.parentSection}>
-      <ThemedText style={styles.parentSectionTitle}>📈 Student's Progress</ThemedText>
-      {Object.entries(studentProgress).map(([moduleId, progress]) => {
-        const module = modules.find(m => m.title.toLowerCase() === moduleId);
-        const progressPercent = Math.round((progress.completedDays / progress.totalDays) * 100);
-        
-        return (
-          <ThemedView key={moduleId} style={styles.progressCard}>
-            <ThemedView style={styles.progressHeader}>
-              <ThemedText style={styles.progressModuleName}>
-                {module?.emoji} {module?.title || moduleId}
-              </ThemedText>
-              <ThemedText style={styles.progressPercent}>{progressPercent}%</ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.progressBar}>
-              <ThemedView style={[styles.progressFill, { width: `${progressPercent}%` }]} />
-            </ThemedView>
-            <ThemedText style={styles.progressDetails}>
-              {progress.completedDays} of {progress.totalDays} days completed
-            </ThemedText>
-            {progress.assessmentScores && progress.assessmentScores.length > 0 && (
-              <ThemedText style={styles.progressScore}>
-                Avg Score: {Math.round(progress.assessmentScores.reduce((a, b) => a + b, 0) / progress.assessmentScores.length)}%
-              </ThemedText>
-            )}
-          </ThemedView>
-        );
-      })}
-    </ThemedView>
-  );
-
   const renderModule = ({ item }: { item: Module }) => {
-    // In parent mode, show progress overlay
-    const progress = studentProgress[item.title.toLowerCase()];
-    const progressPercent = progress ? Math.round((progress.completedDays / progress.totalDays) * 100) : 0;
     
     return (
       <TouchableOpacity 
@@ -225,12 +166,6 @@ export default function TabTwoScreen() {
             <ThemedText style={styles.daysText}>5</ThemedText>
           </View>
           
-          {/* Parent Mode: Show progress overlay */}
-          {userMode === 'parent' && progress && (
-            <View style={styles.progressOverlay}>
-              <ThemedText style={styles.progressOverlayText}>{progressPercent}%</ThemedText>
-            </View>
-          )}
         </View>
         <ThemedText style={[
           styles.moduleTitle,
@@ -242,10 +177,7 @@ export default function TabTwoScreen() {
           styles.moduleDescription,
           !item.isActive && styles.moduleDescriptionLocked
         ]}>
-          {userMode === 'parent' && progress 
-            ? `${progress.completedDays}/${progress.totalDays} days completed`
-            : item.description
-          }
+          {item.description}
         </ThemedText>
       </TouchableOpacity>
     );
@@ -262,35 +194,22 @@ export default function TabTwoScreen() {
           />
         </ThemedView>
         <ThemedText type="title" style={styles.title}>
-          {userMode === 'parent' ? 'Parent Dashboard' : 'Learning Modules'}
+          Learning Modules
         </ThemedText>
         <ThemedText style={styles.subtitle}>
-          {userMode === 'parent' 
-            ? 'Monitor your student\'s learning progress' 
-            : 'Start your learning journey'
-          }
+          Start your learning journey
         </ThemedText>
       </ThemedView>
       
-      {userMode === 'parent' ? (
-        <ScrollView 
-          style={styles.parentContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          {renderParentInsights()}
-          {renderChildProgress()}
-        </ScrollView>
-      ) : (
-        <FlatList
-          data={modules}
-          renderItem={renderModule}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          contentContainerStyle={styles.moduleGrid}
-          columnWrapperStyle={styles.moduleRow}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+      <FlatList
+        data={modules}
+        renderItem={renderModule}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        contentContainerStyle={styles.moduleGrid}
+        columnWrapperStyle={styles.moduleRow}
+        showsVerticalScrollIndicator={false}
+      />
     </ThemedView>
   );
 }

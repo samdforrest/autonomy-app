@@ -6,10 +6,16 @@ import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
+import { useAppMode } from '@/contexts/AppModeContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { userMode } = useAppMode();
+  
+  // Debug logging to verify userMode
+  console.log('🔍 TabLayout userMode:', userMode, 'showExplore:', userMode === 'student');
+  console.log('🔍 TabLayout userMode type:', typeof userMode, 'exact value:', JSON.stringify(userMode));
 
   return (
     <Tabs
@@ -38,6 +44,8 @@ export default function TabLayout() {
         options={{
           title: 'Explore',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          // Hide tab for parents by setting href to null
+          href: userMode === 'student' ? '/explore' : null,
         }}
       />
       <Tabs.Screen

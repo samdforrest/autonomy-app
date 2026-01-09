@@ -27,8 +27,9 @@ export default function RootLayout() {
       if (router.canGoBack()) {
         router.back();
       } else {
-        // If no history (e.g., direct page reload), navigate to explore tab
-        router.push('/(tabs)/explore');
+        // If no history (e.g., direct page reload), navigate to home tab
+        // This is safer than trying to access userMode here
+        router.push('/(tabs)');
       }
     };
 
