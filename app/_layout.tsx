@@ -6,6 +6,7 @@ import { Platform, Text, TouchableOpacity } from 'react-native';
 import 'react-native-reanimated';
 
 import { AppModeProvider } from '@/contexts/AppModeContext';
+import { CompletionProvider } from '@/contexts/CompletionContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function RootLayout() {
@@ -72,7 +73,8 @@ export default function RootLayout() {
 
   return (
     <AppModeProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <CompletionProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen 
@@ -145,7 +147,8 @@ export default function RootLayout() {
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />
-      </ThemeProvider>
+        </ThemeProvider>
+      </CompletionProvider>
     </AppModeProvider>
   );
 }

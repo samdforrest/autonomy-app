@@ -22,6 +22,15 @@ export interface StudentData {
   name: string;
   assessments: { [assessmentId: string]: any };
   progress: { [moduleId: string]: any };
+  moduleCompletions?: {
+    [moduleId: string]: {
+      isCompleted: boolean;
+      completedAt?: any;
+      completedDays?: number;
+      totalDays?: number;
+      lastAccessed?: any;
+    };
+  };
 }
 
 export class FamilyService {
@@ -119,7 +128,8 @@ export class FamilyService {
     const studentData: StudentData = {
       name: studentName,
       assessments: {},
-      progress: {}
+      progress: {},
+      moduleCompletions: {}
     };
 
     await updateDoc(doc(db, 'families', familyCode), {
@@ -128,6 +138,39 @@ export class FamilyService {
 
     console.log('✅ Added student to family:', studentName, 'in', familyCode);
     return studentId;
+  }
+
+  /**
+   * Get the first available student ID from a family (for auto-selection)
+   */
+  async getFirstStudentId(familyCode: string): Promise<string | null> {
+    const family = await this.getFamilyData(familyCode);
+    if (!family || !family.students) {
+      return null;
+    }
+
+    const studentIds = Object.keys(family.students);
+    return studentIds.length > 0 ? studentIds[0] : null;
+  }
+
+  /**
+   * Ensure a family has at least one student (create default if needed)
+   */
+  async ensureDefaultStudent(familyCode: string): Promise<string> {
+    const family = await this.getFamilyData(familyCode);
+    if (!family) {
+      throw new Error('Family not found');
+    }
+
+    // Check if family already has students
+    if (family.students && Object.keys(family.students).length > 0) {
+      return Object.keys(family.students)[0];
+    }
+
+    // Create a default student
+    const defaultStudentId = await this.addStudent(familyCode, 'Student');
+    console.log('✅ Created default student for family:', familyCode);
+    return defaultStudentId;
   }
 
   /**
@@ -175,6 +218,146 @@ export class FamilyService {
   async validateFamilyCode(familyCode: string): Promise<boolean> {
     const family = await this.getFamilyData(familyCode);
     return family !== null;
+  }
+
+  /**
+   * Mark a module as completed for a student
+   */
+  async markModuleCompleted(
+    familyCode: string,
+    studentId: string,
+    moduleId: string,
+    completedDays: number = 5,
+    totalDays: number = 5
+  ): Promise<void> {
+    await updateDoc(doc(db, 'families', familyCode), {
+      [`students.${studentId}.moduleCompletions.${moduleId}`]: {
+        isCompleted: true,
+        completedAt: serverTimestamp(),
+        completedDays,
+        totalDays,
+        lastAccessed: serverTimestamp()
+      }
+    });
+
+    console.log('✅ Module marked as completed:', moduleId, 'for student:', studentId, 'in family:', familyCode);
+  }
+
+  /**
+   * Update module progress (days completed, last accessed)
+   */
+  async updateModuleProgress(
+    familyCode: string,
+    studentId: string,
+    moduleId: string,
+    completedDays: number,
+    totalDays: number = 5
+  ): Promise<void> {
+    const isCompleted = completedDays >= totalDays;
+    
+    await updateDoc(doc(db, 'families', familyCode), {
+      [`students.${studentId}.moduleCompletions.${moduleId}`]: {
+        isCompleted,
+        completedAt: isCompleted ? serverTimestamp() : null,
+        completedDays,
+        totalDays,
+        lastAccessed: serverTimestamp()
+      }
+    });
+
+    console.log('📊 Module progress updated:', moduleId, `${completedDays}/${totalDays}`, 'for student:', studentId);
+  }
+
+  /**
+   * Get completion status for all modules for a student
+   */
+  async getStudentModuleCompletions(
+    familyCode: string,
+    studentId: string
+  ): Promise<{ [moduleId: string]: any } | null> {
+    const family = await this.getFamilyData(familyCode);
+    if (!family || !family.students[studentId]) {
+      return null;
+    }
+
+    return family.students[studentId].moduleCompletions || {};
+  }
+
+  /**
+   * Get completion statistics for a family
+   */
+  async getFamilyCompletionStats(familyCode: string): Promise<{
+    totalStudents: number;
+    moduleStats: { [moduleId: string]: { 
+      completed: number; 
+      inProgress: number; 
+      notStarted: number;
+      totalDaysCompleted: number;
+      totalPossibleDays: number;
+      averageProgress: number;
+    } };
+  } | null> {
+    const family = await this.getFamilyData(familyCode);
+    if (!family) return null;
+
+    // Check if students object exists, if not create empty array
+    const students = family.students ? Object.values(family.students) : [];
+    console.log('📊 Family completion stats - students found:', students.length);
+    
+    const moduleIds = ['mistakes', 'regulation', 'job', 'collaboration', 'selfcoach', 'curiosity', 'shapeoflearning', 'neuroplasticity', 'masterymoments', 'selfmonitoring'];
+    
+    const moduleStats: { [moduleId: string]: { 
+      completed: number; 
+      inProgress: number; 
+      notStarted: number;
+      totalDaysCompleted: number;
+      totalPossibleDays: number;
+      averageProgress: number;
+    } } = {};
+    
+    moduleIds.forEach(moduleId => {
+      moduleStats[moduleId] = { 
+        completed: 0, 
+        inProgress: 0, 
+        notStarted: 0,
+        totalDaysCompleted: 0,
+        totalPossibleDays: 0,
+        averageProgress: 0
+      };
+      
+      students.forEach(student => {
+        const completion = student.moduleCompletions?.[moduleId];
+        const totalDays = completion?.totalDays || 5; // Default to 5 days per module
+        const completedDays = completion?.completedDays || 0;
+        
+        // Add to totals for average calculation
+        moduleStats[moduleId].totalDaysCompleted += completedDays;
+        moduleStats[moduleId].totalPossibleDays += totalDays;
+        
+        if (!completion || completedDays === 0) {
+          // No progress recorded
+          moduleStats[moduleId].notStarted++;
+        } else if (completedDays >= totalDays) {
+          // All days completed
+          moduleStats[moduleId].completed++;
+        } else if (completedDays > 0) {
+          // Some days completed but not all
+          moduleStats[moduleId].inProgress++;
+        }
+      });
+      
+      // Calculate average progress percentage for this module
+      if (moduleStats[moduleId].totalPossibleDays > 0) {
+        moduleStats[moduleId].averageProgress = Math.round(
+          (moduleStats[moduleId].totalDaysCompleted / moduleStats[moduleId].totalPossibleDays) * 100
+        );
+      }
+    });
+
+    return {
+      totalStudents: students.length,
+      moduleStats
+    };
   }
 
   /**

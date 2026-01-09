@@ -1,3 +1,4 @@
+import { FamilyCompletionDashboard } from '@/components/FamilyCompletionDashboard';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useAppMode } from '@/contexts/AppModeContext';
 import { useRouter } from 'expo-router';
@@ -118,6 +119,9 @@ export default function FamilyDashboard() {
             </View>
         )}
       </View>
+
+      {/* Module Completion Dashboard */}
+      <FamilyCompletionDashboard />
 
       {/* Quick Actions */}
       <View style={styles.section}>
