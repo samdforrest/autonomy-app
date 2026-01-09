@@ -4,12 +4,12 @@ import React from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { AssessmentCard } from '@/components/AssessmentCard';
+import { EnhancedYouTubePlayer } from '@/components/EnhancedYouTubePlayer';
 import { ImageViewer } from '@/components/ImageViewer';
 import { TableViewer } from '@/components/TableViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { YouTubePlayer } from '@/components/YouTubePlayer';
 import { useAppMode } from '@/contexts/AppModeContext';
 import { useColorInheritance } from '@/hooks/useColorInheritance';
 import { useGoogleDocsContent } from '@/hooks/useGoogleDocsContent';
@@ -117,21 +117,23 @@ export default function HomeScreen() {
         
         {/* YouTube Video Player if header is a YouTube URL */}
         {isVideoBlock && (
-          <YouTubePlayer
+          <EnhancedYouTubePlayer
             url={block.header}
-            height={200}
-            showThumbnail={true}
+            title="Featured Video"
+            category="lesson"
             style={styles.bubbleVideo}
+            useCardMode={true}
           />
         )}
         
         {/* YouTube Video Player if this block has a combined video */}
         {block.videoUrl && (
-          <YouTubePlayer
+          <EnhancedYouTubePlayer
             url={block.videoUrl}
-            height={200}
-            showThumbnail={true}
+            title="Learning Video"
+            category="example"
             style={styles.bubbleVideo}
+            useCardMode={true}
           />
         )}
         
@@ -173,24 +175,26 @@ export default function HomeScreen() {
               const videoUrl = item.url || item.uri || item.text;
               console.log('🎥 Rendering video:', videoUrl);
               return (
-                <YouTubePlayer
+                <EnhancedYouTubePlayer
                   key={idx}
                   url={videoUrl}
-                  height={200}
-                  showThumbnail={true}
+                  title="Learning Video"
+                  category="lesson"
                   style={styles.bubbleVideo}
+                  useCardMode={true}
                 />
               );
             } else if (item.type === 'link' && (item.url?.includes('youtube.com') || item.url?.includes('youtu.be'))) {
               // Handle YouTube links that might be categorized as generic links
               console.log('🔗 Rendering YouTube link as video:', item.url);
               return (
-                <YouTubePlayer
+                <EnhancedYouTubePlayer
                   key={idx}
                   url={item.url}
-                  height={200}
-                  showThumbnail={true}
+                  title={item.text || "Learning Video"}
+                  category="example"
                   style={styles.bubbleVideo}
+                  useCardMode={true}
                 />
               );
             } else if (item.type === 'image') {
