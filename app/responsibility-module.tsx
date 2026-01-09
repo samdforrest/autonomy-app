@@ -47,6 +47,7 @@ export default function ResponsibilityModuleScreen() {
         sectionsCount: content.sections ? Object.keys(content.sections).length : 0
       });
       
+      
       if (content.contentBlocks) {
         content.contentBlocks.forEach((block, index) => {
           const imageCount = block.content?.filter(item => item.type === 'image').length || 0;
@@ -176,6 +177,7 @@ export default function ResponsibilityModuleScreen() {
            lowerHeader.includes('closing conversation:') ||
            lowerHeader.includes('read the purpose together:') ||
            lowerHeader.includes('scenario:') ||
+           lowerHeader.includes('job:') ||
            lowerHeader.includes('instructions:') ||
            lowerHeader.includes('answer:');
   };
@@ -183,10 +185,12 @@ export default function ResponsibilityModuleScreen() {
   const renderContentBlock = (block: any, index: number) => {
     if (!block || !block.content) return null;
 
+    // Check for both Scenario and Job blocks
     const isScenario = block.header && block.header.toLowerCase().includes('scenario:');
+    const isJob = block.header && block.header.toLowerCase().includes('job:');
     const isAnswerRevealed = revealedAnswers.has(block.id);
     
-    // For scenario blocks, separate content into question, options, and answer
+    // For scenario and job blocks, separate content into question, options, and answer
     let scenarioQuestion: string | null = null;
     let scenarioOptions: any[] = [];
     let answerText: string | null = null;
@@ -195,16 +199,12 @@ export default function ResponsibilityModuleScreen() {
     if (isScenario && block.content) {
       block.content.forEach((item: any) => {
         if (item.type === 'option') {
-          // This is an A:, B:, C: option
           scenarioOptions.push(item);
         } else if (item.text && item.text.toLowerCase().includes('answer:')) {
-          // This is the answer
           answerText = item.text;
         } else if (item.type === 'text' && !scenarioQuestion) {
-          // First text item is the scenario question
           scenarioQuestion = item.text;
         } else {
-          // Everything else
           otherContent.push(item);
         }
       });
@@ -218,14 +218,37 @@ export default function ResponsibilityModuleScreen() {
       });
     }
     
-    // Determine what header to display for scenarios
-    const displayHeader = isScenario 
+    // DUPLICATE LOGIC FOR JOB BLOCKS
+    if (isJob && block.content) {
+      block.content.forEach((item: any) => {
+        if (item.type === 'option') {
+          scenarioOptions.push(item);
+        } else if (item.text && item.text.toLowerCase().includes('answer:')) {
+          answerText = item.text;
+        } else if (item.type === 'text' && !scenarioQuestion) {
+          scenarioQuestion = item.text;
+        } else {
+          otherContent.push(item);
+        }
+      });
+      
+      console.log('🔍 Job Block Parsed:', {
+        blockId: block.id,
+        hasQuestion: !!scenarioQuestion,
+        optionsCount: scenarioOptions.length,
+        hasAnswer: !!answerText,
+        otherContentCount: otherContent.length
+      });
+    }
+    
+    // Determine what header to display
+    const displayHeader = (isScenario || isJob)
       ? (isAnswerRevealed && answerText ? answerText : (scenarioQuestion || block.header))
       : block.header;
     
-    // Filter content - for scenarios, we'll handle question/options/answer separately
-    const filteredContent = isScenario 
-      ? otherContent  // Everything except question, options, and answer
+    // Filter content - for scenarios and jobs, we'll handle question/options/answer separately
+    const filteredContent = (isScenario || isJob)
+      ? otherContent
       : block.content;
 
     return (
@@ -252,14 +275,14 @@ export default function ResponsibilityModuleScreen() {
           </ThemedView>
         )}
         
-        {/* Reveal Answer Button for Scenarios - positioned after options */}
-        {isScenario && (
+        {/* Reveal Answer Button for Scenarios and Jobs - positioned after options */}
+        {(isScenario || isJob) && (
           <TouchableOpacity 
             style={styles.revealButton} 
             onPress={() => toggleRevealAnswer(block.id)}
           >
             <ThemedText style={styles.revealButtonText}>
-              {isAnswerRevealed ? 'Show Scenario' : 'Reveal Answer'}
+              {isAnswerRevealed ? (isJob ? 'Show Job' : 'Show Scenario') : 'Reveal Answer'}
             </ThemedText>
           </TouchableOpacity>
         )}
@@ -403,6 +426,7 @@ export default function ResponsibilityModuleScreen() {
     const color = inheritedColor || directColor;
     const colorStyle = getBubbleStyleFromColor(color);
     
+    
     return (
       <ThemedView key={sectionKey} style={[styles.bubble, colorStyle]}>
         <ThemedText style={[
@@ -487,6 +511,17 @@ export default function ResponsibilityModuleScreen() {
               renderSection(sectionKey, section, '')
             )
           ) : (
+            // Fallback content if no Google Docs content is available
+            <ThemedView style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>📝 Day {day.dayNumber} Content</ThemedText>
+              <ThemedText style={styles.contentText}>
+                Content is loading from Google Docs...
+              </ThemedText>
+            </ThemedView>
+          )}
+
+          {/* Content metadata */}
+          {content?.metadata && (
             // Fallback content if no Google Docs content is available
             <ThemedView style={styles.section}>
               <ThemedText style={styles.sectionTitle}>📝 Day {day.dayNumber} Content</ThemedText>

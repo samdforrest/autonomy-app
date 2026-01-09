@@ -405,12 +405,12 @@ export default function HomeScreen() {
           />
         </ThemedView>
         <ThemedText type="title" style={styles.title}>
-          {userMode === 'parent' ? 'Parent Guide' : 'Welcome Student!'}
+          {userMode === 'parent' ? 'Parent Guide' : 'Welcome, student!'}
         </ThemedText>
         <ThemedText style={styles.subtitle}>
           {userMode === 'parent' 
             ? 'Supporting your student\'s learning journey' 
-            : 'Begin your autonomy learning adventure'
+            : 'Begin your Autonomy Learning adventure'
           }
         </ThemedText>
       </ThemedView>

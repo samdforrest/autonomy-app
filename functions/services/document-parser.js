@@ -377,7 +377,8 @@ class DocumentParser {
       /^Think Together/i,
       /^Remember/i,
       /^Closing Conversation/i,
-      /^Scenario:/i
+      /^Scenario:/i,
+      /^Job:/i
     ];
     
     return headerPatterns.some(pattern => pattern.test(text));

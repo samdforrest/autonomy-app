@@ -35,7 +35,7 @@ export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
 
     if (userMode === 'parent') {
       return {
-        title: '📊 Student Assessment',
+        title: '📊 Personalize your Path',
         subtitle: hasCompletedAssessment
           ? 'View your student\'s learning priorities'
           : 'Help determine your student\'s learning path',
