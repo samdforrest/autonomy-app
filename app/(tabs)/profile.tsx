@@ -3,13 +3,16 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useAppMode } from '@/contexts/AppModeContext';
+import { familyService } from '@/services/family-service';
 import { useRouter } from 'expo-router';
-import React from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
-  const { userMode, switchMode, isInFamilyMode, currentFamily, currentFamilyCode, isAdminFamily } = useAppMode();
+  const { userMode, switchMode, isInFamilyMode, currentFamily, currentFamilyCode, isAdminFamily, setFamilyContext } = useAppMode();
   const router = useRouter();
+  const [familyCode, setFamilyCode] = useState('');
+  const [loading, setLoading] = useState(false);
   // Student-related state removed for now
 
   const handleModeToggle = () => {
@@ -17,6 +20,54 @@ export default function ProfileScreen() {
   };
 
   // Student profile functions removed for now
+
+  const handleJoinFamily = async () => {
+    if (!familyCode.trim()) {
+      Alert.alert('Error', 'Please enter a family code');
+      return;
+    }
+
+    const code = familyCode.trim().toUpperCase();
+    setLoading(true);
+
+    try {
+      const familyData = await familyService.getFamilyData(code);
+
+      if (familyData) {
+        // Set family context globally
+        setFamilyContext(code, familyData);
+        Alert.alert('Success', `Successfully joined family ${code}!`, [
+          { text: 'OK', onPress: () => router.replace('/(tabs)/profile') }
+        ]);
+      } else {
+        Alert.alert(
+          'Family Not Found',
+          `The family code "${code}" was not found. Please check the code and try again, or create a new family instead.`,
+          [
+            { text: 'Try Again', style: 'cancel' },
+            {
+              text: 'Create New Family',
+              onPress: () => router.push('/create-family')
+            }
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('❌ Error joining family:', error);
+      Alert.alert('Error', 'Failed to join family. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatFamilyCode = (text: string) => {
+    // Auto-format as XXXX-XXXX
+    const cleaned = text.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    if (cleaned.length <= 4) {
+      return cleaned;
+    }
+    return `${cleaned.slice(0, 4)}-${cleaned.slice(4, 8)}`;
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -133,19 +184,55 @@ export default function ProfileScreen() {
           </View>
         </View>
       ) : (
-        /* Default Profile Content - Show when not in family mode */
-        <ThemedView style={styles.content}>
-          <ThemedText style={styles.comingSoon}>
-            Profile features coming soon!
-          </ThemedText>
-          <ThemedText style={styles.description}>
-            Here you'll be able to:
-            {'\n'}• Switch between parent and student profiles
-            {'\n'}• View learning progress
-            {'\n'}• Manage account settings
-            {'\n'}• Track completed modules
-          </ThemedText>
-        </ThemedView>
+        /* Family Sign-In Section - Show when not in family mode */
+        <View style={styles.signInContainer}>
+          <Text style={styles.signInTitle}>Join Your Family</Text>
+          <Text style={styles.signInSubtitle}>
+            Enter your family code to access your dashboard and track progress
+          </Text>
+
+          <View style={styles.form}>
+            <Text style={styles.label}>Family Code</Text>
+            <TextInput
+              style={styles.input}
+              value={familyCode}
+              onChangeText={(text) => setFamilyCode(formatFamilyCode(text))}
+              placeholder="BEAR-2024"
+              autoCapitalize="characters"
+              maxLength={9} // XXXX-XXXX format
+            />
+
+            <Text style={styles.hint}>
+              Format: ANIMAL-NUMBERS (e.g., BEAR-2024)
+            </Text>
+
+            <TouchableOpacity
+              style={[styles.joinButton, loading && styles.buttonDisabled]}
+              onPress={handleJoinFamily}
+              disabled={loading}
+            >
+              <Text style={styles.joinButtonText}>
+                {loading ? 'Joining...' : 'Join Family'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.examples}>
+            <Text style={styles.examplesTitle}>Example Family Codes:</Text>
+            <Text style={styles.exampleCode}>LION-3847</Text>
+            <Text style={styles.exampleCode}>WOLF-1592</Text>
+            <Text style={styles.exampleCode}>BEAR-7429</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.createButton}
+            onPress={() => router.push('/create-family')}
+          >
+            <Text style={styles.createButtonText}>
+              Don't have a family code? Create new family
+            </Text>
+          </TouchableOpacity>
+        </View>
       )}
     </ScrollView>
   );
@@ -431,5 +518,101 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FF6B35',
     fontWeight: 'bold',
+  },
+  // Family Sign-In Styles
+  signInContainer: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
+  },
+  signInTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  signInSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 40,
+    lineHeight: 24,
+  },
+  form: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    marginBottom: 30,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 18,
+    marginBottom: 8,
+    backgroundColor: '#fff',
+    textAlign: 'center',
+    fontFamily: 'monospace',
+  },
+  hint: {
+    fontSize: 12,
+    color: '#999',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  joinButton: {
+    backgroundColor: '#007AFF',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  joinButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  examples: {
+    backgroundColor: '#f8f9fa',
+    padding: 20,
+    borderRadius: 10,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  examplesTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 10,
+  },
+  exampleCode: {
+    fontSize: 16,
+    fontFamily: 'monospace',
+    color: '#666',
+    marginBottom: 5,
+  },
+  createButton: {
+    alignItems: 'center',
+    padding: 10,
+  },
+  createButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
+    textDecorationLine: 'underline',
   },
 });
