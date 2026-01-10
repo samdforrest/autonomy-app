@@ -3,6 +3,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useAppMode } from '@/contexts/AppModeContext';
+import { useFamilyTutorial } from '@/contexts/TutorialContext';
 import { familyService } from '@/services/family-service';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -10,10 +11,13 @@ import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View 
 
 export default function ProfileScreen() {
   const { userMode, switchMode, isInFamilyMode, currentFamily, currentFamilyCode, isAdminFamily, setFamilyContext } = useAppMode();
+  const tutorial = useFamilyTutorial(currentFamilyCode);
   const router = useRouter();
   const [familyCode, setFamilyCode] = useState('');
   const [loading, setLoading] = useState(false);
   // Student-related state removed for now
+
+  // Auto-trigger removed - users can start tutorial manually from buttons below
 
   const handleModeToggle = () => {
     switchMode(userMode === 'parent' ? 'student' : 'parent');
@@ -36,7 +40,9 @@ export default function ProfileScreen() {
       if (familyData) {
         // Set family context globally
         setFamilyContext(code, familyData);
-        Alert.alert('Success', `Successfully joined family ${code}!`, [
+        
+        // Simple welcome message - users can start tutorial manually if they want
+        Alert.alert('Welcome to Your Family!', `Successfully joined family ${code}! Use the "Take App Tour" button below if you'd like a guided introduction to the app.`, [
           { text: 'OK', onPress: () => router.replace('/(tabs)/profile') }
         ]);
       } else {
@@ -68,6 +74,7 @@ export default function ProfileScreen() {
     }
     return `${cleaned.slice(0, 4)}-${cleaned.slice(4, 8)}`;
   };
+
 
   return (
     <ScrollView style={styles.container}>
@@ -234,6 +241,26 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Tutorial launcher for families */}
+      {isInFamilyMode && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>📚 App Tutorial</Text>
+          <Text style={styles.sectionSubtitle}>
+            New to the app? Take a guided tour to learn how parents and students can use the platform together effectively.
+          </Text>
+          
+          <TouchableOpacity 
+            style={[styles.familyButton, styles.tutorialButton]}
+            onPress={() => tutorial.showTutorial()}
+          >
+            <Text style={[styles.familyButtonText, styles.tutorialButtonText]}>
+              🎯 Start Guided Tour
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
     </ScrollView>
   );
 }
@@ -614,5 +641,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#007AFF',
     textDecorationLine: 'underline',
+  },
+  // Tutorial button styles
+  tutorialButton: {
+    backgroundColor: '#17A2B8',
+    marginTop: 0,
+  },
+  tutorialButtonText: {
+    color: 'white',
+    fontWeight: '600',
   },
 });

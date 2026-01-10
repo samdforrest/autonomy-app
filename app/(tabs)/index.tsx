@@ -11,6 +11,7 @@ import { TextWithYouTube } from '@/components/TextWithYouTube';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAppMode } from '@/contexts/AppModeContext';
+import { useTutorial } from '@/contexts/TutorialContext';
 import { useColorInheritance } from '@/hooks/useColorInheritance';
 import { useGoogleDocsContent } from '@/hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '@/services/api';
@@ -19,6 +20,7 @@ import { assessmentService, type AssessmentSummary } from '@/services/assessment
 export default function HomeScreen() {
   const router = useRouter();
   const { userMode, isInFamilyMode, currentFamilyCode, currentFamily, clearFamilyContext } = useAppMode();
+  const tutorial = useTutorial();
   const [assessmentResults, setAssessmentResults] = React.useState<AssessmentSummary | null>(null);
   const [loadingResults, setLoadingResults] = React.useState(false);
   
@@ -566,6 +568,26 @@ export default function HomeScreen() {
               </ThemedView>
             )}
 
+            {/* Tutorial launcher for families */}
+            {isInFamilyMode && (
+              <ThemedView style={styles.tutorialSection}>
+                <ThemedText style={styles.tutorialSectionTitle}>
+                  📚 New to the App?
+                </ThemedText>
+                <ThemedText style={styles.tutorialSectionSubtitle}>
+                  Take our interactive tutorial to learn how families can use the platform together - perfect for both parents and students!
+                </ThemedText>
+                <TouchableOpacity 
+                  style={styles.tutorialButton}
+                  onPress={() => tutorial.showTutorial()}
+                >
+                  <ThemedText style={styles.tutorialButtonText}>
+                    🎯 Start Interactive Tutorial
+                  </ThemedText>
+                </TouchableOpacity>
+              </ThemedView>
+            )}
+
             {/* Content metadata */}
             {content?.metadata && (
               <ThemedView style={styles.metadataContainer}>
@@ -1040,5 +1062,39 @@ const styles = StyleSheet.create({
     color: '#7F8C8D',
     fontSize: 14,
     fontWeight: '500',
+  },
+  // Tutorial launcher styles
+  tutorialSection: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 20,
+    marginHorizontal: 16,
+    marginVertical: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#17A2B8',
+  },
+  tutorialSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  tutorialSectionSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  tutorialButton: {
+    backgroundColor: '#17A2B8',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  tutorialButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

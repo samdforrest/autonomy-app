@@ -1,12 +1,66 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Platform, Text, TouchableOpacity } from 'react-native';
 import 'react-native-reanimated';
 
-import { AppModeProvider } from '@/contexts/AppModeContext';
+// Component to handle tutorial inside providers
+function TutorialManager() {
+  const { userMode, switchMode, currentFamilyCode } = useAppMode();
+  const tutorial = useFamilyTutorial(currentFamilyCode);
+  const router = useRouter();
+
+  // Tutorial navigation handlers
+  const handleTutorialComplete = async () => {
+    if (currentFamilyCode) {
+      await tutorial.completeFamilyTutorial();
+    }
+  };
+
+  const handleTutorialClose = () => {
+    tutorial.hideTutorial();
+  };
+
+  const handleTutorialModeSwitch = (mode: 'parent' | 'student') => {
+    switchMode(mode);
+  };
+
+  const handleTutorialNavigateToAssessment = () => {
+    router.push('/assessment');
+  };
+
+  const handleTutorialNavigateToExplore = () => {
+    router.push('/(tabs)/explore');
+  };
+
+  const handleTutorialNavigateToProfile = () => {
+    router.push('/(tabs)/profile');
+  };
+
+  const handleTutorialNavigateToHome = () => {
+    router.push('/(tabs)');
+  };
+
+  return (
+    <FamilyOnboardingTutorial
+      visible={tutorial.isTutorialVisible}
+      onComplete={handleTutorialComplete}
+      onClose={handleTutorialClose}
+      currentUserMode={userMode}
+      onModeSwitch={handleTutorialModeSwitch}
+      onNavigateToAssessment={handleTutorialNavigateToAssessment}
+      onNavigateToExplore={handleTutorialNavigateToExplore}
+      onNavigateToProfile={handleTutorialNavigateToProfile}
+      onNavigateToHome={handleTutorialNavigateToHome}
+    />
+  );
+}
+
+import { FamilyOnboardingTutorial } from '@/components/FamilyOnboardingTutorial';
+import { AppModeProvider, useAppMode } from '@/contexts/AppModeContext';
 import { CompletionProvider } from '@/contexts/CompletionContext';
+import { TutorialProvider, useFamilyTutorial } from '@/contexts/TutorialContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function RootLayout() {
@@ -73,9 +127,10 @@ export default function RootLayout() {
   });
 
   return (
-    <AppModeProvider>
-      <CompletionProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <TutorialProvider>
+      <AppModeProvider>
+        <CompletionProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen 
@@ -147,9 +202,11 @@ export default function RootLayout() {
         <Stack.Screen name="family/[code]" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
+        <TutorialManager />
         <StatusBar style="auto" />
-        </ThemeProvider>
-      </CompletionProvider>
-    </AppModeProvider>
+          </ThemeProvider>
+        </CompletionProvider>
+      </AppModeProvider>
+    </TutorialProvider>
   );
 }
