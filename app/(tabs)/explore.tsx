@@ -1,5 +1,6 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { ModeToggle } from '@/components/ModeToggle';
 import { useAppMode } from '@/contexts/AppModeContext';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
@@ -255,6 +256,9 @@ export default function TabTwoScreen() {
           {userMode === 'parent' ? 'Guide your child\'s learning journey' : 'Start your learning journey'}
         </ThemedText>
       </ThemedView>
+      
+      {/* Mode Toggle */}
+      <ModeToggle />
       
       <FlatList
         data={modules}

@@ -6,6 +6,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'rea
 import { AssessmentCard } from '@/components/AssessmentCard';
 import { EnhancedYouTubePlayer } from '@/components/EnhancedYouTubePlayer';
 import { ImageViewer } from '@/components/ImageViewer';
+import { ModeToggle } from '@/components/ModeToggle';
 import { TableViewer } from '@/components/TableViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
 import { ThemedText } from '@/components/ThemedText';
@@ -411,7 +412,7 @@ export default function HomeScreen() {
           />
         </ThemedView>
         <ThemedText type="title" style={styles.title}>
-          {userMode === 'parent' ? 'Parent Guide' : 'Welcome, student!'}
+          {userMode === 'parent' ? 'Parent Guide' : 'Welcome, Student!'}
         </ThemedText>
         <ThemedText style={styles.subtitle}>
           {userMode === 'parent' 
@@ -420,6 +421,9 @@ export default function HomeScreen() {
           }
         </ThemedText>
       </ThemedView>
+
+      {/* Mode Toggle */}
+      <ModeToggle />
 
       <ScrollView 
         style={styles.scrollContainer}
