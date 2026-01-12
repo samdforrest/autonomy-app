@@ -2,9 +2,11 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { familyService } from '../services/family-service';
+import { useAppMode } from '../contexts/AppModeContext';
 
 export default function CreateFamily() {
   const router = useRouter();
+  const { setFamilyContext } = useAppMode();
   const [parentName, setParentName] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -18,16 +20,30 @@ export default function CreateFamily() {
     try {
       const familyCode = await familyService.createFamily(parentName.trim());
       
-      Alert.alert(
-        'Family Created!',
-        `Your family code is: ${familyCode}\n\nSave this code - you'll need it to access your family dashboard.`,
-        [
-          {
-            text: 'Go to Dashboard',
-            onPress: () => router.replace(`/family/${familyCode}`)
-          }
-        ]
-      );
+      // Get the newly created family data to set the context
+      const familyData = await familyService.getFamilyData(familyCode);
+      
+      if (familyData) {
+        // Set family context globally
+        console.log('🏠 Setting family context after creating new family:', familyCode);
+        setFamilyContext(familyCode, familyData);
+        
+        Alert.alert(
+          'Family Created!',
+          `Your family code is: ${familyCode}\n\nSave this code - you'll need it to access your family dashboard.`,
+          [
+            {
+              text: 'Continue to App',
+              onPress: () => {
+                // AuthGuard will automatically show the app content now
+                console.log('✅ Family created successfully, AuthGuard should now show app');
+              }
+            }
+          ]
+        );
+      } else {
+        throw new Error('Failed to load newly created family data');
+      }
     } catch (error) {
       console.error('❌ Error creating family:', error);
       Alert.alert('Error', 'Failed to create family. Please try again.');

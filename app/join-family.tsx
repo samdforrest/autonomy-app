@@ -2,9 +2,11 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { familyService } from '../services/family-service';
+import { useAppMode } from '../contexts/AppModeContext';
 
 export default function JoinFamily() {
   const router = useRouter();
+  const { setFamilyContext } = useAppMode();
   const [familyCode, setFamilyCode] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -18,10 +20,16 @@ export default function JoinFamily() {
     setLoading(true);
 
     try {
-      const isValid = await familyService.validateFamilyCode(code);
+      // Fetch full family data instead of just validating
+      const familyData = await familyService.getFamilyData(code);
       
-      if (isValid) {
-        router.replace(`/family/${code}`);
+      if (familyData) {
+        // Set family context globally - this is what AuthGuard checks
+        console.log('🏠 Setting family context after successful join:', code);
+        setFamilyContext(code, familyData);
+        
+        // AuthGuard will automatically show the app content now
+        console.log('✅ Family joined successfully, AuthGuard should now show app');
       } else {
         Alert.alert(
           'Family Not Found',
@@ -36,8 +44,8 @@ export default function JoinFamily() {
         );
       }
     } catch (error) {
-      console.error('❌ Error validating family code:', error);
-      Alert.alert('Error', 'Failed to validate family code. Please try again.');
+      console.error('❌ Error joining family:', error);
+      Alert.alert('Error', 'Failed to join family. Please try again.');
     } finally {
       setLoading(false);
     }

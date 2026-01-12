@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
-  const { userMode, switchMode, isInFamilyMode, currentFamily, currentFamilyCode, isAdminFamily, setFamilyContext } = useAppMode();
+  const { userMode, switchMode, isInFamilyMode, currentFamily, currentFamilyCode, isAdminFamily, setFamilyContext, clearFamilyContext } = useAppMode();
   const tutorial = useFamilyTutorial(currentFamilyCode);
   const router = useRouter();
   const [familyCode, setFamilyCode] = useState('');
@@ -21,6 +21,25 @@ export default function ProfileScreen() {
 
   const handleModeToggle = () => {
     switchMode(userMode === 'parent' ? 'student' : 'parent');
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out? You\'ll need to enter your family code again to access the app.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Sign Out', 
+          style: 'destructive',
+          onPress: () => {
+            console.log('🚪 User logging out');
+            clearFamilyContext();
+            // No need to navigate - AuthGuard will automatically show login screen
+          }
+        }
+      ]
+    );
   };
 
   // Student profile functions removed for now
@@ -147,6 +166,13 @@ export default function ProfileScreen() {
               }}
             >
               <Text style={styles.quickActionText}>🔗 Share Family Code</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.quickAction, styles.logoutAction]}
+              onPress={handleLogout}
+            >
+              <Text style={[styles.quickActionText, styles.logoutActionText]}>🚪 Sign Out</Text>
             </TouchableOpacity>
           </View>
 
@@ -493,6 +519,15 @@ const styles = StyleSheet.create({
   quickActionText: {
     fontSize: 16,
     color: '#333',
+  },
+  logoutAction: {
+    backgroundColor: '#ffe6e6',
+    borderColor: '#ffcccc',
+    borderWidth: 1,
+  },
+  logoutActionText: {
+    color: '#d32f2f',
+    fontWeight: '600',
   },
   // Family Access styles
   sectionSubtitle: {
