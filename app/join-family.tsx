@@ -29,6 +29,7 @@ export default function JoinFamily() {
         setFamilyContext(code, familyData);
         
         // Navigate to home page after successful authentication
+        // Login count will be incremented on home screen load
         console.log('✅ Family joined successfully, redirecting to home');
         router.replace('/(tabs)');
       } else {

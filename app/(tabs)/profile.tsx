@@ -61,6 +61,7 @@ export default function ProfileScreen() {
         setFamilyContext(code, familyData);
         
         // Simple welcome message - users can start tutorial manually if they want
+        // Login count will be incremented on home screen load
         Alert.alert('Welcome to Your Family!', `Successfully joined family ${code}! Use the "Take App Tour" button below if you'd like a guided introduction to the app.`, [
           { text: 'OK', onPress: () => router.replace('/(tabs)/profile') }
         ]);

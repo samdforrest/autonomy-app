@@ -14,6 +14,7 @@ export interface FamilyData {
     createdAt: any;
     hasPassword: boolean;
     isAdmin?: boolean; // NEW: Admin role flag
+    loginCount?: number; // Track number of logins for auto-tutorial trigger
   };
   students: { [studentId: string]: StudentData };
 }
@@ -76,7 +77,8 @@ export class FamilyService {
       settings: {
         parentName: parentName || 'Parent',
         createdAt: serverTimestamp(),
-        hasPassword: false
+        hasPassword: false,
+        loginCount: 0 // Start with 0 logins for new families
       },
       students: {}
     };
@@ -387,6 +389,49 @@ export class FamilyService {
       return false;
     }
   }
+
+  /**
+   * Increment login count for family (for auto-tutorial trigger)
+   */
+  async incrementLoginCount(familyCode: string): Promise<number> {
+    try {
+      // Add stack trace to see who's calling this
+      const stack = new Error().stack;
+      console.log('🔢 incrementLoginCount called for:', familyCode);
+      console.log('📍 Call stack:', stack?.split('\n').slice(1, 4).join('\n'));
+      
+      const familyRef = doc(db, 'families', familyCode);
+      const familyData = await this.getFamilyData(familyCode);
+      
+      if (!familyData) {
+        console.error('❌ Family not found for login count increment:', familyCode);
+        return 0;
+      }
+
+      const currentCount = familyData.settings.loginCount || 0;
+      
+      // Don't increment if already > 0 (family has already logged in)
+      if (currentCount > 0) {
+        console.log('⏭️ Login count already > 0, skipping increment. Returning existing count:', currentCount);
+        return currentCount;
+      }
+      
+      const newCount = currentCount + 1;
+      
+      console.log('📈 About to increment login count from', currentCount, 'to', newCount);
+
+      await updateDoc(familyRef, {
+        'settings.loginCount': newCount
+      });
+
+      console.log('✅ Login count incremented successfully in Firebase:', { familyCode, from: currentCount, to: newCount });
+      return newCount;
+    } catch (error) {
+      console.error('❌ Error incrementing login count:', error);
+      return 0;
+    }
+  }
+
 }
 
 export const familyService = new FamilyService();
