@@ -30,13 +30,14 @@ export default function CreateFamily() {
         
         Alert.alert(
           'Family Created!',
-          `Your family code is: ${familyCode}\n\nSave this code - you'll need it to access your family dashboard.`,
+          `Your family code is: ${familyCode}\n\nSave this code - you'll need it to access the app.`,
           [
             {
               text: 'Continue to App',
               onPress: () => {
-                // AuthGuard will automatically show the app content now
-                console.log('✅ Family created successfully, AuthGuard should now show app');
+                // Navigate to home page after successful family creation
+                console.log('✅ Family created successfully, redirecting to home');
+                router.replace('/(tabs)');
               }
             }
           ]

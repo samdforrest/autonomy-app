@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { familyService } from '../services/family-service';
 import { useAppMode } from '../contexts/AppModeContext';
+import { familyService } from '../services/family-service';
 
 export default function JoinFamily() {
   const router = useRouter();
@@ -28,18 +28,15 @@ export default function JoinFamily() {
         console.log('🏠 Setting family context after successful join:', code);
         setFamilyContext(code, familyData);
         
-        // AuthGuard will automatically show the app content now
-        console.log('✅ Family joined successfully, AuthGuard should now show app');
+        // Navigate to home page after successful authentication
+        console.log('✅ Family joined successfully, redirecting to home');
+        router.replace('/(tabs)');
       } else {
         Alert.alert(
           'Family Not Found',
           `The family code "${code}" was not found. Please check the code and try again, or create a new family instead.`,
           [
-            { text: 'Try Again', style: 'cancel' },
-            { 
-              text: 'Create New Family', 
-              onPress: () => router.push('/create-family')
-            }
+            { text: 'Try Again', style: 'cancel' }
           ]
         );
       }
@@ -65,7 +62,7 @@ export default function JoinFamily() {
       <View style={styles.content}>
         <Text style={styles.title}>Join Your Family</Text>
         <Text style={styles.subtitle}>
-          Enter your family code to access your dashboard
+          Enter your family code to access the app
         </Text>
 
         <View style={styles.form}>
@@ -100,15 +97,6 @@ export default function JoinFamily() {
           <Text style={styles.exampleCode}>WOLF-1592</Text>
           <Text style={styles.exampleCode}>BEAR-7429</Text>
         </View>
-
-        <TouchableOpacity 
-          style={styles.linkButton}
-          onPress={() => router.push('/create-family')}
-        >
-          <Text style={styles.linkText}>
-            Don't have a family code? Create new family
-          </Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -204,15 +192,6 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     color: '#666',
     marginBottom: 5,
-  },
-  linkButton: {
-    alignItems: 'center',
-    padding: 10,
-  },
-  linkText: {
-    fontSize: 16,
-    color: '#007AFF',
-    textDecorationLine: 'underline',
   },
 });
 

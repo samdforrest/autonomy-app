@@ -214,7 +214,6 @@ export default function RootLayout() {
                     }),
                   }}
                 />
-                <Stack.Screen name="family/[code]" options={{ headerShown: false }} />
                 <Stack.Screen name="+not-found" />
               </Stack>
               <TutorialManager />
