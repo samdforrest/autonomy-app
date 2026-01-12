@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { ModeToggle } from './ModeToggle';
 import { ThemedText } from './ThemedText';
 
 interface TutorialStep {
@@ -25,8 +26,10 @@ interface TutorialStep {
     width?: number;
     height?: number;
   };
-  action?: 'switch-to-parent' | 'switch-to-student' | 'switch-to-parent-and-navigate-profile' | 'switch-to-student-and-navigate-profile' | 'navigate-to-assessment' | 'navigate-to-explore' | 'navigate-to-profile' | 'navigate-to-home' | 'none';
-  emoji?: string;
+   action?: 'switch-to-parent' | 'switch-to-student' | 'switch-to-parent-and-navigate-profile' | 'switch-to-student-and-navigate-profile' | 'navigate-to-assessment' | 'navigate-to-explore' | 'navigate-to-profile' | 'navigate-to-home' | 'none';
+   isInteractive?: boolean; // Requires user interaction before proceeding
+   interactionTarget?: 'mode-switcher'; // What the user needs to interact with
+   emoji?: string;
 }
 
 const TUTORIAL_STEPS: TutorialStep[] = [
@@ -44,14 +47,16 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     perspective: 'both',
     emoji: '🔗'
   },
-  {
-    id: 'mode-switcher-intro',
-    title: 'Two Views, One Family 🔄',
-    description: 'See this toggle? It switches between Parent View (for tracking and insights) and Student View (for learning and activities). Let\'s explore both!',
-    perspective: 'both',
-    targetArea: 'mode-switcher',
-    emoji: '👀'
-  },
+   {
+     id: 'mode-switcher-intro',
+     title: 'Try the Mode Switcher! 🔄',
+     description: 'See this toggle? It switches between Parent View (for tracking and insights) and Student View (for learning and activities). Go ahead - try switching it! We\'ll wait for you to explore both modes.',
+     perspective: 'both',
+     targetArea: 'mode-switcher',
+     isInteractive: true,
+     interactionTarget: 'mode-switcher',
+     emoji: '👆'
+   },
   {
     id: 'parent-view',
     title: 'Parent View: Your Mission Control 📊',
@@ -143,6 +148,8 @@ export function FamilyOnboardingTutorial({
 }: FamilyOnboardingTutorialProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [fadeAnim] = useState(new Animated.Value(0));
+  const [hasInteractedWithModeSwitch, setHasInteractedWithModeSwitch] = useState(false);
+  const [initialUserMode, setInitialUserMode] = useState<'parent' | 'student' | null>(null);
   const screenHeight = Dimensions.get('window').height;
   const screenWidth = Dimensions.get('window').width;
   
@@ -159,6 +166,24 @@ export function FamilyOnboardingTutorial({
       console.log('📚 Tutorial instance destroyed with ID:', instanceId.current);
     };
   }, []);
+
+  // Track initial user mode when tutorial starts
+  useEffect(() => {
+    if (visible && initialUserMode === null) {
+      setInitialUserMode(currentUserMode);
+      setHasInteractedWithModeSwitch(false);
+      console.log('📚 Tutorial started with initial mode:', currentUserMode);
+    }
+  }, [visible, currentUserMode, initialUserMode]);
+
+  // Track mode switches during tutorial
+  useEffect(() => {
+    if (visible && initialUserMode !== null && currentUserMode !== initialUserMode) {
+      console.log('🔄 Mode switch detected during tutorial:', initialUserMode, '→', currentUserMode);
+      console.log('✅ Interactive step completed! User can now proceed.');
+      setHasInteractedWithModeSwitch(true);
+    }
+  }, [currentUserMode, initialUserMode, visible]);
 
   useEffect(() => {
     if (visible) {
@@ -232,6 +257,14 @@ export function FamilyOnboardingTutorial({
   const currentTutorialStep = TUTORIAL_STEPS[currentStep];
 
   const handleNext = () => {
+    // Check if this is an interactive step that requires completion
+    const step = TUTORIAL_STEPS[currentStep];
+    if (step?.isInteractive && step.interactionTarget === 'mode-switcher' && !hasInteractedWithModeSwitch) {
+      // Don't proceed if interaction is required but not completed
+      console.log('📚 Interactive step not completed yet, cannot proceed');
+      return;
+    }
+
     // Navigation and mode switching now happen automatically when step shows
     // This just advances to the next step
     if (currentStep < TUTORIAL_STEPS.length - 1) {
@@ -239,6 +272,15 @@ export function FamilyOnboardingTutorial({
     } else {
       handleComplete();
     }
+  };
+
+  // Check if the next button should be enabled
+  const canProceedToNext = () => {
+    const step = TUTORIAL_STEPS[currentStep];
+    if (step?.isInteractive && step.interactionTarget === 'mode-switcher') {
+      return hasInteractedWithModeSwitch;
+    }
+    return true; // Non-interactive steps can always proceed
   };
 
   const handlePrevious = () => {
@@ -249,13 +291,23 @@ export function FamilyOnboardingTutorial({
       executedActions.current.delete(currentActionKey);
       executedActions.current.delete(nextActionKey);
       
+      // Reset interaction state when going back to interactive step
+      const prevStep = TUTORIAL_STEPS[currentStep - 1];
+      if (prevStep?.isInteractive && prevStep.interactionTarget === 'mode-switcher') {
+        setHasInteractedWithModeSwitch(false);
+        setInitialUserMode(currentUserMode);
+      }
+      
       setCurrentStep(currentStep - 1);
     }
   };
 
   const handleComplete = () => {
-    // Clear executed actions for fresh restart
+    // Clear executed actions and interaction state for fresh restart
     executedActions.current.clear();
+    setHasInteractedWithModeSwitch(false);
+    setInitialUserMode(null);
+    
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 300,
@@ -266,8 +318,11 @@ export function FamilyOnboardingTutorial({
   };
 
   const handleSkip = () => {
-    // Clear executed actions for fresh restart
+    // Clear executed actions and interaction state for fresh restart
     executedActions.current.clear();
+    setHasInteractedWithModeSwitch(false);
+    setInitialUserMode(null);
+    
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 300,
@@ -343,11 +398,38 @@ export function FamilyOnboardingTutorial({
               {currentTutorialStep.title}
             </ThemedText>
             
-            <ThemedText style={styles.stepDescription}>
-              {currentTutorialStep.description}
-            </ThemedText>
+             <ThemedText style={styles.stepDescription}>
+               {currentTutorialStep.description}
+             </ThemedText>
 
-            {/* Show current mode indicator when relevant */}
+             {/* Interactive mode switcher for step 3 */}
+             {currentTutorialStep.isInteractive && currentTutorialStep.interactionTarget === 'mode-switcher' && (
+               <View style={styles.interactiveSection}>
+                 <ThemedText style={styles.interactionPrompt}>
+                   👇 Try the toggle below - switch between Parent and Student views:
+                 </ThemedText>
+                 
+                 <View style={styles.embeddedToggleContainer}>
+                   <ModeToggle compact={true} />
+                 </View>
+
+                 {!hasInteractedWithModeSwitch ? (
+                   <View style={styles.waitingMessage}>
+                     <Text style={styles.waitingText}>
+                       💡 Switch modes to see how the interface changes for parents vs students!
+                     </Text>
+                   </View>
+                 ) : (
+                   <View style={styles.completedMessage}>
+                     <Text style={styles.completedText}>
+                       ✅ Perfect! You've tried both modes. Notice how each view is designed for different users. Ready to continue?
+                     </Text>
+                   </View>
+                 )}
+               </View>
+             )}
+
+             {/* Show current mode indicator when relevant */}
             {(currentTutorialStep.perspective !== 'both' || currentTutorialStep.action) && (
               <View style={styles.modeIndicator}>
                 <Text style={styles.currentModeText}>
@@ -376,14 +458,25 @@ export function FamilyOnboardingTutorial({
                 </TouchableOpacity>
               )}
 
-              <TouchableOpacity 
-                style={[styles.button, styles.nextButton]} 
-                onPress={handleNext}
-              >
-                <Text style={styles.nextButtonText}>
-                  {currentStep === TUTORIAL_STEPS.length - 1 ? 'Get Started!' : 'Next'}
-                </Text>
-              </TouchableOpacity>
+               <TouchableOpacity 
+                 style={[
+                   styles.button, 
+                   styles.nextButton,
+                   !canProceedToNext() && styles.nextButtonDisabled
+                 ]} 
+                 onPress={handleNext}
+                 disabled={!canProceedToNext()}
+               >
+                 <Text style={[
+                   styles.nextButtonText,
+                   !canProceedToNext() && styles.nextButtonTextDisabled
+                 ]}>
+                   {!canProceedToNext() 
+                     ? 'Try the toggle first!' 
+                     : currentStep === TUTORIAL_STEPS.length - 1 ? 'Get Started!' : 'Next'
+                   }
+                 </Text>
+               </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -530,9 +623,63 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 12,
   },
-  nextButtonText: {
-    fontSize: 16,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-});
+   nextButtonText: {
+     fontSize: 16,
+     color: 'white',
+     fontWeight: 'bold',
+   },
+   nextButtonDisabled: {
+     backgroundColor: '#BDC3C7',
+     opacity: 0.6,
+   },
+   nextButtonTextDisabled: {
+     color: '#7F8C8D',
+   },
+   interactiveSection: {
+     backgroundColor: '#F8F9FA',
+     borderRadius: 12,
+     padding: 16,
+     marginVertical: 16,
+     borderLeftWidth: 4,
+     borderLeftColor: '#007AFF',
+   },
+   interactionPrompt: {
+     fontSize: 16,
+     fontWeight: '600',
+     color: '#007AFF',
+     textAlign: 'center',
+     marginBottom: 16,
+   },
+   embeddedToggleContainer: {
+     alignItems: 'center',
+     marginVertical: 8,
+   },
+   waitingMessage: {
+     marginTop: 12,
+     padding: 12,
+     backgroundColor: '#FFF3CD',
+     borderRadius: 8,
+     borderLeftWidth: 4,
+     borderLeftColor: '#FFC107',
+   },
+   waitingText: {
+     fontSize: 14,
+     color: '#856404',
+     textAlign: 'center',
+     fontWeight: '500',
+   },
+   completedMessage: {
+     marginTop: 12,
+     padding: 12,
+     backgroundColor: '#D1ECF1',
+     borderRadius: 8,
+     borderLeftWidth: 4,
+     borderLeftColor: '#17A2B8',
+   },
+   completedText: {
+     fontSize: 14,
+     color: '#0C5460',
+     textAlign: 'center',
+     fontWeight: '600',
+   },
+ });
