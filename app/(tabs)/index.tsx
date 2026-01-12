@@ -313,9 +313,7 @@ export default function HomeScreen() {
     if (loadingResults) {
       return (
         <ThemedView style={styles.assessmentResultsSection}>
-          <ThemedText style={styles.sectionTitle}>
-            {userMode === 'parent' ? '📊 Student Learning Priorities' : '📊 Your Learning Priorities'}
-          </ThemedText>
+          <ThemedText style={styles.sectionTitle}>📊 Your Learning Priorities</ThemedText>
           <ThemedView style={styles.loadingContainer}>
             <ActivityIndicator size="small" color="#2196F3" />
             <ThemedText style={styles.loadingText}>Loading results...</ThemedText>
@@ -327,14 +325,9 @@ export default function HomeScreen() {
     if (!assessmentResults) {
       return (
         <ThemedView style={styles.assessmentResultsSection}>
-          <ThemedText style={styles.sectionTitle}>
-            {userMode === 'parent' ? '📊 Student Learning Priorities' : '📊 Your Learning Priorities'}
-          </ThemedText>
+          <ThemedText style={styles.sectionTitle}>📊 Your Learning Priorities</ThemedText>
           <ThemedText style={styles.noResultsText}>
-            {userMode === 'parent' 
-              ? 'Student needs to take the assessment to see personalized learning priorities!'
-              : 'Take the assessment to see your personalized learning priorities!'
-            }
+            Take the assessment to see your personalized learning priorities!
           </ThemedText>
           {/* <TouchableOpacity 
             style={styles.takeAssessmentButton}
@@ -360,9 +353,7 @@ export default function HomeScreen() {
     return (
       <ThemedView style={styles.assessmentResultsSection}>
         <ThemedView style={styles.resultsHeader}>
-          <ThemedText style={styles.sectionTitle}>
-            {userMode === 'parent' ? '📊 Student Learning Priorities' : '📊 Your Learning Priorities'}
-          </ThemedText>
+          <ThemedText style={styles.sectionTitle}>📊 Your Learning Priorities</ThemedText>
           <TouchableOpacity 
             style={styles.viewFullResultsButton}
             onPress={() => {
@@ -378,10 +369,7 @@ export default function HomeScreen() {
         </ThemedView>
         
         <ThemedText style={styles.resultsSubtitle}>
-          {userMode === 'parent' 
-            ? 'Based on your student\'s assessment, here are their top learning priorities:'
-            : 'Based on your assessment, here are your top learning priorities:'
-          }
+          Based on your assessment, here are your top learning priorities:
         </ThemedText>
 
         {moduleScores.map((module, index) => (
@@ -403,14 +391,12 @@ export default function HomeScreen() {
           </ThemedView>
         ))}
 
-        {userMode === 'student' && (
-          <TouchableOpacity 
-            style={styles.retakeAssessmentButton}
-            onPress={() => router.push('/assessment')}
-          >
-            <ThemedText style={styles.retakeAssessmentButtonText}>🔄 Retake Assessment</ThemedText>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity 
+          style={styles.retakeAssessmentButton}
+          onPress={() => router.push('/assessment')}
+        >
+          <ThemedText style={styles.retakeAssessmentButtonText}>🔄 Retake Assessment</ThemedText>
+        </TouchableOpacity>
       </ThemedView>
     );
   };
@@ -518,8 +504,8 @@ export default function HomeScreen() {
           </ThemedView>
         )}
 
-        {/* Assessment Card - Only for students */}
-        {userMode === 'student' && <AssessmentCard userMode={userMode} />}
+        {/* Assessment Card - Always visible */}
+        <AssessmentCard userMode={userMode} />
 
         {/* Assessment Results Display */}
         {renderAssessmentResults()}

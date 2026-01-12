@@ -11,30 +11,10 @@ interface AssessmentCardProps {
 
 export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
   const hasCompletedAssessment = assessmentService.hasCompletedAssessment();
-  const [assessmentResults, setAssessmentResults] = React.useState<any>(null);
-
-  React.useEffect(() => {
-    const loadResults = async () => {
-      const results = await assessmentService.loadAssessmentResults();
-      setAssessmentResults(results);
-    };
-    loadResults();
-  }, []);
+  const assessmentResults = assessmentService.loadAssessmentResults();
 
   const handlePress = () => {
-    if (userMode === 'student') {
-      router.push('/assessment');
-    } else {
-      // Parents can only view results if assessment is completed
-      if (hasCompletedAssessment) {
-        // Navigate to student progress/results if available
-        console.log('Viewing student progress');
-        // Could implement navigation to progress dashboard later
-      } else {
-        console.log('Student needs to take assessment first');
-        // Could show a reminder modal or do nothing
-      }
-    }
+    router.push('/assessment');
   };
 
   const getModuleDisplayName = (moduleId: string): string => {
@@ -55,15 +35,15 @@ export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
 
     if (userMode === 'parent') {
       return {
-        title: '📊 Student Progress',
+        title: '📊 Personalize your Path',
         subtitle: hasCompletedAssessment
-          ? 'Your student\'s learning priorities'
-          : 'Student assessment needed',
+          ? 'View your student\'s learning priorities'
+          : 'Help determine your student\'s learning path',
         description: hasCompletedAssessment
-          ? `Student assessment completed. Recommended starting point: ${topModule}`
-          : 'Your student needs to take the assessment to personalize their learning path.',
-        buttonText: hasCompletedAssessment ? 'View Student Progress' : 'Remind Student',
-        icon: hasCompletedAssessment ? '📈' : '⏳'
+          ? `Assessment completed. Recommended starting point: ${topModule}`
+          : 'Complete a quick assessment to personalize the learning experience for your student.',
+        buttonText: hasCompletedAssessment ? 'Start Assessment' : 'View My Results',
+        icon: hasCompletedAssessment ? '📈' : '🎯'
       };
     } else {
       return {
