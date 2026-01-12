@@ -328,12 +328,12 @@ export default function HomeScreen() {
           <ThemedText style={styles.noResultsText}>
             Take the assessment to see your personalized learning priorities!
           </ThemedText>
-          <TouchableOpacity 
+          {/* <TouchableOpacity 
             style={styles.takeAssessmentButton}
             onPress={() => router.push('/assessment')}
           >
             <ThemedText style={styles.takeAssessmentButtonText}>Take Assessment</ThemedText>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </ThemedView>
       );
     }
