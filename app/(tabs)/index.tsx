@@ -452,6 +452,26 @@ export default function HomeScreen() {
           </ThemedView>
         )}
 
+        {/* Tutorial launcher for families */}
+        {isInFamilyMode && (
+              <ThemedView style={styles.tutorialSection}>
+                <ThemedText style={styles.tutorialSectionTitle}>
+                  📚 New to the App?
+                </ThemedText>
+                <ThemedText style={styles.tutorialSectionSubtitle}>
+                  Take our interactive tutorial to learn how families can use the platform together - perfect for both parents and students!
+                </ThemedText>
+                <TouchableOpacity 
+                  style={styles.tutorialButton}
+                  onPress={() => tutorial.showTutorial()}
+                >
+                  <ThemedText style={styles.tutorialButtonText}>
+                    🎯 Start Interactive Tutorial
+                  </ThemedText>
+                </TouchableOpacity>
+              </ThemedView>
+            )}
+
         {/* Family Access Section - Only show if NOT in family mode */}
         {!isInFamilyMode && (
           <ThemedView style={styles.familySection}>
@@ -568,25 +588,7 @@ export default function HomeScreen() {
               </ThemedView>
             )}
 
-            {/* Tutorial launcher for families */}
-            {isInFamilyMode && (
-              <ThemedView style={styles.tutorialSection}>
-                <ThemedText style={styles.tutorialSectionTitle}>
-                  📚 New to the App?
-                </ThemedText>
-                <ThemedText style={styles.tutorialSectionSubtitle}>
-                  Take our interactive tutorial to learn how families can use the platform together - perfect for both parents and students!
-                </ThemedText>
-                <TouchableOpacity 
-                  style={styles.tutorialButton}
-                  onPress={() => tutorial.showTutorial()}
-                >
-                  <ThemedText style={styles.tutorialButtonText}>
-                    🎯 Start Interactive Tutorial
-                  </ThemedText>
-                </TouchableOpacity>
-              </ThemedView>
-            )}
+            
 
             {/* Content metadata */}
             {content?.metadata && (
