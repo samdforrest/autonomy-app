@@ -24,6 +24,14 @@ export default function CreateFamily() {
       const familyData = await familyService.getFamilyData(familyCode);
       
       if (familyData) {
+        // Increment login count for this initial sign-in event
+        console.log('🔐 New family created, incrementing login count');
+        const newCount = await familyService.incrementLoginCount(familyCode);
+        
+        // Update local family data to match Firebase
+        familyData.settings.loginCount = newCount;
+        console.log('📊 Updated local family data with new login count:', newCount);
+        
         // Set family context globally
         console.log('🏠 Setting family context after creating new family:', familyCode);
         setFamilyContext(familyCode, familyData);

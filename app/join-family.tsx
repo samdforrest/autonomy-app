@@ -24,12 +24,19 @@ export default function JoinFamily() {
       const familyData = await familyService.getFamilyData(code);
       
       if (familyData) {
+        // Increment login count for this sign-in event
+        console.log('🔐 Successful sign-in detected, incrementing login count');
+        const newCount = await familyService.incrementLoginCount(code);
+        
+        // Update local family data to match Firebase
+        familyData.settings.loginCount = newCount;
+        console.log('📊 Updated local family data with new login count:', newCount);
+        
         // Set family context globally - this is what AuthGuard checks
         console.log('🏠 Setting family context after successful join:', code);
         setFamilyContext(code, familyData);
         
         // Navigate to home page after successful authentication
-        // Login count will be incremented on home screen load
         console.log('✅ Family joined successfully, redirecting to home');
         router.replace('/(tabs)');
       } else {

@@ -391,14 +391,14 @@ export class FamilyService {
   }
 
   /**
-   * Increment login count for family (for auto-tutorial trigger)
+   * Increment login count for family (tracks all individual login sessions)
    */
   async incrementLoginCount(familyCode: string): Promise<number> {
     try {
-      // Add stack trace to see who's calling this
       const stack = new Error().stack;
-      console.log('🔢 incrementLoginCount called for:', familyCode);
-      console.log('📍 Call stack:', stack?.split('\n').slice(1, 4).join('\n'));
+      console.log('🔢🔢🔢 INCREMENT LOGIN COUNT CALLED');
+      console.log('📍 Family Code:', familyCode);
+      console.log('📍 Call Stack:', stack?.split('\n').slice(1, 5).join('\n'));
       
       const familyRef = doc(db, 'families', familyCode);
       const familyData = await this.getFamilyData(familyCode);
@@ -409,16 +409,9 @@ export class FamilyService {
       }
 
       const currentCount = familyData.settings.loginCount || 0;
-      
-      // Don't increment if already > 0 (family has already logged in)
-      if (currentCount > 0) {
-        console.log('⏭️ Login count already > 0, skipping increment. Returning existing count:', currentCount);
-        return currentCount;
-      }
-      
       const newCount = currentCount + 1;
       
-      console.log('📈 About to increment login count from', currentCount, 'to', newCount);
+      console.log('📈 Incrementing login count from', currentCount, 'to', newCount);
 
       await updateDoc(familyRef, {
         'settings.loginCount': newCount

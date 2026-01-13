@@ -17,17 +17,19 @@ import { useColorInheritance } from '@/hooks/useColorInheritance';
 import { useGoogleDocsContent } from '@/hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '@/services/api';
 import { assessmentService, type AssessmentSummary } from '@/services/assessment-service';
-import { familyService } from '@/services/family-service';
 
 export default function HomeScreen() {
+  const componentId = React.useRef(Math.random().toString(36).substr(2, 9));
+  console.log('🏠🏠🏠 HOME SCREEN COMPONENT RENDER (ID:', componentId.current + ')');
+  
   const router = useRouter();
   const { userMode, isInFamilyMode, currentFamilyCode, currentFamily, clearFamilyContext } = useAppMode();
   const tutorial = useTutorial();
   const [assessmentResults, setAssessmentResults] = React.useState<AssessmentSummary | null>(null);
   const [loadingResults, setLoadingResults] = React.useState(false);
   
-  // Track if we've already incremented login count for current family
-  const hasIncrementedRef = React.useRef<string | null>(null);
+  // Tutorial auto-trigger logic (much simpler now!)
+  const [hasTriggeredTutorial, setHasTriggeredTutorial] = React.useState(false);
   
   // Determine which tab to fetch based on current mode
   const tabName = userMode === 'parent' ? 'Parent Intro' : 'Student Intro';
@@ -101,75 +103,38 @@ export default function HomeScreen() {
     }
   }, [content]);
 
-  // Auto-trigger tutorial on first login
+  // Auto-trigger tutorial on first login (much simpler!)
   React.useEffect(() => {
-    const checkFirstLogin = async () => {
-      const effectId = Math.random().toString(36).substr(2, 9);
-      console.log('🎯 Auto-trigger useEffect running (ID:', effectId + '):', {
-        isInFamilyMode,
-        hasFamilyCode: !!currentFamilyCode,
-        hasCurrentFamily: !!currentFamily,
-        isTutorialVisible: tutorial.isTutorialVisible,
-        loginCount: currentFamily?.settings.loginCount,
-        hasIncrementedRef: hasIncrementedRef.current
-      });
-
-      if (isInFamilyMode && currentFamily && currentFamilyCode && !tutorial.isTutorialVisible) {
-        // Check current login count
-        const currentLoginCount = currentFamily.settings.loginCount || 0;
-        
-        console.log('🎯 Checking first login status:', { 
-          familyCode: currentFamilyCode, 
-          loginCount: currentLoginCount,
-          isTutorialVisible: tutorial.isTutorialVisible
-        });
-        
-        // If this is a persisted family loading (loginCount might not be incremented yet)
-        if (currentLoginCount === 0) {
-          // Check if we've already incremented for this family
-          if (hasIncrementedRef.current === currentFamilyCode) {
-            console.log('⏭️ Already incremented for this family, skipping');
-            return;
-          }
-
-          console.log('🔄 Persisted family detected with 0 logins - incrementing count');
-          console.log('🎯 Home screen calling incrementLoginCount for:', currentFamilyCode);
-          hasIncrementedRef.current = currentFamilyCode; // Mark as processed
-          
-          try {
-            const newCount = await familyService.incrementLoginCount(currentFamilyCode);
-            console.log('📊 Home screen received count after increment:', newCount);
-            
-            // Only trigger tutorial if we actually incremented (newCount === 1 means we went from 0 to 1)
-            if (newCount === 1) {
-              console.log('🎉 First login detected after increment! Auto-triggering tutorial.');
-              // Small delay to let the home screen fully load
-              setTimeout(() => {
-                tutorial.showTutorial();
-              }, 1000);
-            } else {
-              console.log('👀 Login count was already > 0, not triggering tutorial');
-            }
-          } catch (error) {
-            console.error('❌ Failed to increment login count:', error);
-          }
-        } else {
-          console.log('👀 Not first login (count: ' + currentLoginCount + '), skipping tutorial auto-trigger');
-        }
-      } else {
-        console.log('❌ Auto-trigger conditions not met');
-      }
-    };
-
-    checkFirstLogin();
-  }, [isInFamilyMode, currentFamily, currentFamilyCode, tutorial]);
-
-  // Reset increment tracking when family changes
-  React.useEffect(() => {
-    if (currentFamilyCode && hasIncrementedRef.current !== currentFamilyCode) {
-      console.log('👨‍👩‍👧‍👦 Family changed, resetting increment tracking');
-      hasIncrementedRef.current = null;
+    if (!isInFamilyMode || !currentFamily || !currentFamilyCode || hasTriggeredTutorial) {
+      return;
     }
+
+    const loginCount = currentFamily.settings.loginCount || 0;
+    
+    console.log('🎯 Checking tutorial trigger:', { 
+      familyCode: currentFamilyCode, 
+      loginCount,
+      isTutorialVisible: tutorial.isTutorialVisible,
+      hasTriggeredTutorial
+    });
+
+    // Only trigger tutorial if this is the first login (count = 1) and we haven't triggered it yet
+    if (loginCount === 1 && !tutorial.isTutorialVisible && !hasTriggeredTutorial) {
+      console.log('🎉 First login detected! Auto-triggering tutorial.');
+      setHasTriggeredTutorial(true);
+      
+      // Small delay to let the home screen fully load
+      setTimeout(() => {
+        tutorial.showTutorial();
+      }, 1000);
+    } else if (loginCount > 1) {
+      console.log('👀 Subsequent login (count: ' + loginCount + '), no tutorial trigger');
+    }
+  }, [isInFamilyMode, currentFamily, currentFamilyCode, tutorial.isTutorialVisible, hasTriggeredTutorial]);
+
+  // Reset tutorial trigger when family changes
+  React.useEffect(() => {
+    setHasTriggeredTutorial(false);
   }, [currentFamilyCode]);
 
   // Helper function to check if a string is a YouTube URL
