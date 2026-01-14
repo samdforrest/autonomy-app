@@ -111,15 +111,18 @@ export default function HomeScreen() {
 
     const loginCount = currentFamily.settings.loginCount || 0;
     
+    const hasCompletedTutorial = currentFamily.settings.hasCompletedTutorial || false;
+    
     console.log('🎯 Checking tutorial trigger:', { 
       familyCode: currentFamilyCode, 
       loginCount,
+      hasCompletedTutorial,
       isTutorialVisible: tutorial.isTutorialVisible,
       hasTriggeredTutorial
     });
 
-    // Only trigger tutorial if this is the first login (count = 1) and we haven't triggered it yet
-    if (loginCount === 1 && !tutorial.isTutorialVisible && !hasTriggeredTutorial) {
+    // Only trigger tutorial if this is the first login (count = 1), tutorial hasn't been completed, and we haven't triggered it yet
+    if (loginCount === 1 && !hasCompletedTutorial && !tutorial.isTutorialVisible && !hasTriggeredTutorial) {
       console.log('🎉 First login detected! Auto-triggering tutorial.');
       setHasTriggeredTutorial(true);
       
@@ -129,6 +132,8 @@ export default function HomeScreen() {
       }, 1000);
     } else if (loginCount > 1) {
       console.log('👀 Subsequent login (count: ' + loginCount + '), no tutorial trigger');
+    } else if (hasCompletedTutorial) {
+      console.log('✅ Tutorial already completed, no trigger needed');
     }
   }, [isInFamilyMode, currentFamily, currentFamilyCode, tutorial.isTutorialVisible, hasTriggeredTutorial]);
 

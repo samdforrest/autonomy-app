@@ -7,14 +7,37 @@ import 'react-native-reanimated';
 
 // Component to handle tutorial inside providers
 function TutorialManager() {
-  const { userMode, switchMode, currentFamilyCode } = useAppMode();
+  const { userMode, switchMode, currentFamilyCode, currentFamily, setFamilyContext } = useAppMode();
   const tutorial = useFamilyTutorial(currentFamilyCode);
   const router = useRouter();
 
   // Tutorial navigation handlers
   const handleTutorialComplete = async () => {
-    if (currentFamilyCode) {
-      await tutorial.completeFamilyTutorial();
+    if (currentFamilyCode && currentFamily) {
+      try {
+        console.log('📚 Tutorial completed, marking as complete and navigating to parent intro');
+        
+        // Mark tutorial as complete in Firebase
+        await familyService.markTutorialComplete(currentFamilyCode);
+        
+        // Update local family context to reflect the completion
+        const updatedFamilyData = {
+          ...currentFamily,
+          settings: {
+            ...currentFamily.settings,
+            hasCompletedTutorial: true
+          }
+        };
+        setFamilyContext(currentFamilyCode, updatedFamilyData);
+        
+        // Complete tutorial in context (for local state)
+        await tutorial.completeFamilyTutorial();
+        
+        // Navigate to parent intro
+        router.replace('/intro-parent');
+      } catch (error) {
+        console.error('❌ Error completing tutorial:', error);
+      }
     }
   };
 
@@ -58,10 +81,12 @@ function TutorialManager() {
 }
 
 import { AuthGuard } from '@/components/AuthGuard';
+import { IntroGuard } from '@/components/IntroGuard';
 import { FamilyOnboardingTutorial } from '@/components/FamilyOnboardingTutorial';
 import { AppModeProvider, useAppMode } from '@/contexts/AppModeContext';
 import { CompletionProvider } from '@/contexts/CompletionContext';
 import { TutorialProvider, useFamilyTutorial } from '@/contexts/TutorialContext';
+import { familyService } from '@/services/family-service';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function RootLayout() {
@@ -133,7 +158,8 @@ export default function RootLayout() {
         <CompletionProvider>
           <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <AuthGuard>
-              <Stack>
+              <IntroGuard>
+                <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen 
                   name="assessment"
@@ -214,9 +240,26 @@ export default function RootLayout() {
                     }),
                   }}
                 />
+                <Stack.Screen 
+                  name="intro-parent" 
+                  options={{
+                    title: "Parent Introduction",
+                    headerShown: false, // Full screen
+                    gestureEnabled: false, // Prevent back navigation
+                  }}
+                />
+                <Stack.Screen 
+                  name="intro-student" 
+                  options={{
+                    title: "Student Introduction", 
+                    headerShown: false, // Full screen
+                    gestureEnabled: false, // Prevent back navigation
+                  }}
+                />
                 <Stack.Screen name="+not-found" />
               </Stack>
               <TutorialManager />
+              </IntroGuard>
             </AuthGuard>
             <StatusBar style="auto" />
           </ThemeProvider>

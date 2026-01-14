@@ -15,6 +15,9 @@ export interface FamilyData {
     hasPassword: boolean;
     isAdmin?: boolean; // NEW: Admin role flag
     loginCount?: number; // Track number of logins for auto-tutorial trigger
+    hasCompletedTutorial?: boolean; // Track tutorial completion
+    hasCompletedParentIntro?: boolean; // Track parent intro completion
+    hasCompletedStudentIntro?: boolean; // Track student intro completion
   };
   students: { [studentId: string]: StudentData };
 }
@@ -78,7 +81,10 @@ export class FamilyService {
         parentName: parentName || 'Parent',
         createdAt: serverTimestamp(),
         hasPassword: false,
-        loginCount: 0 // Start with 0 logins for new families
+        loginCount: 0, // Start with 0 logins for new families
+        hasCompletedTutorial: false,
+        hasCompletedParentIntro: false,
+        hasCompletedStudentIntro: false
       },
       students: {}
     };
@@ -423,6 +429,67 @@ export class FamilyService {
       console.error('❌ Error incrementing login count:', error);
       return 0;
     }
+  }
+
+  /**
+   * Mark tutorial as completed for family
+   */
+  async markTutorialComplete(familyCode: string): Promise<void> {
+    try {
+      console.log('✅ Marking tutorial complete for family:', familyCode);
+      await updateDoc(doc(db, 'families', familyCode), {
+        'settings.hasCompletedTutorial': true
+      });
+      console.log('✅ Tutorial completion marked in Firebase');
+    } catch (error) {
+      console.error('❌ Error marking tutorial complete:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark parent intro as completed for family
+   */
+  async markParentIntroComplete(familyCode: string): Promise<void> {
+    try {
+      console.log('✅ Marking parent intro complete for family:', familyCode);
+      await updateDoc(doc(db, 'families', familyCode), {
+        'settings.hasCompletedParentIntro': true
+      });
+      console.log('✅ Parent intro completion marked in Firebase');
+    } catch (error) {
+      console.error('❌ Error marking parent intro complete:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark student intro as completed for family
+   */
+  async markStudentIntroComplete(familyCode: string): Promise<void> {
+    try {
+      console.log('✅ Marking student intro complete for family:', familyCode);
+      await updateDoc(doc(db, 'families', familyCode), {
+        'settings.hasCompletedStudentIntro': true
+      });
+      console.log('✅ Student intro completion marked in Firebase');
+    } catch (error) {
+      console.error('❌ Error marking student intro complete:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Determine what screen should be shown based on completion state
+   */
+  getRequiredScreen(familyData: FamilyData): 'tutorial' | 'intro-parent' | 'intro-student' | 'home' {
+    // Only show intro flow for first-time users (loginCount = 1)
+    if (familyData.settings.loginCount === 1) {
+      if (!familyData.settings.hasCompletedTutorial) return 'tutorial';
+      if (!familyData.settings.hasCompletedParentIntro) return 'intro-parent';
+      if (!familyData.settings.hasCompletedStudentIntro) return 'intro-student';
+    }
+    return 'home';
   }
 
 }
