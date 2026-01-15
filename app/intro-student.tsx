@@ -32,6 +32,62 @@ export default function StudentIntroScreen() {
     teal: styles.bubbleTeal,
   });
 
+  // Check if header should be bold (same logic as home screen)
+  const shouldBoldHeader = (header: string) => {
+    if (!header) return false;
+    
+    const lowerHeader = header.toLowerCase();
+    return lowerHeader.includes('welcome') || 
+           lowerHeader.includes('introduction') || 
+           lowerHeader.includes('getting started') ||
+           lowerHeader.includes('overview') ||
+           lowerHeader.includes('student');
+  };
+
+  // Helper function to check if a string is a YouTube URL
+  const isYouTubeUrl = (url: string | null | undefined) => {
+    return url && (url.includes('youtube.com') || url.includes('youtu.be'));
+  };
+
+  const renderContentBlock = (block: any, index: number) => {
+    // Check if this block's header is a YouTube URL
+    const isVideoBlock = isYouTubeUrl(block.header);
+    
+    return (
+      <ThemedView key={block.id || index} style={[styles.bubble, getBubbleStyle(block.header, index, block.id)]}>
+        {/* Header/Label - or Video Player if header is YouTube URL */}
+        {block.header && !isVideoBlock && (
+          <ThemedText style={[
+            styles.bubbleHeader, 
+            shouldBoldHeader(block.header) && styles.bubbleHeaderBold
+          ]}>
+            {block.header}
+          </ThemedText>
+        )}
+        
+        {/* Content */}
+        <ThemedView style={styles.bubbleContent}>
+          {block.items?.map((item: any, itemIndex: number) => (
+            <View key={itemIndex} style={styles.contentItem}>
+              {item.text && (
+                <TextWithYouTube 
+                  text={item.text} 
+                  textStyle={styles.bubbleText}
+                />
+              )}
+              {item.uri && (
+                <TextWithYouTube 
+                  text={`Video: ${item.uri}`} 
+                  textStyle={styles.bubbleText}
+                />
+              )}
+            </View>
+          ))}
+        </ThemedView>
+      </ThemedView>
+    );
+  };
+
   const handleContinue = async () => {
     if (!currentFamilyCode || isCompleting) return;
 
@@ -76,30 +132,7 @@ export default function StudentIntroScreen() {
         </View>
 
         {/* Content Blocks */}
-        {content?.contentBlocks?.map((block: any, index: number) => (
-          <View key={index} style={[styles.contentBlock, getBubbleStyle(block.header, index)]}>
-            {block.header && (
-              <ThemedText style={styles.blockHeader}>{block.header}</ThemedText>
-            )}
-            
-            {block.items?.map((item: any, itemIndex: number) => (
-              <View key={itemIndex} style={styles.contentItem}>
-                {item.text && (
-                  <TextWithYouTube 
-                    text={item.text} 
-                    style={styles.itemText}
-                  />
-                )}
-                {item.uri && (
-                  <TextWithYouTube 
-                    text={`Video: ${item.uri}`} 
-                    style={styles.itemText}
-                  />
-                )}
-              </View>
-            ))}
-          </View>
-        ))}
+        {content?.contentBlocks?.map((block: any, index: number) => renderContentBlock(block, index))}
 
         {/* Continue Button */}
         <View style={styles.buttonContainer}>
@@ -144,22 +177,41 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     opacity: 0.8,
   },
-  contentBlock: {
-    marginBottom: 20,
-    padding: 15,
-    borderRadius: 10,
+  bubble: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  blockHeader: {
-    fontSize: 18,
+  bubbleHeader: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 8,
+  },
+  bubbleHeaderBold: {
     fontWeight: 'bold',
-    marginBottom: 10,
+    fontSize: 15,
   },
-  contentItem: {
-    marginBottom: 10,
+  bubbleContent: {
+    backgroundColor: 'transparent',
   },
-  itemText: {
+  bubbleText: {
     fontSize: 16,
     lineHeight: 24,
+    color: '#333',
+    marginBottom: 8,
+  },
+  contentItem: {
+    marginBottom: 8,
   },
   buttonContainer: {
     marginTop: 30,
