@@ -55,10 +55,19 @@ export default function StudentIntroScreen() {
     
     return (
       <ThemedView key={block.id || index} style={[styles.bubble, getBubbleStyle(block.header, index, block.id)]}>
-        {/* Header/Label - or Video Player if header is YouTube URL */}
+        {/* Video Player if header is YouTube URL */}
+        {block.header && isVideoBlock && (
+          <TextWithYouTube
+            text={block.header}
+            textStyle={styles.bubbleText}
+            videoHeight={200}
+          />
+        )}
+
+        {/* Header/Label (not a video) */}
         {block.header && !isVideoBlock && (
           <ThemedText style={[
-            styles.bubbleHeader, 
+            styles.bubbleHeader,
             shouldBoldHeader(block.header) && styles.bubbleHeaderBold
           ]}>
             {block.header}
@@ -76,9 +85,10 @@ export default function StudentIntroScreen() {
                 />
               )}
               {item.uri && (
-                <TextWithYouTube 
-                  text={`Video: ${item.uri}`} 
+                <TextWithYouTube
+                  text={item.uri}
                   textStyle={styles.bubbleText}
+                  videoHeight={180}
                 />
               )}
             </View>

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { convertToYouTubeEmbedUrl, getYouTubeThumbnail, isYouTubeUrl } from '../utils/youtube';
+import { convertToYouTubeEmbedUrl, fetchYouTubeTitle, getYouTubeThumbnail, isYouTubeUrl } from '../utils/youtube';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
 
@@ -59,6 +59,17 @@ export function YouTubeVideoCard({
   const [hasError, setHasError] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [fetchedTitle, setFetchedTitle] = useState<string | null>(null);
+
+  // Fetch actual video title if using default
+  useEffect(() => {
+    if (title === 'YouTube Video') {
+      fetchYouTubeTitle(url).then(setFetchedTitle);
+    }
+  }, [url, title]);
+
+  // Use fetched title if available, otherwise use prop
+  const displayTitle = fetchedTitle || title;
 
   // Validate YouTube URL
   if (!isYouTubeUrl(url)) {
@@ -140,7 +151,7 @@ export function YouTubeVideoCard({
             }}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
-            title={title}
+            title={displayTitle}
           />
         </ThemedView>
       );
@@ -170,10 +181,10 @@ export function YouTubeVideoCard({
       <ThemedView style={styles.thumbnailContainer}>
         {thumbnailUrl && !imageError ? (
           Platform.OS === 'web' ? (
-            <img 
+            <img
               src={thumbnailUrl}
               style={styles.thumbnail}
-              alt={title}
+              alt={displayTitle}
               onError={() => setImageError(true)}
             />
           ) : (
@@ -241,7 +252,7 @@ export function YouTubeVideoCard({
 
         {/* Title */}
         <ThemedText style={styles.title} numberOfLines={2}>
-          {title}
+          {displayTitle}
         </ThemedText>
 
         {/* Description */}

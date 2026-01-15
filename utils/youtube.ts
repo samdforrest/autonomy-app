@@ -135,7 +135,7 @@ export function parseTextWithYouTube(text: string): Array<{type: 'text' | 'youtu
 
   // Split text by YouTube URLs while keeping the URLs
   const youtubeRegex = /(https?:\/\/(?:www\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/|m\.youtube\.com\/watch\?v=)[a-zA-Z0-9_-]{11}(?:[^\s]*)?)/g;
-  
+
   const parts = text.split(youtubeRegex);
   const result: Array<{type: 'text' | 'youtube', content: string}> = [];
 
@@ -150,4 +150,42 @@ export function parseTextWithYouTube(text: string): Array<{type: 'text' | 'youtu
   });
 
   return result.length > 0 ? result : [{type: 'text', content: text}];
+}
+
+// Simple in-memory cache for video titles
+const titleCache: Map<string, string> = new Map();
+
+/**
+ * Fetches the actual YouTube video title using oEmbed API
+ * @param url - YouTube video URL
+ * @returns Promise<string> - Video title or fallback
+ */
+export async function fetchYouTubeTitle(url: string): Promise<string> {
+  const videoId = extractYouTubeVideoId(url);
+  if (!videoId) return 'YouTube Video';
+
+  // Check cache first
+  if (titleCache.has(videoId)) {
+    return titleCache.get(videoId)!;
+  }
+
+  try {
+    const oEmbedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+    const response = await fetch(oEmbedUrl);
+
+    if (!response.ok) {
+      return 'YouTube Video';
+    }
+
+    const data = await response.json();
+    const title = data.title || 'YouTube Video';
+
+    // Cache the result
+    titleCache.set(videoId, title);
+
+    return title;
+  } catch (error) {
+    console.log('Failed to fetch YouTube title:', error);
+    return 'YouTube Video';
+  }
 }
