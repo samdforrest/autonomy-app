@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { getThumbnailUrl } from '../services/thumbnail-service';
 import { convertToYouTubeEmbedUrl, fetchYouTubeTitle, getYouTubeThumbnail, isYouTubeUrl } from '../utils/youtube';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
@@ -60,6 +61,7 @@ export function YouTubeVideoCard({
   const [showVideo, setShowVideo] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [fetchedTitle, setFetchedTitle] = useState<string | null>(null);
+  const [customThumbnailUrl, setCustomThumbnailUrl] = useState<string | null>(null);
 
   // Fetch actual video title if using default
   useEffect(() => {
@@ -67,6 +69,11 @@ export function YouTubeVideoCard({
       fetchYouTubeTitle(url).then(setFetchedTitle);
     }
   }, [url, title]);
+
+  // Fetch custom thumbnail if available
+  useEffect(() => {
+    getThumbnailUrl(url).then(setCustomThumbnailUrl);
+  }, [url]);
 
   // Use fetched title if available, otherwise use prop
   const displayTitle = fetchedTitle || title;
@@ -127,7 +134,8 @@ export function YouTubeVideoCard({
     onBookmark?.();
   };
 
-  const thumbnailUrl = getYouTubeThumbnail(url, 'medium') || undefined;
+  // Use custom thumbnail if available, otherwise use YouTube default
+  const thumbnailUrl = customThumbnailUrl || getYouTubeThumbnail(url, 'medium') || undefined;
 
   // If video is playing, show the embedded player
   if (showVideo) {

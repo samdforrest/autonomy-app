@@ -187,12 +187,21 @@ export default function ProfileScreen() {
                 Administrative functions for managing the platform
               </Text>
               
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.familyButton, styles.adminButton]}
                 onPress={() => router.push('/create-family')}
               >
                 <Text style={[styles.familyButtonText, styles.adminButtonText]}>
                   🆕 Create New Family (Admin)
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.familyButton, styles.adminButton]}
+                onPress={() => router.push('/admin/thumbnails')}
+              >
+                <Text style={[styles.familyButtonText, styles.adminButtonText]}>
+                  🖼️ Manage Video Thumbnails
                 </Text>
               </TouchableOpacity>
             </View>

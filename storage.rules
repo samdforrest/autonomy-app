@@ -1,0 +1,17 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Thumbnail images - public read, no client writes (only via Cloud Functions)
+    match /thumbnails/{videoId} {
+      // Anyone can read thumbnails (for display in app)
+      allow read: if true;
+      // Client-side writes are blocked - uploads only via Cloud Functions Admin SDK
+      allow write: if false;
+    }
+
+    // Default: deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
