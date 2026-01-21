@@ -92,7 +92,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
   {
     id: 'modules-explained',
     title: 'Learning Modules: Your Growth Areas 🌟',
-    description: 'Each module focuses on important skills like handling mistakes, self-regulation, and curiosity. Students work through them at their own pace. Here they are!',
+    description: 'Each module focuses on important skills like handling mistakes, self-regulation, and curiosity. Parent view has a guide to each lesson. Student view walks you both through the five activities you complete together!',
     perspective: 'student',
     action: 'navigate-to-explore',
     targetArea: 'modules',
@@ -117,7 +117,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
   {
     id: 'ready-to-start',
     title: 'You\'re Ready to Begin! 🚀',
-    description: 'That\'s it! Start with the student assessment to create a personalized learning path. Parents can always switch views to check progress. Happy learning!',
+    description: 'While your child starts with the learning assessment, you can start by watching the intro videos in the parent and student guide! Parents can always switch views to check progress. Happy learning!',
     perspective: 'both',
     emoji: '🎉'
   }
