@@ -3,8 +3,9 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAppMode } from '@/contexts/AppModeContext';
 import { surveyService } from '@/services/survey-service';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface SurveyButtonProps {
   moduleId: string;
@@ -13,6 +14,7 @@ interface SurveyButtonProps {
 }
 
 export default function SurveyButton({ moduleId, moduleName, dayNumber }: SurveyButtonProps) {
+  const router = useRouter();
   const { currentFamilyCode } = useAppMode();
   const [surveyModalVisible, setSurveyModalVisible] = useState(false);
   const [surveyCompleted, setSurveyCompleted] = useState(false);
@@ -62,12 +64,24 @@ export default function SurveyButton({ moduleId, moduleName, dayNumber }: Survey
   if (surveyCompleted) {
     return (
       <ThemedView style={[styles.surveySection, styles.completedSurveySection]}>
-        <ThemedText style={styles.completedSurveyTitle}>
-          ✅ Survey Completed
-        </ThemedText>
-        <ThemedText style={styles.completedSurveySubtitle}>
-          Thank you for your feedback on this lesson!
-        </ThemedText>
+        <View style={styles.completedSurveyContent}>
+          <View style={styles.completedSurveyTextContainer}>
+            <ThemedText style={styles.completedSurveyTitle}>
+              ✅ Survey Completed
+            </ThemedText>
+            <ThemedText style={styles.completedSurveySubtitle}>
+              Thank you for your feedback on this lesson!
+            </ThemedText>
+          </View>
+          <TouchableOpacity
+            style={styles.backToModulesButton}
+            onPress={() => router.push('/(tabs)/explore')}
+          >
+            <ThemedText style={styles.backToModulesButtonText}>
+              Back to Modules
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
       </ThemedView>
     );
   }
@@ -157,5 +171,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#2E7D32',
     lineHeight: 20,
+  },
+  completedSurveyContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  completedSurveyTextContainer: {
+    flex: 1,
+    marginRight: 12,
+  },
+  backToModulesButton: {
+    backgroundColor: '#27AE60',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  backToModulesButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
