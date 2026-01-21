@@ -16,7 +16,7 @@ interface TutorialStep {
   id: string;
   title: string;
   description: string;
-  targetArea?: 'header' | 'mode-switcher' | 'family-dashboard' | 'bottom-tabs' | 'assessment' | 'modules';
+  targetArea?: 'header' | 'mode-switcher' | 'family-dashboard' | 'assessment' | 'modules';
   perspective: 'both' | 'parent' | 'student';
   highlightPosition?: {
     top?: number;
@@ -81,14 +81,14 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     action: 'navigate-to-assessment',
     emoji: '🧠'
   },
-  {
-    id: 'student-view',
-    title: 'Student View: Where Learning Happens ✨',
-    description: 'In Student View, kids find their personalized modules, watch videos, and track their own progress. It\'s designed to be engaging and age-appropriate! Let\'s see the student profile.',
-    perspective: 'student',
-    action: 'switch-to-student-and-navigate-profile',
-    emoji: '📚'
-  },
+  // {
+  //   id: 'student-view',
+  //   title: 'Student View: Where Learning Happens ✨',
+  //   description: 'In Student View, kids find their personalized modules, watch videos, and track their own progress. It\'s designed to be engaging and age-appropriate! Let\'s see the student profile.',
+  //   perspective: 'student',
+  //   action: 'switch-to-student-and-navigate-profile',
+  //   emoji: '📚'
+  // },
   {
     id: 'modules-explained',
     title: 'Learning Modules: Your Growth Areas 🌟',
@@ -98,15 +98,15 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     targetArea: 'modules',
     emoji: '🎓'
   },
-  {
-    id: 'navigation',
-    title: 'Getting Around the App 🧭',
-    description: 'Use the tabs at the bottom to navigate. Home has your dashboard, Explore shows learning modules, and Profile manages your family settings. Back to home we go!',
-    perspective: 'both',
-    action: 'navigate-to-home',
-    targetArea: 'bottom-tabs',
-    emoji: '🗺️'
-  },
+  // {
+  //   id: 'navigation',
+  //   title: 'Getting Around the App 🧭',
+  //   description: 'Use the tabs at the bottom to navigate. Home has your dashboard, Explore shows learning modules, and Profile manages your family settings. Back to home we go!',
+  //   perspective: 'both',
+  //   action: 'navigate-to-home',
+  //   targetArea: 'bottom-tabs',
+  //   emoji: '🗺️'
+  // },
   {
     id: 'working-together',
     title: 'Learning Together Works Best 🤝',
