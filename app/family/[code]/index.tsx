@@ -1,3 +1,4 @@
+import { FamilyCompletionDashboard } from '@/components/FamilyCompletionDashboard';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useAppMode } from '@/contexts/AppModeContext';
 import { useRouter } from 'expo-router';
@@ -11,24 +12,24 @@ export default function FamilyDashboard() {
   console.log('🏠 FamilyDashboard got context:', { familyCode, hasFamily: !!family });
   const { isAdminFamily } = useAppMode();
   const router = useRouter();
-  const [addingChild, setAddingChild] = useState(false);
+  const [addingStudent, setAddingStudent] = useState(false);
 
-  const handleAddChild = () => {
+  const handleAddStudent = () => {
     Alert.prompt(
-      'Set Child Name',
-      'Enter your child\'s name:',
-      async (childName) => {
-        if (childName && childName.trim()) {
+      'Set Student Name',
+      'Enter your student\'s name:',
+      async (studentName) => {
+        if (studentName && studentName.trim()) {
           try {
-            // For simplified model, we'll update the family's child name
+            // For simplified model, we'll update the family's student name
             // This would need to be implemented in the family service
-            console.log('Setting child name:', childName.trim());
-            // TODO: Implement familyService.setChildName(familyCode, childName.trim());
+            console.log('Setting student name:', studentName.trim());
+            // TODO: Implement familyService.setStudentName(familyCode, studentName.trim());
             await refreshFamily();
-            console.log('✅ Child name set successfully');
+            console.log('✅ Student name set successfully');
           } catch (error) {
-            console.error('❌ Error setting child name:', error);
-            Alert.alert('Error', 'Failed to set child name. Please try again.');
+            console.error('❌ Error setting student name:', error);
+            Alert.alert('Error', 'Failed to set student name. Please try again.');
           }
         }
       }
@@ -65,32 +66,32 @@ export default function FamilyDashboard() {
         </Text>
       </View>
 
-      {/* Child Profile Section */}
+      {/* Student Profile Section */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Child Profile</Text>
-          {!(family as any).childName && (
+          <Text style={styles.sectionTitle}>Student Profile</Text>
+          {!(family as any).studentName && (
             <TouchableOpacity 
               style={styles.addButton}
-              onPress={handleAddChild}
+              onPress={handleAddStudent}
             >
-              <Text style={styles.addButtonText}>+ Set Child Name</Text>
+              <Text style={styles.addButtonText}>+ Set Student Name</Text>
             </TouchableOpacity>
           )}
         </View>
 
-        {!(family as any).childName ? (
+        {!(family as any).studentName ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No child profile set</Text>
+            <Text style={styles.emptyText}>No student profile set</Text>
             <Text style={styles.emptySubtext}>
-              Set your child's name to get started with assessments
+              Set your student's name to get started with assessments
             </Text>
           </View>
         ) : (
-          <View style={styles.childCard}>
-            <Text style={styles.childName}>{(family as any).childName}</Text>
+          <View style={styles.studentCard}>
+            <Text style={styles.studentName}>{(family as any).studentName}</Text>
             
-            <View style={styles.childActions}>
+            <View style={styles.studentActions}>
               <TouchableOpacity 
                 style={styles.actionButton}
                 onPress={navigateToAssessment}
@@ -118,6 +119,9 @@ export default function FamilyDashboard() {
             </View>
         )}
       </View>
+
+      {/* Module Completion Dashboard */}
+      <FamilyCompletionDashboard />
 
       {/* Quick Actions */}
       <View style={styles.section}>
@@ -278,19 +282,19 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'center',
   },
-  childCard: {
+  studentCard: {
     backgroundColor: '#f8f9fa',
     padding: 15,
     borderRadius: 8,
     marginBottom: 10,
   },
-  childName: {
+  studentName: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
     marginBottom: 10,
   },
-  childActions: {
+  studentActions: {
     flexDirection: 'row',
     gap: 10,
     marginBottom: 10,

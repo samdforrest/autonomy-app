@@ -1,10 +1,12 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useAppMode } from '../contexts/AppModeContext';
 import { familyService } from '../services/family-service';
 
 export default function JoinFamily() {
   const router = useRouter();
+  const { setFamilyContext } = useAppMode();
   const [familyCode, setFamilyCode] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -18,26 +20,37 @@ export default function JoinFamily() {
     setLoading(true);
 
     try {
-      const isValid = await familyService.validateFamilyCode(code);
+      // Fetch full family data instead of just validating
+      const familyData = await familyService.getFamilyData(code);
       
-      if (isValid) {
-        router.replace(`/family/${code}`);
+      if (familyData) {
+        // Increment login count for this sign-in event
+        console.log('🔐 Successful sign-in detected, incrementing login count');
+        const newCount = await familyService.incrementLoginCount(code);
+        
+        // Update local family data to match Firebase
+        familyData.settings.loginCount = newCount;
+        console.log('📊 Updated local family data with new login count:', newCount);
+        
+        // Set family context globally - this is what AuthGuard checks
+        console.log('🏠 Setting family context after successful join:', code);
+        setFamilyContext(code, familyData);
+        
+        // Navigate to home page after successful authentication
+        console.log('✅ Family joined successfully, redirecting to home');
+        router.replace('/(tabs)');
       } else {
         Alert.alert(
           'Family Not Found',
           `The family code "${code}" was not found. Please check the code and try again, or create a new family instead.`,
           [
-            { text: 'Try Again', style: 'cancel' },
-            { 
-              text: 'Create New Family', 
-              onPress: () => router.push('/create-family')
-            }
+            { text: 'Try Again', style: 'cancel' }
           ]
         );
       }
     } catch (error) {
-      console.error('❌ Error validating family code:', error);
-      Alert.alert('Error', 'Failed to validate family code. Please try again.');
+      console.error('❌ Error joining family:', error);
+      Alert.alert('Error', 'Failed to join family. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -57,7 +70,7 @@ export default function JoinFamily() {
       <View style={styles.content}>
         <Text style={styles.title}>Join Your Family</Text>
         <Text style={styles.subtitle}>
-          Enter your family code to access your dashboard
+          Enter your family code to access the app
         </Text>
 
         <View style={styles.form}>
@@ -92,15 +105,6 @@ export default function JoinFamily() {
           <Text style={styles.exampleCode}>WOLF-1592</Text>
           <Text style={styles.exampleCode}>BEAR-7429</Text>
         </View>
-
-        <TouchableOpacity 
-          style={styles.linkButton}
-          onPress={() => router.push('/create-family')}
-        >
-          <Text style={styles.linkText}>
-            Don't have a family code? Create new family
-          </Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -196,15 +200,6 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     color: '#666',
     marginBottom: 5,
-  },
-  linkButton: {
-    alignItems: 'center',
-    padding: 10,
-  },
-  linkText: {
-    fontSize: 16,
-    color: '#007AFF',
-    textDecorationLine: 'underline',
   },
 });
 

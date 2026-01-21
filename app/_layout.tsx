@@ -1,11 +1,92 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Platform, Text, TouchableOpacity } from 'react-native';
 import 'react-native-reanimated';
 
-import { AppModeProvider } from '@/contexts/AppModeContext';
+// Component to handle tutorial inside providers
+function TutorialManager() {
+  const { userMode, switchMode, currentFamilyCode, currentFamily, setFamilyContext } = useAppMode();
+  const tutorial = useFamilyTutorial(currentFamilyCode);
+  const router = useRouter();
+
+  // Tutorial navigation handlers
+  const handleTutorialComplete = async () => {
+    if (currentFamilyCode && currentFamily) {
+      try {
+        console.log('📚 Tutorial completed, marking as complete and navigating to parent intro');
+        
+        // Mark tutorial as complete in Firebase
+        await familyService.markTutorialComplete(currentFamilyCode);
+        
+        // Update local family context to reflect the completion
+        const updatedFamilyData = {
+          ...currentFamily,
+          settings: {
+            ...currentFamily.settings,
+            hasCompletedTutorial: true
+          }
+        };
+        setFamilyContext(currentFamilyCode, updatedFamilyData);
+        
+        // Complete tutorial in context (for local state)
+        await tutorial.completeFamilyTutorial();
+        
+        // Navigate to parent intro
+        router.replace('/intro-parent');
+      } catch (error) {
+        console.error('❌ Error completing tutorial:', error);
+      }
+    }
+  };
+
+  const handleTutorialClose = () => {
+    tutorial.hideTutorial();
+  };
+
+  const handleTutorialModeSwitch = (mode: 'parent' | 'student') => {
+    switchMode(mode);
+  };
+
+  const handleTutorialNavigateToAssessment = () => {
+    router.push('/assessment');
+  };
+
+  const handleTutorialNavigateToExplore = () => {
+    router.push('/(tabs)/explore');
+  };
+
+  const handleTutorialNavigateToProfile = () => {
+    router.push('/(tabs)/profile');
+  };
+
+  const handleTutorialNavigateToHome = () => {
+    router.push('/(tabs)');
+  };
+
+  return (
+    <FamilyOnboardingTutorial
+      visible={tutorial.isTutorialVisible}
+      onComplete={handleTutorialComplete}
+      onClose={handleTutorialClose}
+      currentUserMode={userMode}
+      onModeSwitch={handleTutorialModeSwitch}
+      onNavigateToAssessment={handleTutorialNavigateToAssessment}
+      onNavigateToExplore={handleTutorialNavigateToExplore}
+      onNavigateToProfile={handleTutorialNavigateToProfile}
+      onNavigateToHome={handleTutorialNavigateToHome}
+    />
+  );
+}
+
+import { AuthGuard } from '@/components/AuthGuard';
+import { IntroGuard } from '@/components/IntroGuard';
+import { FamilyOnboardingTutorial } from '@/components/FamilyOnboardingTutorial';
+import { AppModeProvider, useAppMode } from '@/contexts/AppModeContext';
+import { CompletionProvider } from '@/contexts/CompletionContext';
+import { TutorialProvider, useFamilyTutorial } from '@/contexts/TutorialContext';
+import { familyService } from '@/services/family-service';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function RootLayout() {
@@ -26,8 +107,9 @@ export default function RootLayout() {
       if (router.canGoBack()) {
         router.back();
       } else {
-        // If no history (e.g., direct page reload), navigate to explore tab
-        router.push('/(tabs)/explore');
+        // If no history (e.g., direct page reload), navigate to home tab
+        // This is safer than trying to access userMode here
+        router.push('/(tabs)');
       }
     };
 
@@ -71,77 +153,118 @@ export default function RootLayout() {
   });
 
   return (
-    <AppModeProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen 
-            name="mistakes-module" 
-            options={getModuleOptions("Mistakes & Learning")}
-          />
-          <Stack.Screen 
-            name="regulation-module" 
-            options={getModuleOptions("Regulation & Control")}
-          />
-        <Stack.Screen 
-          name="responsibility-module" 
-          options={getModuleOptions("Responsibility Module")}
-        />
-        <Stack.Screen 
-          name="collaboration-module" 
-          options={getModuleOptions("Collaboration & Teamwork")}
-        />
-        <Stack.Screen 
-          name="selfcoach-module" 
-          options={getModuleOptions("Self-Coaching Module")}
-        />
-        <Stack.Screen 
-          name="curiosity-module" 
-          options={getModuleOptions("Curiosity Module")}
-        />
-        <Stack.Screen 
-          name="shapeoflearning-module" 
-          options={getModuleOptions("Shape of Learning Module")}
-        />
-        <Stack.Screen 
-          name="neuroplasticity-module" 
-          options={getModuleOptions("Neuroplasticity Module")}
-        />
-        <Stack.Screen 
-          name="mastery-moments-module" 
-          options={getModuleOptions("Mastery Moments Module")}
-        />
-        <Stack.Screen 
-          name="create-family" 
-          options={{
-            title: "Create Family",
-            headerBackTitle: "Home",
-            ...(Platform.OS === 'web' && {
-              headerLeft: () => <CustomBackButton />,
-              headerStyle: {
-                backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
-              },
-            }),
-          }}
-        />
-        <Stack.Screen 
-          name="join-family" 
-          options={{
-            title: "Join Family",
-            headerBackTitle: "Home",
-            ...(Platform.OS === 'web' && {
-              headerLeft: () => <CustomBackButton />,
-              headerStyle: {
-                backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
-              },
-            }),
-          }}
-        />
-        <Stack.Screen name="family/[code]" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </AppModeProvider>
+    <TutorialProvider>
+      <AppModeProvider>
+        <CompletionProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <AuthGuard>
+              <IntroGuard>
+                <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen 
+                  name="assessment"
+                  options={{
+                    title: "Assessment",
+                    headerBackTitle: "Home",
+                    ...(Platform.OS === 'web' && {
+                      headerLeft: () => <CustomBackButton />,
+                      headerStyle: {
+                        backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
+                      },
+                    }),
+                  }}
+                />
+                <Stack.Screen 
+                  name="mistakes-module" 
+                  options={getModuleOptions("Mistakes & Learning")}
+                />
+                <Stack.Screen 
+                  name="regulation-module" 
+                  options={getModuleOptions("Regulation & Control")}
+                />
+                <Stack.Screen 
+                  name="responsibility-module" 
+                  options={getModuleOptions("Responsibility Module")}
+                />
+                <Stack.Screen 
+                  name="collaboration-module" 
+                  options={getModuleOptions("Collaboration & Teamwork")}
+                />
+                <Stack.Screen 
+                  name="self-monitoring-module" 
+                  options={getModuleOptions("Self-Monitoring Module")}
+                />
+                <Stack.Screen 
+                  name="selfcoach-module" 
+                  options={getModuleOptions("Self-Coaching Module")}
+                />
+                <Stack.Screen 
+                  name="curiosity-module" 
+                  options={getModuleOptions("Curiosity Module")}
+                />
+                <Stack.Screen 
+                  name="shapeoflearning-module" 
+                  options={getModuleOptions("Shape of Learning Module")}
+                />
+                <Stack.Screen 
+                  name="neuroplasticity-module" 
+                  options={getModuleOptions("Neuroplasticity Module")}
+                />
+                <Stack.Screen 
+                  name="mastery-moments-module" 
+                  options={getModuleOptions("Mastery Moments Module")}
+                />
+                <Stack.Screen 
+                  name="create-family" 
+                  options={{
+                    title: "Create Family",
+                    headerBackTitle: "Home",
+                    ...(Platform.OS === 'web' && {
+                      headerLeft: () => <CustomBackButton />,
+                      headerStyle: {
+                        backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
+                      },
+                    }),
+                  }}
+                />
+                <Stack.Screen 
+                  name="join-family" 
+                  options={{
+                    title: "Join Family",
+                    headerBackTitle: "Home",
+                    ...(Platform.OS === 'web' && {
+                      headerLeft: () => <CustomBackButton />,
+                      headerStyle: {
+                        backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
+                      },
+                    }),
+                  }}
+                />
+                <Stack.Screen 
+                  name="intro-parent" 
+                  options={{
+                    title: "Parent Introduction",
+                    headerShown: false, // Full screen
+                    gestureEnabled: false, // Prevent back navigation
+                  }}
+                />
+                <Stack.Screen 
+                  name="intro-student" 
+                  options={{
+                    title: "Student Introduction", 
+                    headerShown: false, // Full screen
+                    gestureEnabled: false, // Prevent back navigation
+                  }}
+                />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <TutorialManager />
+              </IntroGuard>
+            </AuthGuard>
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </CompletionProvider>
+      </AppModeProvider>
+    </TutorialProvider>
   );
 }

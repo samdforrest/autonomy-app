@@ -14,14 +14,27 @@ export interface FamilyData {
     createdAt: any;
     hasPassword: boolean;
     isAdmin?: boolean; // NEW: Admin role flag
+    loginCount?: number; // Track number of logins for auto-tutorial trigger
+    hasCompletedTutorial?: boolean; // Track tutorial completion
+    hasCompletedParentIntro?: boolean; // Track parent intro completion
+    hasCompletedStudentIntro?: boolean; // Track student intro completion
   };
-  children: { [childId: string]: ChildData };
+  students: { [studentId: string]: StudentData };
 }
 
-export interface ChildData {
+export interface StudentData {
   name: string;
   assessments: { [assessmentId: string]: any };
   progress: { [moduleId: string]: any };
+  moduleCompletions?: {
+    [moduleId: string]: {
+      isCompleted: boolean;
+      completedAt?: any;
+      completedDays?: number;
+      totalDays?: number;
+      lastAccessed?: any;
+    };
+  };
 }
 
 export class FamilyService {
@@ -67,9 +80,13 @@ export class FamilyService {
       settings: {
         parentName: parentName || 'Parent',
         createdAt: serverTimestamp(),
-        hasPassword: false
+        hasPassword: false,
+        loginCount: 0, // Start with 0 logins for new families
+        hasCompletedTutorial: false,
+        hasCompletedParentIntro: false,
+        hasCompletedStudentIntro: false
       },
-      children: {}
+      students: {}
     };
 
     await setDoc(doc(db, 'families', familyCode), familyData);
@@ -111,62 +128,96 @@ export class FamilyService {
   }
 
   /**
-   * Add a child to a family
+   * Add a student to a family
    */
-  async addChild(familyCode: string, childName: string): Promise<string> {
-    const childId = childName.toLowerCase().replace(/\s+/g, '-');
+  async addStudent(familyCode: string, studentName: string): Promise<string> {
+    const studentId = studentName.toLowerCase().replace(/\s+/g, '-');
     
-    const childData: ChildData = {
-      name: childName,
+    const studentData: StudentData = {
+      name: studentName,
       assessments: {},
-      progress: {}
+      progress: {},
+      moduleCompletions: {}
     };
 
     await updateDoc(doc(db, 'families', familyCode), {
-      [`children.${childId}`]: childData
+      [`students.${studentId}`]: studentData
     });
 
-    console.log('✅ Added child to family:', childName, 'in', familyCode);
-    return childId;
+    console.log('✅ Added student to family:', studentName, 'in', familyCode);
+    return studentId;
   }
 
   /**
-   * Save assessment results for a child
+   * Get the first available student ID from a family (for auto-selection)
+   */
+  async getFirstStudentId(familyCode: string): Promise<string | null> {
+    const family = await this.getFamilyData(familyCode);
+    if (!family || !family.students) {
+      return null;
+    }
+
+    const studentIds = Object.keys(family.students);
+    return studentIds.length > 0 ? studentIds[0] : null;
+  }
+
+  /**
+   * Ensure a family has at least one student (create default if needed)
+   */
+  async ensureDefaultStudent(familyCode: string): Promise<string> {
+    const family = await this.getFamilyData(familyCode);
+    if (!family) {
+      throw new Error('Family not found');
+    }
+
+    // Check if family already has students
+    if (family.students && Object.keys(family.students).length > 0) {
+      return Object.keys(family.students)[0];
+    }
+
+    // Create a default student
+    const defaultStudentId = await this.addStudent(familyCode, 'Student');
+    console.log('✅ Created default student for family:', familyCode);
+    return defaultStudentId;
+  }
+
+  /**
+   * Save assessment results for a student
    */
   async saveAssessmentResults(
     familyCode: string, 
-    childId: string, 
+    studentId: string, 
     assessmentData: any
   ): Promise<void> {
     const assessmentId = `assessment_${Date.now()}`;
     
     await updateDoc(doc(db, 'families', familyCode), {
-      [`children.${childId}.assessments.${assessmentId}`]: {
+      [`students.${studentId}.assessments.${assessmentId}`]: {
         ...assessmentData,
         completedAt: serverTimestamp()
       }
     });
 
-    console.log('✅ Saved assessment results for:', childId, 'in family:', familyCode);
+    console.log('✅ Saved assessment results for:', studentId, 'in family:', familyCode);
   }
 
   /**
-   * Update child progress for a module
+   * Update student progress for a module
    */
-  async updateChildProgress(
+  async updateStudentProgress(
     familyCode: string,
-    childId: string,
+    studentId: string,
     moduleId: string,
     progressData: any
   ): Promise<void> {
     await updateDoc(doc(db, 'families', familyCode), {
-      [`children.${childId}.progress.${moduleId}`]: {
+      [`students.${studentId}.progress.${moduleId}`]: {
         ...progressData,
         lastUpdated: serverTimestamp()
       }
     });
 
-    console.log('✅ Updated progress for:', childId, moduleId, 'in family:', familyCode);
+    console.log('✅ Updated progress for:', studentId, moduleId, 'in family:', familyCode);
   }
 
   /**
@@ -175,6 +226,146 @@ export class FamilyService {
   async validateFamilyCode(familyCode: string): Promise<boolean> {
     const family = await this.getFamilyData(familyCode);
     return family !== null;
+  }
+
+  /**
+   * Mark a module as completed for a student
+   */
+  async markModuleCompleted(
+    familyCode: string,
+    studentId: string,
+    moduleId: string,
+    completedDays: number = 5,
+    totalDays: number = 5
+  ): Promise<void> {
+    await updateDoc(doc(db, 'families', familyCode), {
+      [`students.${studentId}.moduleCompletions.${moduleId}`]: {
+        isCompleted: true,
+        completedAt: serverTimestamp(),
+        completedDays,
+        totalDays,
+        lastAccessed: serverTimestamp()
+      }
+    });
+
+    console.log('✅ Module marked as completed:', moduleId, 'for student:', studentId, 'in family:', familyCode);
+  }
+
+  /**
+   * Update module progress (days completed, last accessed)
+   */
+  async updateModuleProgress(
+    familyCode: string,
+    studentId: string,
+    moduleId: string,
+    completedDays: number,
+    totalDays: number = 5
+  ): Promise<void> {
+    const isCompleted = completedDays >= totalDays;
+    
+    await updateDoc(doc(db, 'families', familyCode), {
+      [`students.${studentId}.moduleCompletions.${moduleId}`]: {
+        isCompleted,
+        completedAt: isCompleted ? serverTimestamp() : null,
+        completedDays,
+        totalDays,
+        lastAccessed: serverTimestamp()
+      }
+    });
+
+    console.log('📊 Module progress updated:', moduleId, `${completedDays}/${totalDays}`, 'for student:', studentId);
+  }
+
+  /**
+   * Get completion status for all modules for a student
+   */
+  async getStudentModuleCompletions(
+    familyCode: string,
+    studentId: string
+  ): Promise<{ [moduleId: string]: any } | null> {
+    const family = await this.getFamilyData(familyCode);
+    if (!family || !family.students[studentId]) {
+      return null;
+    }
+
+    return family.students[studentId].moduleCompletions || {};
+  }
+
+  /**
+   * Get completion statistics for a family
+   */
+  async getFamilyCompletionStats(familyCode: string): Promise<{
+    totalStudents: number;
+    moduleStats: { [moduleId: string]: { 
+      completed: number; 
+      inProgress: number; 
+      notStarted: number;
+      totalDaysCompleted: number;
+      totalPossibleDays: number;
+      averageProgress: number;
+    } };
+  } | null> {
+    const family = await this.getFamilyData(familyCode);
+    if (!family) return null;
+
+    // Check if students object exists, if not create empty array
+    const students = family.students ? Object.values(family.students) : [];
+    console.log('📊 Family completion stats - students found:', students.length);
+    
+    const moduleIds = ['mistakes', 'regulation', 'job', 'collaboration', 'selfcoach', 'curiosity', 'shapeoflearning', 'neuroplasticity', 'masterymoments', 'selfmonitoring'];
+    
+    const moduleStats: { [moduleId: string]: { 
+      completed: number; 
+      inProgress: number; 
+      notStarted: number;
+      totalDaysCompleted: number;
+      totalPossibleDays: number;
+      averageProgress: number;
+    } } = {};
+    
+    moduleIds.forEach(moduleId => {
+      moduleStats[moduleId] = { 
+        completed: 0, 
+        inProgress: 0, 
+        notStarted: 0,
+        totalDaysCompleted: 0,
+        totalPossibleDays: 0,
+        averageProgress: 0
+      };
+      
+      students.forEach(student => {
+        const completion = student.moduleCompletions?.[moduleId];
+        const totalDays = completion?.totalDays || 5; // Default to 5 days per module
+        const completedDays = completion?.completedDays || 0;
+        
+        // Add to totals for average calculation
+        moduleStats[moduleId].totalDaysCompleted += completedDays;
+        moduleStats[moduleId].totalPossibleDays += totalDays;
+        
+        if (!completion || completedDays === 0) {
+          // No progress recorded
+          moduleStats[moduleId].notStarted++;
+        } else if (completedDays >= totalDays) {
+          // All days completed
+          moduleStats[moduleId].completed++;
+        } else if (completedDays > 0) {
+          // Some days completed but not all
+          moduleStats[moduleId].inProgress++;
+        }
+      });
+      
+      // Calculate average progress percentage for this module
+      if (moduleStats[moduleId].totalPossibleDays > 0) {
+        moduleStats[moduleId].averageProgress = Math.round(
+          (moduleStats[moduleId].totalDaysCompleted / moduleStats[moduleId].totalPossibleDays) * 100
+        );
+      }
+    });
+
+    return {
+      totalStudents: students.length,
+      moduleStats
+    };
   }
 
   /**
@@ -204,6 +395,103 @@ export class FamilyService {
       return false;
     }
   }
+
+  /**
+   * Increment login count for family (tracks all individual login sessions)
+   */
+  async incrementLoginCount(familyCode: string): Promise<number> {
+    try {
+      const stack = new Error().stack;
+      console.log('🔢🔢🔢 INCREMENT LOGIN COUNT CALLED');
+      console.log('📍 Family Code:', familyCode);
+      console.log('📍 Call Stack:', stack?.split('\n').slice(1, 5).join('\n'));
+      
+      const familyRef = doc(db, 'families', familyCode);
+      const familyData = await this.getFamilyData(familyCode);
+      
+      if (!familyData) {
+        console.error('❌ Family not found for login count increment:', familyCode);
+        return 0;
+      }
+
+      const currentCount = familyData.settings.loginCount || 0;
+      const newCount = currentCount + 1;
+      
+      console.log('📈 Incrementing login count from', currentCount, 'to', newCount);
+
+      await updateDoc(familyRef, {
+        'settings.loginCount': newCount
+      });
+
+      console.log('✅ Login count incremented successfully in Firebase:', { familyCode, from: currentCount, to: newCount });
+      return newCount;
+    } catch (error) {
+      console.error('❌ Error incrementing login count:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Mark tutorial as completed for family
+   */
+  async markTutorialComplete(familyCode: string): Promise<void> {
+    try {
+      console.log('✅ Marking tutorial complete for family:', familyCode);
+      await updateDoc(doc(db, 'families', familyCode), {
+        'settings.hasCompletedTutorial': true
+      });
+      console.log('✅ Tutorial completion marked in Firebase');
+    } catch (error) {
+      console.error('❌ Error marking tutorial complete:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark parent intro as completed for family
+   */
+  async markParentIntroComplete(familyCode: string): Promise<void> {
+    try {
+      console.log('✅ Marking parent intro complete for family:', familyCode);
+      await updateDoc(doc(db, 'families', familyCode), {
+        'settings.hasCompletedParentIntro': true
+      });
+      console.log('✅ Parent intro completion marked in Firebase');
+    } catch (error) {
+      console.error('❌ Error marking parent intro complete:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark student intro as completed for family
+   */
+  async markStudentIntroComplete(familyCode: string): Promise<void> {
+    try {
+      console.log('✅ Marking student intro complete for family:', familyCode);
+      await updateDoc(doc(db, 'families', familyCode), {
+        'settings.hasCompletedStudentIntro': true
+      });
+      console.log('✅ Student intro completion marked in Firebase');
+    } catch (error) {
+      console.error('❌ Error marking student intro complete:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Determine what screen should be shown based on completion state
+   */
+  getRequiredScreen(familyData: FamilyData): 'tutorial' | 'intro-parent' | 'intro-student' | 'home' {
+    // Only show intro flow for first-time users (loginCount = 1)
+    if (familyData.settings.loginCount === 1) {
+      if (!familyData.settings.hasCompletedTutorial) return 'tutorial';
+      if (!familyData.settings.hasCompletedParentIntro) return 'intro-parent';
+      if (!familyData.settings.hasCompletedStudentIntro) return 'intro-student';
+    }
+    return 'home';
+  }
+
 }
 
 export const familyService = new FamilyService();

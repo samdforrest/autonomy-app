@@ -2,12 +2,12 @@ import { FamilyData } from '@/services/family-service';
 import React, { createContext, ReactNode, useContext, useEffect, useReducer } from 'react';
 
 // Types
-export type UserMode = 'parent' | 'child';
+export type UserMode = 'parent' | 'student';
 
 export interface FamilyContext {
   familyCode: string | null;
   familyData: FamilyData | null;
-  currentChildId: string | null;
+  currentStudentId: string | null;
   isActive: boolean;
   isAdmin: boolean; // NEW: Admin status
 }
@@ -27,7 +27,7 @@ export interface ParentInsights {
 
 export interface AppModeState {
   userMode: UserMode;
-  childProgress: {
+  studentProgress: {
     [moduleId: string]: ModuleProgress;
   };
   parentInsights: ParentInsights;
@@ -37,18 +37,18 @@ export interface AppModeState {
 // Actions
 type AppModeAction = 
   | { type: 'SWITCH_MODE'; payload: UserMode }
-  | { type: 'UPDATE_CHILD_PROGRESS'; payload: { moduleId: string; progress: Partial<ModuleProgress> } }
+  | { type: 'UPDATE_STUDENT_PROGRESS'; payload: { moduleId: string; progress: Partial<ModuleProgress> } }
   | { type: 'GENERATE_INSIGHTS' }
   | { type: 'RESET_STATE' }
-  | { type: 'SET_FAMILY_CONTEXT'; payload: { familyCode: string; familyData: FamilyData; childId?: string } }
-  | { type: 'SET_CURRENT_CHILD'; payload: string }
+  | { type: 'SET_FAMILY_CONTEXT'; payload: { familyCode: string; familyData: FamilyData; studentId?: string } }
+  | { type: 'SET_CURRENT_STUDENT'; payload: string }
   | { type: 'CLEAR_FAMILY_CONTEXT' }
   | { type: 'LOAD_PERSISTED_FAMILY'; payload: FamilyContext };
 
 // Initial state
 const initialState: AppModeState = {
   userMode: 'parent', // Default to parent mode as requested
-  childProgress: {
+  studentProgress: {
     // Sample data for demo purposes
     'mistakes': {
       completedDays: 2,
@@ -88,7 +88,7 @@ const initialState: AppModeState = {
   familyContext: {
     familyCode: null,
     familyData: null,
-    currentChildId: null,
+    currentStudentId: null,
     isActive: false,
     isAdmin: false
   }
@@ -103,14 +103,14 @@ function appModeReducer(state: AppModeState, action: AppModeAction): AppModeStat
         userMode: action.payload
       };
     
-    case 'UPDATE_CHILD_PROGRESS':
+    case 'UPDATE_STUDENT_PROGRESS':
       const { moduleId, progress } = action.payload;
       return {
         ...state,
-        childProgress: {
-          ...state.childProgress,
+        studentProgress: {
+          ...state.studentProgress,
           [moduleId]: {
-            ...state.childProgress[moduleId],
+            ...state.studentProgress[moduleId],
             ...progress,
             lastAccessed: new Date()
           }
@@ -119,7 +119,7 @@ function appModeReducer(state: AppModeState, action: AppModeAction): AppModeStat
     
     case 'GENERATE_INSIGHTS':
       // Simple assessment algorithm for MVP
-      const modules = Object.entries(state.childProgress);
+      const modules = Object.entries(state.studentProgress);
       const completionRates = modules.map(([id, progress]) => ({
         id,
         rate: progress.completedDays / progress.totalDays,
@@ -151,11 +151,11 @@ function appModeReducer(state: AppModeState, action: AppModeAction): AppModeStat
       };
     
     case 'SET_FAMILY_CONTEXT':
-      const { familyCode, familyData, childId } = action.payload;
+      const { familyCode, familyData, studentId } = action.payload;
       const newFamilyContext = {
         familyCode,
         familyData,
-        currentChildId: childId || null,
+        currentStudentId: studentId || null,
         isActive: true,
         isAdmin: familyData?.settings?.isAdmin === true
       };
@@ -177,10 +177,10 @@ function appModeReducer(state: AppModeState, action: AppModeAction): AppModeStat
         familyContext: newFamilyContext
       };
     
-    case 'SET_CURRENT_CHILD':
+    case 'SET_CURRENT_STUDENT':
       const updatedContext = {
         ...state.familyContext,
-        currentChildId: action.payload
+        currentStudentId: action.payload
       };
       
       // Update localStorage
@@ -191,11 +191,11 @@ function appModeReducer(state: AppModeState, action: AppModeAction): AppModeStat
             const parsedData = JSON.parse(stored);
             localStorage.setItem('autonomy_current_family', JSON.stringify({
               ...parsedData,
-              currentChildId: action.payload
+              currentStudentId: action.payload
             }));
           }
         } catch (error) {
-          console.error('❌ Failed to update child in storage:', error);
+          console.error('❌ Failed to update student in storage:', error);
         }
       }
       
@@ -219,7 +219,7 @@ function appModeReducer(state: AppModeState, action: AppModeAction): AppModeStat
         familyContext: {
           familyCode: null,
           familyData: null,
-          currentChildId: null,
+          currentStudentId: null,
           isActive: false,
           isAdmin: false
         }
@@ -327,8 +327,8 @@ export function useAppMode() {
     dispatch({ type: 'SWITCH_MODE', payload: mode });
   };
 
-  const updateChildProgress = (moduleId: string, progress: Partial<ModuleProgress>) => {
-    dispatch({ type: 'UPDATE_CHILD_PROGRESS', payload: { moduleId, progress } });
+  const updateStudentProgress = (moduleId: string, progress: Partial<ModuleProgress>) => {
+    dispatch({ type: 'UPDATE_STUDENT_PROGRESS', payload: { moduleId, progress } });
   };
 
   const generateInsights = () => {
@@ -340,14 +340,14 @@ export function useAppMode() {
   };
 
   // Family context actions
-  const setFamilyContext = (familyCode: string, familyData: FamilyData, childId?: string) => {
-    console.log('🏠 Setting family context:', familyCode, childId ? `child: ${childId}` : 'no child selected');
-    dispatch({ type: 'SET_FAMILY_CONTEXT', payload: { familyCode, familyData, childId } });
+  const setFamilyContext = (familyCode: string, familyData: FamilyData, studentId?: string) => {
+    console.log('🏠 Setting family context:', familyCode, studentId ? `student: ${studentId}` : 'no student selected');
+    dispatch({ type: 'SET_FAMILY_CONTEXT', payload: { familyCode, familyData, studentId } });
   };
 
-  const setCurrentChild = (childId: string) => {
-    console.log('👶 Setting current child:', childId);
-    dispatch({ type: 'SET_CURRENT_CHILD', payload: childId });
+  const setCurrentStudent = (studentId: string) => {
+    console.log('👶 Setting current student:', studentId);
+    dispatch({ type: 'SET_CURRENT_STUDENT', payload: studentId });
   };
 
   const clearFamilyContext = () => {
@@ -358,7 +358,7 @@ export function useAppMode() {
   return {
     // State
     userMode: state.userMode,
-    childProgress: state.childProgress,
+    studentProgress: state.studentProgress,
     parentInsights: state.parentInsights,
     
     // Family Context State
@@ -366,18 +366,18 @@ export function useAppMode() {
     isInFamilyMode: state.familyContext.isActive,
     currentFamily: state.familyContext.familyData,
     currentFamilyCode: state.familyContext.familyCode,
-    currentChildId: state.familyContext.currentChildId,
+    currentStudentId: state.familyContext.currentStudentId,
     isAdminFamily: state.familyContext.isAdmin,
     
     // Actions
     switchMode,
-    updateChildProgress,
+    updateStudentProgress,
     generateInsights,
     resetState,
     
     // Family Context Actions
     setFamilyContext,
-    setCurrentChild,
+    setCurrentStudent,
     clearFamilyContext
   };
 }

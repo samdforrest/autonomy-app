@@ -3,21 +3,26 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // Allow read/write access to survey responses
-    // In production, you may want to add authentication rules
     match /survey_responses/{document} {
       allow read, write: if true;
     }
-    
+
     // Allow read/write access to family data
     match /families/{document} {
       allow read, write: if true;
     }
-    
+
     // Allow read/write access to assessment data
     match /assessments/{document} {
       allow read, write: if true;
     }
-    
+
+    // Video thumbnails - allow read/write for admin uploads
+    match /videoThumbnails/{videoId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
     // Default rule - deny access to other collections
     match /{document=**} {
       allow read, write: if false;

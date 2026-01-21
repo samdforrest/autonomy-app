@@ -27,7 +27,7 @@ export default function FamilyAssessment() {
   useEffect(() => {
     if (code) {
       // Set assessment service context - simplified to just family code
-      assessmentService.setContext(code as string, 'child');
+      assessmentService.setContext(code as string, 'student');
       
       // Check for existing results
       checkExistingResults();
@@ -89,7 +89,7 @@ export default function FamilyAssessment() {
       
       Alert.alert(
         'Assessment Complete!',
-        `Assessment completed for ${family.childName || 'your child'}. You can now view their personalized learning modules.`,
+        `Assessment completed for ${family.studentName || 'your student'}. You can now view their personalized learning modules.`,
         [
           {
             text: 'View Results',
@@ -136,7 +136,7 @@ export default function FamilyAssessment() {
         <View style={styles.existingResultsContainer}>
           <Text style={styles.title}>Assessment Complete</Text>
           <Text style={styles.subtitle}>
-            {family.childName || 'Your child'} has already completed their assessment.
+            {family.studentName || 'Your student'} has already completed their assessment.
           </Text>
           
           <TouchableOpacity 
@@ -164,7 +164,7 @@ export default function FamilyAssessment() {
       <View style={styles.header}>
         <Text style={styles.title}>Learning Assessment</Text>
         <Text style={styles.subtitle}>
-          Help us personalize {family.childName || 'your child'}'s learning journey
+          Help us personalize {family.studentName || 'your student'}'s learning journey
         </Text>
         <Text style={styles.familyCode}>Family: {code}</Text>
       </View>

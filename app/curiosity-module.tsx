@@ -147,6 +147,7 @@ export default function CuriosityModuleScreen() {
     const boldPatterns = [
       /^Activity:/i,
       /^Scenario:/i,
+      /^Job:/i,
       /^Instructions:/i,
       /^Question:/i,
       /^Answer:/i
@@ -174,6 +175,7 @@ export default function CuriosityModuleScreen() {
     if (!block || !block.content) return null;
 
     const isScenario = block.header?.toLowerCase().includes('scenario:');
+    const isJob = block.header?.toLowerCase().includes('job:');
     const isAnswerRevealed = revealedAnswers.has(block.id);
     
     // Parse scenario content if this is a scenario block
@@ -182,7 +184,7 @@ export default function CuriosityModuleScreen() {
     let answerText = null;
     let otherContent: any[] = [];
     
-    if (isScenario && block.content) {
+    if ((isScenario || isJob) && block.content) {
       block.content.forEach((item: any) => {
         if (item.label && ['A', 'B', 'C', 'D'].includes(item.label)) {
           // This is an option
@@ -208,13 +210,13 @@ export default function CuriosityModuleScreen() {
       });
     }
     
-    // Determine what header to display for scenarios
-    const displayHeader = isScenario 
+    // Determine what header to display for scenarios and jobs
+    const displayHeader = (isScenario || isJob)
       ? (isAnswerRevealed && answerText ? answerText : (scenarioQuestion || block.header))
       : block.header;
     
-    // Filter content - for scenarios, we'll handle question/options/answer separately
-    const filteredContent = isScenario 
+    // Filter content - for scenarios and jobs, we'll handle question/options/answer separately
+    const filteredContent = (isScenario || isJob)
       ? otherContent  // Everything except question, options, and answer
       : block.content;
 

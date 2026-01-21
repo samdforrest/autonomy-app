@@ -81,7 +81,7 @@ export default function AssessmentScreen() {
         // Set family context if user is in family mode
         if (isInFamilyMode && currentFamilyCode) {
           console.log('🏠 Assessment: Setting family context for loading:', currentFamilyCode);
-          assessmentService.setContext(currentFamilyCode, 'child'); // Simplified: one child per family
+          assessmentService.setContext(currentFamilyCode, 'student'); // Simplified: one student per family
         } else {
           // Make sure to sync context from global state for non-family users
           console.log('👤 Assessment: Syncing context for individual user');
@@ -164,7 +164,7 @@ export default function AssessmentScreen() {
       // Set family context if user is in family mode
       if (isInFamilyMode && currentFamilyCode) {
         console.log('🏠 Assessment: Setting family context for submission:', currentFamilyCode);
-        assessmentService.setContext(currentFamilyCode, 'child'); // Simplified: one child per family
+        assessmentService.setContext(currentFamilyCode, 'student'); // Simplified: one student per family
       } else {
         // Make sure to sync context from global state for non-family users
         console.log('👤 Assessment: Syncing context for individual user');
@@ -186,7 +186,14 @@ export default function AssessmentScreen() {
         summary.summary,
         [
           { text: 'View Results', onPress: () => {} },
-          { text: 'Start Learning', onPress: () => router.push('/(tabs)/explore') }
+          { text: 'Start Learning', onPress: () => {
+            // Only navigate to explore for students, parents go to home
+            if (userMode === 'student') {
+              router.push('/(tabs)/explore');
+            } else {
+                  router.push('/(tabs)');
+            }
+          } }
         ]
       );
       
@@ -303,7 +310,14 @@ export default function AssessmentScreen() {
             
             <TouchableOpacity 
               style={[styles.primaryButton, { backgroundColor: '#27AE60', marginTop: 8 }]} 
-              onPress={() => router.push('/(tabs)/explore')}
+              onPress={() => {
+                // Only navigate to explore for students, parents go to home
+                if (userMode === 'student') {
+                  router.push('/(tabs)/explore');
+                } else {
+                  router.push('/(tabs)');
+                }
+              }}
             >
               <ThemedText style={styles.primaryButtonText}>Start Learning</ThemedText>
             </TouchableOpacity>

@@ -46,7 +46,7 @@ export default function FamilyResults() {
       setLoading(true);
       
       // Set assessment service context
-      assessmentService.setContext(code as string, 'child');
+      assessmentService.setContext(code as string, 'student');
       
       // Load results
       const assessmentResults = await assessmentService.loadAssessmentResults();
@@ -72,7 +72,7 @@ export default function FamilyResults() {
         <View style={styles.noResultsContainer}>
           <Text style={styles.title}>No Assessment Results</Text>
           <Text style={styles.subtitle}>
-            {(family as any).childName || 'Your child'} hasn't completed an assessment yet.
+            {(family as any).studentName || 'Your student'} hasn't completed an assessment yet.
           </Text>
           
           <TouchableOpacity 
@@ -100,7 +100,7 @@ export default function FamilyResults() {
       <View style={styles.header}>
         <Text style={styles.title}>Assessment Results</Text>
         <Text style={styles.subtitle}>
-          Learning priorities for {(family as any).childName || 'your child'}
+          Learning priorities for {(family as any).studentName || 'your student'}
         </Text>
         <Text style={styles.familyCode}>Family: {code}</Text>
       </View>

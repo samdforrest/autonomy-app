@@ -4,23 +4,32 @@ import React from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { AssessmentCard } from '@/components/AssessmentCard';
+import { EnhancedYouTubePlayer } from '@/components/EnhancedYouTubePlayer';
 import { ImageViewer } from '@/components/ImageViewer';
+import { ModeToggle } from '@/components/ModeToggle';
 import { TableViewer } from '@/components/TableViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { YouTubePlayer } from '@/components/YouTubePlayer';
 import { useAppMode } from '@/contexts/AppModeContext';
+import { useTutorial } from '@/contexts/TutorialContext';
 import { useColorInheritance } from '@/hooks/useColorInheritance';
 import { useGoogleDocsContent } from '@/hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '@/services/api';
 import { assessmentService, type AssessmentSummary } from '@/services/assessment-service';
 
 export default function HomeScreen() {
+  const componentId = React.useRef(Math.random().toString(36).substr(2, 9));
+  console.log('🏠🏠🏠 HOME SCREEN COMPONENT RENDER (ID:', componentId.current + ')');
+  
   const router = useRouter();
   const { userMode, isInFamilyMode, currentFamilyCode, currentFamily, clearFamilyContext } = useAppMode();
+  const tutorial = useTutorial();
   const [assessmentResults, setAssessmentResults] = React.useState<AssessmentSummary | null>(null);
   const [loadingResults, setLoadingResults] = React.useState(false);
+  
+  // Tutorial auto-trigger logic (much simpler now!)
+  const [hasTriggeredTutorial, setHasTriggeredTutorial] = React.useState(false);
   
   // Determine which tab to fetch based on current mode
   const tabName = userMode === 'parent' ? 'Parent Intro' : 'Student Intro';
@@ -61,7 +70,7 @@ export default function HomeScreen() {
       try {
         // Set context based on current mode
         if (isInFamilyMode && currentFamilyCode) {
-          assessmentService.setContext(currentFamilyCode, 'child');
+          assessmentService.setContext(currentFamilyCode, 'student');
         } else {
           assessmentService.syncFromGlobalContext();
         }
@@ -94,6 +103,45 @@ export default function HomeScreen() {
     }
   }, [content]);
 
+  // Auto-trigger tutorial on first login (much simpler!)
+  React.useEffect(() => {
+    if (!isInFamilyMode || !currentFamily || !currentFamilyCode || hasTriggeredTutorial) {
+      return;
+    }
+
+    const loginCount = currentFamily.settings.loginCount || 0;
+    
+    const hasCompletedTutorial = currentFamily.settings.hasCompletedTutorial || false;
+    
+    console.log('🎯 Checking tutorial trigger:', { 
+      familyCode: currentFamilyCode, 
+      loginCount,
+      hasCompletedTutorial,
+      isTutorialVisible: tutorial.isTutorialVisible,
+      hasTriggeredTutorial
+    });
+
+    // Only trigger tutorial if this is the first login (count = 1), tutorial hasn't been completed, and we haven't triggered it yet
+    if (loginCount === 1 && !hasCompletedTutorial && !tutorial.isTutorialVisible && !hasTriggeredTutorial) {
+      console.log('🎉 First login detected! Auto-triggering tutorial.');
+      setHasTriggeredTutorial(true);
+      
+      // Small delay to let the home screen fully load
+      setTimeout(() => {
+        tutorial.showTutorial();
+      }, 1000);
+    } else if (loginCount > 1) {
+      console.log('👀 Subsequent login (count: ' + loginCount + '), no tutorial trigger');
+    } else if (hasCompletedTutorial) {
+      console.log('✅ Tutorial already completed, no trigger needed');
+    }
+  }, [isInFamilyMode, currentFamily, currentFamilyCode, tutorial.isTutorialVisible, hasTriggeredTutorial]);
+
+  // Reset tutorial trigger when family changes
+  React.useEffect(() => {
+    setHasTriggeredTutorial(false);
+  }, [currentFamilyCode]);
+
   // Helper function to check if a string is a YouTube URL
   const isYouTubeUrl = (url: string | null | undefined) => {
     return url && (url.includes('youtube.com') || url.includes('youtu.be'));
@@ -117,21 +165,23 @@ export default function HomeScreen() {
         
         {/* YouTube Video Player if header is a YouTube URL */}
         {isVideoBlock && (
-          <YouTubePlayer
+          <EnhancedYouTubePlayer
             url={block.header}
-            height={200}
-            showThumbnail={true}
+            title="Featured Video"
+            category="lesson"
             style={styles.bubbleVideo}
+            useCardMode={true}
           />
         )}
         
         {/* YouTube Video Player if this block has a combined video */}
         {block.videoUrl && (
-          <YouTubePlayer
+          <EnhancedYouTubePlayer
             url={block.videoUrl}
-            height={200}
-            showThumbnail={true}
+            title="Learning Video"
+            category="example"
             style={styles.bubbleVideo}
+            useCardMode={true}
           />
         )}
         
@@ -173,24 +223,26 @@ export default function HomeScreen() {
               const videoUrl = item.url || item.uri || item.text;
               console.log('🎥 Rendering video:', videoUrl);
               return (
-                <YouTubePlayer
+                <EnhancedYouTubePlayer
                   key={idx}
                   url={videoUrl}
-                  height={200}
-                  showThumbnail={true}
+                  title="Learning Video"
+                  category="lesson"
                   style={styles.bubbleVideo}
+                  useCardMode={true}
                 />
               );
             } else if (item.type === 'link' && (item.url?.includes('youtube.com') || item.url?.includes('youtu.be'))) {
               // Handle YouTube links that might be categorized as generic links
               console.log('🔗 Rendering YouTube link as video:', item.url);
               return (
-                <YouTubePlayer
+                <EnhancedYouTubePlayer
                   key={idx}
                   url={item.url}
-                  height={200}
-                  showThumbnail={true}
+                  title={item.text || "Learning Video"}
+                  category="example"
                   style={styles.bubbleVideo}
+                  useCardMode={true}
                 />
               );
             } else if (item.type === 'image') {
@@ -306,7 +358,9 @@ export default function HomeScreen() {
     if (loadingResults) {
       return (
         <ThemedView style={styles.assessmentResultsSection}>
-          <ThemedText style={styles.sectionTitle}>📊 Your Learning Priorities</ThemedText>
+          <ThemedText style={styles.sectionTitle}>
+            {userMode === 'parent' ? '📊 Student Learning Priorities' : '📊 Your Learning Priorities'}
+          </ThemedText>
           <ThemedView style={styles.loadingContainer}>
             <ActivityIndicator size="small" color="#2196F3" />
             <ThemedText style={styles.loadingText}>Loading results...</ThemedText>
@@ -318,16 +372,21 @@ export default function HomeScreen() {
     if (!assessmentResults) {
       return (
         <ThemedView style={styles.assessmentResultsSection}>
-          <ThemedText style={styles.sectionTitle}>📊 Your Learning Priorities</ThemedText>
-          <ThemedText style={styles.noResultsText}>
-            Take the assessment to see your personalized learning priorities!
+          <ThemedText style={styles.sectionTitle}>
+            {userMode === 'parent' ? '📊 Student Learning Priorities' : '📊 Your Learning Priorities'}
           </ThemedText>
-          <TouchableOpacity 
+          <ThemedText style={styles.noResultsText}>
+            {userMode === 'parent' 
+              ? 'Student needs to take the assessment to see personalized learning priorities!'
+              : 'Take the assessment to see your personalized learning priorities!'
+            }
+          </ThemedText>
+          {/* <TouchableOpacity 
             style={styles.takeAssessmentButton}
             onPress={() => router.push('/assessment')}
           >
             <ThemedText style={styles.takeAssessmentButtonText}>Take Assessment</ThemedText>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </ThemedView>
       );
     }
@@ -346,7 +405,9 @@ export default function HomeScreen() {
     return (
       <ThemedView style={styles.assessmentResultsSection}>
         <ThemedView style={styles.resultsHeader}>
-          <ThemedText style={styles.sectionTitle}>📊 Your Learning Priorities</ThemedText>
+          <ThemedText style={styles.sectionTitle}>
+            {userMode === 'parent' ? '📊 Student Learning Priorities' : '📊 Your Learning Priorities'}
+          </ThemedText>
           <TouchableOpacity 
             style={styles.viewFullResultsButton}
             onPress={() => {
@@ -362,7 +423,10 @@ export default function HomeScreen() {
         </ThemedView>
         
         <ThemedText style={styles.resultsSubtitle}>
-          Based on your assessment, here are your top learning priorities:
+          {userMode === 'parent' 
+            ? 'Based on your student\'s assessment, here are their top learning priorities:'
+            : 'Based on your assessment, here are your top learning priorities:'
+          }
         </ThemedText>
 
         {moduleScores.map((module, index) => (
@@ -384,12 +448,14 @@ export default function HomeScreen() {
           </ThemedView>
         ))}
 
-        <TouchableOpacity 
-          style={styles.retakeAssessmentButton}
-          onPress={() => router.push('/assessment')}
-        >
-          <ThemedText style={styles.retakeAssessmentButtonText}>🔄 Retake Assessment</ThemedText>
-        </TouchableOpacity>
+        {userMode === 'student' && (
+          <TouchableOpacity 
+            style={styles.retakeAssessmentButton}
+            onPress={() => router.push('/assessment')}
+          >
+            <ThemedText style={styles.retakeAssessmentButtonText}>🔄 Retake Assessment</ThemedText>
+          </TouchableOpacity>
+        )}
       </ThemedView>
     );
   };
@@ -405,15 +471,18 @@ export default function HomeScreen() {
           />
         </ThemedView>
         <ThemedText type="title" style={styles.title}>
-          {userMode === 'parent' ? 'Parent Guide' : 'Welcome Student!'}
+          {userMode === 'parent' ? 'Parent Guide' : 'Welcome, Student!'}
         </ThemedText>
         <ThemedText style={styles.subtitle}>
           {userMode === 'parent' 
-            ? 'Supporting your child\'s learning journey' 
-            : 'Begin your autonomy learning adventure'
+            ? 'Supporting your student\'s learning journey' 
+            : 'Begin your Autonomy Learning adventure'
           }
         </ThemedText>
       </ThemedView>
+
+      {/* Mode Toggle */}
+      <ModeToggle />
 
       <ScrollView 
         style={styles.scrollContainer}
@@ -430,9 +499,9 @@ export default function HomeScreen() {
             <ThemedView style={styles.familyContextActions}>
               <TouchableOpacity 
                 style={styles.familyContextButton}
-                onPress={() => router.push(`/family/${currentFamilyCode}`)}
+                onPress={() => router.push('/(tabs)/profile')}
               >
-                <ThemedText style={styles.familyContextButtonText}>Go to Dashboard</ThemedText>
+                <ThemedText style={styles.familyContextButtonText}>Go to Profile</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.familyContextButton, styles.familyContextButtonSecondary]}
@@ -446,12 +515,46 @@ export default function HomeScreen() {
           </ThemedView>
         )}
 
+        {/* Tutorial launcher for families */}
+        {isInFamilyMode && (
+              <ThemedView style={styles.tutorialSection}>
+                <ThemedText style={styles.tutorialSectionTitle}>
+                  📚 New to the App?
+                </ThemedText>
+                <ThemedText style={styles.tutorialSectionSubtitle}>
+                  Take our interactive tutorial to learn how families can use the platform together - perfect for both parents and students!
+                </ThemedText>
+                <TouchableOpacity 
+                  style={styles.tutorialButton}
+                  onPress={() => tutorial.showTutorial()}
+                >
+                  <ThemedText style={styles.tutorialButtonText}>
+                    🎯 Start Interactive Tutorial
+                  </ThemedText>
+                </TouchableOpacity>
+
+                {/* DEBUG: Reset tutorial for testing auto-trigger */}
+                <TouchableOpacity 
+                  style={[styles.tutorialButton, { backgroundColor: '#ff6b6b', marginTop: 8 }]}
+                  onPress={async () => {
+                    await tutorial.resetTutorialStatus();
+                    console.log('🧹 Tutorial status reset - refresh app to test auto-trigger');
+                    alert('Tutorial status reset! Refresh the app to test auto-trigger.');
+                  }}
+                >
+                  <ThemedText style={styles.tutorialButtonText}>
+                    🧹 Reset Tutorial (Debug)
+                  </ThemedText>
+                </TouchableOpacity>
+              </ThemedView>
+            )}
+
         {/* Family Access Section - Only show if NOT in family mode */}
         {!isInFamilyMode && (
           <ThemedView style={styles.familySection}>
             <ThemedText style={styles.familySectionTitle}>👨‍👩‍👧‍👦 Family Access</ThemedText>
             <ThemedText style={styles.familySectionSubtitle}>
-              Track progress across multiple children with family codes
+              Track progress across multiple students with family codes
             </ThemedText>
             
             <ThemedView style={styles.familyButtons}>
@@ -474,8 +577,8 @@ export default function HomeScreen() {
           </ThemedView>
         )}
 
-        {/* Assessment Card - Always visible */}
-        <AssessmentCard userMode={userMode} />
+        {/* Assessment Card - Only for students */}
+        {userMode === 'student' && <AssessmentCard userMode={userMode} />}
 
         {/* Assessment Results Display */}
         {renderAssessmentResults()}
@@ -561,6 +664,8 @@ export default function HomeScreen() {
                 </ThemedText>
               </ThemedView>
             )}
+
+            
 
             {/* Content metadata */}
             {content?.metadata && (
@@ -1036,5 +1141,39 @@ const styles = StyleSheet.create({
     color: '#7F8C8D',
     fontSize: 14,
     fontWeight: '500',
+  },
+  // Tutorial launcher styles
+  tutorialSection: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 20,
+    marginHorizontal: 16,
+    marginVertical: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#17A2B8',
+  },
+  tutorialSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  tutorialSectionSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  tutorialButton: {
+    backgroundColor: '#17A2B8',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  tutorialButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

@@ -2,9 +2,11 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { familyService } from '../services/family-service';
+import { useAppMode } from '../contexts/AppModeContext';
 
 export default function CreateFamily() {
   const router = useRouter();
+  const { setFamilyContext } = useAppMode();
   const [parentName, setParentName] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -18,16 +20,39 @@ export default function CreateFamily() {
     try {
       const familyCode = await familyService.createFamily(parentName.trim());
       
-      Alert.alert(
-        'Family Created!',
-        `Your family code is: ${familyCode}\n\nSave this code - you'll need it to access your family dashboard.`,
-        [
-          {
-            text: 'Go to Dashboard',
-            onPress: () => router.replace(`/family/${familyCode}`)
-          }
-        ]
-      );
+      // Get the newly created family data to set the context
+      const familyData = await familyService.getFamilyData(familyCode);
+      
+      if (familyData) {
+        // Increment login count for this initial sign-in event
+        console.log('🔐 New family created, incrementing login count');
+        const newCount = await familyService.incrementLoginCount(familyCode);
+        
+        // Update local family data to match Firebase
+        familyData.settings.loginCount = newCount;
+        console.log('📊 Updated local family data with new login count:', newCount);
+        
+        // Set family context globally
+        console.log('🏠 Setting family context after creating new family:', familyCode);
+        setFamilyContext(familyCode, familyData);
+        
+        Alert.alert(
+          'Family Created!',
+          `Your family code is: ${familyCode}\n\nSave this code - you'll need it to access the app.`,
+          [
+            {
+              text: 'Continue to App',
+              onPress: () => {
+                // Navigate to home page after successful family creation
+                console.log('✅ Family created successfully, redirecting to home');
+                router.replace('/(tabs)');
+              }
+            }
+          ]
+        );
+      } else {
+        throw new Error('Failed to load newly created family data');
+      }
     } catch (error) {
       console.error('❌ Error creating family:', error);
       Alert.alert('Error', 'Failed to create family. Please try again.');
@@ -41,7 +66,7 @@ export default function CreateFamily() {
       <View style={styles.content}>
         <Text style={styles.title}>Create Your Family</Text>
         <Text style={styles.subtitle}>
-          Get started with personalized learning assessments for your children
+          Get started with personalized learning assessments for your students
         </Text>
 
         <View style={styles.form}>
@@ -69,7 +94,7 @@ export default function CreateFamily() {
           <Text style={styles.infoTitle}>What happens next?</Text>
           <Text style={styles.infoText}>
             • You'll get a unique family code{'\n'}
-            • Add your children to the family{'\n'}
+            • Add your students to the family{'\n'}
             • Start personalized assessments{'\n'}
             • Track learning progress
           </Text>

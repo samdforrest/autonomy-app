@@ -1,9 +1,11 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { ModeToggle } from '@/components/ModeToggle';
 import { useAppMode } from '@/contexts/AppModeContext';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { FlatList, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface Module {
   id: string;
@@ -14,9 +16,11 @@ interface Module {
 }
 
 export default function TabTwoScreen() {
-  const { userMode, childProgress, parentInsights } = useAppMode();
+  const { userMode } = useAppMode();
   
-  const modules: Module[] = [
+  // No redirect needed - parents can access explore page
+  
+  const studentModules: Module[] = [
     {
       id: '1',
       title: 'Responsibility',
@@ -40,7 +44,7 @@ export default function TabTwoScreen() {
     },
     {
       id: '4',
-      title: 'Regulation',
+      title: 'Self-Regulation',
       emoji: '📏',
       description: 'Who is in control?',
       isActive: true
@@ -89,118 +93,111 @@ export default function TabTwoScreen() {
     }
   ];
 
+  const parentModules: Module[] = [
+    {
+      id: '1',
+      title: 'Responsibility',
+      emoji: '💼',
+      description: 'How to guide responsibility development',
+      isActive: true
+    },
+    {
+      id: '2',
+      title: 'Collaboration',
+      emoji: '🤝',
+      description: 'Supporting teamwork skills',
+      isActive: true
+    },
+    {
+      id: '3',
+      title: 'Self-Monitoring',
+      emoji: '🌱',
+      description: 'Helping your child self-assess',
+      isActive: true
+    },
+    {
+      id: '4',
+      title: 'Self-Regulation',
+      emoji: '📏',
+      description: 'Teaching self-control strategies',
+      isActive: true
+    },
+    {
+      id: '5',
+      title: 'Curiosity',
+      emoji: '❓',
+      description: 'Encouraging questions and exploration',
+      isActive: true
+    },
+    {
+      id: '6',
+      title: 'Shape of Learning',
+      emoji: '🔄',
+      description: 'Understanding the learning process',
+      isActive: true
+    },
+    {
+      id: '7',
+      title: 'Self Coach',
+      emoji: '🧘‍♂️',
+      description: 'Modeling positive self-talk',
+      isActive: true
+    },
+    {
+      id: '8',
+      title: 'Mistakes',
+      emoji: '❌',
+      description: 'Helping process errors constructively',
+      isActive: true
+    },
+    {
+      id: '9',
+      title: 'Neuroplasticity',
+      emoji: '🧠',
+      description: 'Explaining brain growth to your child',
+      isActive: true
+    },
+    {
+      id: '10',
+      title: 'Mastery Moments',
+      emoji: '🏆',
+      description: 'Celebrating achievements effectively',
+      isActive: true
+    }
+  ];
+
+  const modules = userMode === 'parent' ? parentModules : studentModules;
+
   const handleModulePress = (module: Module) => {
     if (!module.isActive) {
       console.log(`${module.title} module is locked`);
       return;
     }
     
-    // Navigate to specific module
-    if (module.title === 'Responsibility') {
-      router.push('/responsibility-module');
-    } else if (module.title === 'Collaboration') {
-      router.push('/collaboration-module');
-    } else if (module.title === 'Self-Monitoring') {
-      router.push('/self-monitoring-module');
-    } else if (module.title === 'Mistakes') {
-      router.push('/mistakes-module');
-    } else if (module.title === 'Regulation') {
-      router.push('/regulation-module');
-    } else if (module.title === 'Self Coach') {
-      router.push('/selfcoach-module');
-    } else if (module.title === 'Curiosity') {
-      router.push('/curiosity-module');
-    } else if (module.title === 'Shape of Learning') {
-      router.push('/shapeoflearning-module');
-    } else if (module.title === 'Neuroplasticity') {
-      router.push('/neuroplasticity-module');
-    } else if (module.title === 'Mastery Moments') {
-      router.push('/mastery-moments-module');
+    // Navigate to specific module - different routes for parent vs student
+    const moduleRoutes = {
+      'Responsibility': userMode === 'parent' ? '/responsibility-parent-module' : '/responsibility-module',
+      'Collaboration': userMode === 'parent' ? '/collaboration-parent-module' : '/collaboration-module',
+      'Self-Monitoring': userMode === 'parent' ? '/self-monitoring-parent-module' : '/self-monitoring-module',
+      'Mistakes': userMode === 'parent' ? '/mistakes-parent-module' : '/mistakes-module',
+      'Self-Regulation': userMode === 'parent' ? '/regulation-parent-module' : '/regulation-module',
+      'Self Coach': userMode === 'parent' ? '/selfcoach-parent-module' : '/selfcoach-module',
+      'Curiosity': userMode === 'parent' ? '/curiosity-parent-module' : '/curiosity-module',
+      'Shape of Learning': userMode === 'parent' ? '/shapeoflearning-parent-module' : '/shapeoflearning-module',
+      'Neuroplasticity': userMode === 'parent' ? '/neuroplasticity-parent-module' : '/neuroplasticity-module',
+      'Mastery Moments': userMode === 'parent' ? '/mastery-moments-parent-module' : '/mastery-moments-module'
+    };
+
+    const route = moduleRoutes[module.title as keyof typeof moduleRoutes];
+    if (route) {
+      router.push(route as any); // Type assertion needed for dynamic routes
     } else {
       console.log(`${module.title} module pressed - coming soon`);
     }
   };
 
   // Parent Dashboard Components
-  const renderParentInsights = () => (
-    <ThemedView style={styles.parentSection}>
-      <ThemedText style={styles.parentSectionTitle}>📊 Learning Insights</ThemedText>
-      
-      {/* Recommended Modules */}
-      <ThemedView style={styles.insightCard}>
-        <ThemedText style={styles.insightTitle}>🎯 Priority Modules</ThemedText>
-        {parentInsights.recommendedModules.slice(0, 3).map((moduleId, index) => {
-          const module = modules.find(m => m.title.toLowerCase() === moduleId);
-          return (
-            <ThemedText key={moduleId} style={styles.insightItem}>
-              {index + 1}. {module?.title || moduleId} {module?.emoji}
-            </ThemedText>
-          );
-        })}
-      </ThemedView>
-
-      {/* Strengths */}
-      {parentInsights.strengths.length > 0 && (
-        <ThemedView style={styles.insightCard}>
-          <ThemedText style={styles.insightTitle}>💪 Strengths</ThemedText>
-          {parentInsights.strengths.map(strength => (
-            <ThemedText key={strength} style={styles.strengthItem}>
-              ✅ {strength}
-            </ThemedText>
-          ))}
-        </ThemedView>
-      )}
-
-      {/* Areas for Growth */}
-      {parentInsights.strugglingAreas.length > 0 && (
-        <ThemedView style={styles.insightCard}>
-          <ThemedText style={styles.insightTitle}>🎯 Focus Areas</ThemedText>
-          {parentInsights.strugglingAreas.map(area => (
-            <ThemedText key={area} style={styles.strugglingItem}>
-              📈 {area}
-            </ThemedText>
-          ))}
-        </ThemedView>
-      )}
-    </ThemedView>
-  );
-
-  const renderChildProgress = () => (
-    <ThemedView style={styles.parentSection}>
-      <ThemedText style={styles.parentSectionTitle}>📈 Child's Progress</ThemedText>
-      {Object.entries(childProgress).map(([moduleId, progress]) => {
-        const module = modules.find(m => m.title.toLowerCase() === moduleId);
-        const progressPercent = Math.round((progress.completedDays / progress.totalDays) * 100);
-        
-        return (
-          <ThemedView key={moduleId} style={styles.progressCard}>
-            <ThemedView style={styles.progressHeader}>
-              <ThemedText style={styles.progressModuleName}>
-                {module?.emoji} {module?.title || moduleId}
-              </ThemedText>
-              <ThemedText style={styles.progressPercent}>{progressPercent}%</ThemedText>
-            </ThemedView>
-            <ThemedView style={styles.progressBar}>
-              <ThemedView style={[styles.progressFill, { width: `${progressPercent}%` }]} />
-            </ThemedView>
-            <ThemedText style={styles.progressDetails}>
-              {progress.completedDays} of {progress.totalDays} days completed
-            </ThemedText>
-            {progress.assessmentScores && progress.assessmentScores.length > 0 && (
-              <ThemedText style={styles.progressScore}>
-                Avg Score: {Math.round(progress.assessmentScores.reduce((a, b) => a + b, 0) / progress.assessmentScores.length)}%
-              </ThemedText>
-            )}
-          </ThemedView>
-        );
-      })}
-    </ThemedView>
-  );
-
   const renderModule = ({ item }: { item: Module }) => {
-    // In parent mode, show progress overlay
-    const progress = childProgress[item.title.toLowerCase()];
-    const progressPercent = progress ? Math.round((progress.completedDays / progress.totalDays) * 100) : 0;
     
     return (
       <TouchableOpacity 
@@ -225,12 +222,6 @@ export default function TabTwoScreen() {
             <ThemedText style={styles.daysText}>5</ThemedText>
           </View>
           
-          {/* Parent Mode: Show progress overlay */}
-          {userMode === 'parent' && progress && (
-            <View style={styles.progressOverlay}>
-              <ThemedText style={styles.progressOverlayText}>{progressPercent}%</ThemedText>
-            </View>
-          )}
         </View>
         <ThemedText style={[
           styles.moduleTitle,
@@ -242,10 +233,7 @@ export default function TabTwoScreen() {
           styles.moduleDescription,
           !item.isActive && styles.moduleDescriptionLocked
         ]}>
-          {userMode === 'parent' && progress 
-            ? `${progress.completedDays}/${progress.totalDays} days completed`
-            : item.description
-          }
+          {item.description}
         </ThemedText>
       </TouchableOpacity>
     );
@@ -262,35 +250,25 @@ export default function TabTwoScreen() {
           />
         </ThemedView>
         <ThemedText type="title" style={styles.title}>
-          {userMode === 'parent' ? 'Parent Dashboard' : 'Learning Modules'}
+          {userMode === 'parent' ? 'How To Modules' : 'Learning Modules'}
         </ThemedText>
         <ThemedText style={styles.subtitle}>
-          {userMode === 'parent' 
-            ? 'Monitor your child\'s learning progress' 
-            : 'Start your learning journey'
-          }
+          {userMode === 'parent' ? 'Guide your child\'s learning journey' : 'Start your learning journey'}
         </ThemedText>
       </ThemedView>
       
-      {userMode === 'parent' ? (
-        <ScrollView 
-          style={styles.parentContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          {renderParentInsights()}
-          {renderChildProgress()}
-        </ScrollView>
-      ) : (
-        <FlatList
-          data={modules}
-          renderItem={renderModule}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          contentContainerStyle={styles.moduleGrid}
-          columnWrapperStyle={styles.moduleRow}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
+      {/* Mode Toggle */}
+      <ModeToggle />
+      
+      <FlatList
+        data={modules}
+        renderItem={renderModule}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        contentContainerStyle={styles.moduleGrid}
+        columnWrapperStyle={styles.moduleRow}
+        showsVerticalScrollIndicator={false}
+      />
     </ThemedView>
   );
 }

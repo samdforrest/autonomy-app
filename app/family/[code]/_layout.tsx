@@ -81,7 +81,7 @@ function FamilyLayoutContent() {
     );
   }
 
-  // Provide family context to children
+  // Provide family context to child components
   console.log('🎯 Rendering FamilyProvider with family:', family?.familyCode);
   return (
     <FamilyProvider family={family} familyCode={code as string}>

@@ -176,12 +176,14 @@ export default function RegulationModuleScreen() {
            lowerHeader.includes('closing conversation:') ||
            lowerHeader.includes('read the purpose together:') ||
            lowerHeader.includes('scenario:') ||
+           lowerHeader.includes('job:') ||
            lowerHeader.includes('instructions:') ||
            lowerHeader.includes('answer:');
   };
 
   const renderContentBlock = (block: any, index: number) => {
     const isScenario = block.header && block.header.toLowerCase().includes('scenario:');
+    const isJob = block.header && block.header.toLowerCase().includes('job:');
     const isAnswerRevealed = revealedAnswers.has(block.id);
     
     // For scenario blocks, separate content into question, options, and answer
@@ -190,7 +192,7 @@ export default function RegulationModuleScreen() {
     let answerText: string | null = null;
     let otherContent: any[] = [];
     
-    if (isScenario && block.content) {
+    if ((isScenario || isJob) && block.content) {
       block.content.forEach((item: any) => {
         if (item.type === 'option') {
           // This is an A:, B:, C: option
@@ -216,13 +218,13 @@ export default function RegulationModuleScreen() {
       });
     }
     
-    // Determine what header to display for scenarios
-    const displayHeader = isScenario 
+    // Determine what header to display for scenarios and jobs
+    const displayHeader = (isScenario || isJob)
       ? (isAnswerRevealed && answerText ? answerText : (scenarioQuestion || block.header))
       : block.header;
     
-    // Filter content - for scenarios, we'll handle question/options/answer separately
-    const filteredContent = isScenario 
+    // Filter content - for scenarios and jobs, we'll handle question/options/answer separately
+    const filteredContent = (isScenario || isJob)
       ? otherContent  // Everything except question, options, and answer
       : block.content;
 
@@ -461,7 +463,7 @@ export default function RegulationModuleScreen() {
           {/* Survey Button - Only show for Day 5 */}
           <SurveyButton 
             moduleId="regulation"
-            moduleName="Regulation & Control"
+            moduleName="Self-Regulation & Control"
             dayNumber={day.dayNumber}
           />
         </ThemedView>
@@ -482,7 +484,7 @@ export default function RegulationModuleScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.header}>
-        <ThemedText type="title" style={styles.moduleTitle}>Regulation & Control</ThemedText>
+        <ThemedText type="title" style={styles.moduleTitle}>Self-Regulation & Control</ThemedText>
         <ThemedText style={styles.moduleSubtitle}>
           Build emotional awareness and self-regulation skills through 5 focused days...
         </ThemedText>

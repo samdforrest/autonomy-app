@@ -1,6 +1,14 @@
 const functions = require('firebase-functions');
 const express = require('express');
 const cors = require('cors');
+const admin = require('firebase-admin');
+
+// Initialize Firebase Admin SDK (for Firestore and Storage access)
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+const db = admin.firestore();
+const bucket = admin.storage().bucket();
 
 // Import Google Docs services (lazy loaded to prevent startup issues)
 let GoogleDocsService = null;
@@ -158,6 +166,188 @@ app.get('/documents/:documentRef', async (req, res) => {
       error: errorMessage,
       details: errorDetails,
       timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// ============================================
+// Thumbnail Management Endpoints (Admin Only)
+// ============================================
+
+/**
+ * Extract YouTube video ID from various URL formats
+ */
+function extractYouTubeVideoId(url) {
+  if (!url) return null;
+
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    /(?:m\.youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  return null;
+}
+
+/**
+ * Verify admin status for a family
+ */
+async function verifyAdmin(familyCode) {
+  if (!familyCode) return false;
+
+  try {
+    const familyDoc = await db.collection('families').doc(familyCode).get();
+    return familyDoc.exists && familyDoc.data()?.settings?.isAdmin === true;
+  } catch (error) {
+    console.error('❌ Error verifying admin status:', error);
+    return false;
+  }
+}
+
+/**
+ * POST /thumbnails/upload - Upload custom thumbnail (Admin only)
+ */
+app.post('/thumbnails/upload', async (req, res) => {
+  try {
+    const { familyCode, youtubeUrl, imageData } = req.body;
+
+    console.log('📸 Thumbnail upload request from family:', familyCode);
+
+    // Validate required fields
+    if (!familyCode || !youtubeUrl || !imageData) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: familyCode, youtubeUrl, imageData'
+      });
+    }
+
+    // Verify admin status
+    const isAdmin = await verifyAdmin(familyCode);
+    if (!isAdmin) {
+      console.log('🚫 Non-admin upload attempt from:', familyCode);
+      return res.status(403).json({
+        success: false,
+        error: 'Admin access required'
+      });
+    }
+
+    // Extract video ID
+    const videoId = extractYouTubeVideoId(youtubeUrl);
+    if (!videoId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid YouTube URL'
+      });
+    }
+
+    console.log('📤 Uploading thumbnail for video:', videoId);
+
+    // Decode base64 and upload to Storage
+    const buffer = Buffer.from(imageData, 'base64');
+    const file = bucket.file(`thumbnails/${videoId}`);
+
+    await file.save(buffer, {
+      metadata: {
+        contentType: 'image/jpeg',
+        metadata: {
+          uploadedBy: familyCode,
+          youtubeUrl: youtubeUrl
+        }
+      }
+    });
+
+    // Make file publicly readable
+    await file.makePublic();
+
+    // Get public URL
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/thumbnails/${videoId}`;
+
+    // Save metadata to Firestore
+    await db.collection('videoThumbnails').doc(videoId).set({
+      videoId,
+      customUrl: publicUrl,
+      originalYouTubeUrl: youtubeUrl,
+      uploadedBy: familyCode,
+      uploadedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    console.log('✅ Thumbnail uploaded successfully:', videoId);
+
+    res.json({
+      success: true,
+      url: publicUrl,
+      videoId
+    });
+
+  } catch (error) {
+    console.error('❌ Thumbnail upload error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to upload thumbnail',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * DELETE /thumbnails/:videoId - Delete custom thumbnail (Admin only)
+ */
+app.delete('/thumbnails/:videoId', async (req, res) => {
+  try {
+    const { videoId } = req.params;
+    const { familyCode } = req.body;
+
+    console.log('🗑️ Thumbnail delete request for:', videoId, 'from:', familyCode);
+
+    // Validate required fields
+    if (!familyCode || !videoId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: familyCode, videoId'
+      });
+    }
+
+    // Verify admin status
+    const isAdmin = await verifyAdmin(familyCode);
+    if (!isAdmin) {
+      console.log('🚫 Non-admin delete attempt from:', familyCode);
+      return res.status(403).json({
+        success: false,
+        error: 'Admin access required'
+      });
+    }
+
+    // Delete from Storage
+    try {
+      const file = bucket.file(`thumbnails/${videoId}`);
+      await file.delete();
+      console.log('✅ Deleted from Storage:', videoId);
+    } catch (storageError) {
+      console.log('⚠️ Storage file may not exist:', storageError.message);
+    }
+
+    // Delete from Firestore
+    await db.collection('videoThumbnails').doc(videoId).delete();
+    console.log('✅ Deleted from Firestore:', videoId);
+
+    res.json({
+      success: true,
+      message: 'Thumbnail deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ Thumbnail delete error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete thumbnail',
+      details: error.message
     });
   }
 });

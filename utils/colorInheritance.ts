@@ -34,7 +34,7 @@ interface ContentBlock {
  * @returns Color name if keyword found, null otherwise
  */
 export function getColorFromHeader(header: string | null): ColorType | null {
-  if (!header) return null;
+  if (!header || typeof header !== 'string') return null;
   
   const lowerHeader = header.toLowerCase();
   
