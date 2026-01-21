@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { assessmentService, AssessmentSummary } from '../../../services/assessment-service';
 import { useFamilyContext } from './_layout';
 
@@ -31,9 +31,10 @@ export default function FamilyResults() {
   const { code } = useLocalSearchParams<{ code: string }>();
   const { family } = useFamilyContext();
   const router = useRouter();
-  
+
   const [results, setResults] = useState<AssessmentSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isRetaking, setIsRetaking] = useState(false);
 
   useEffect(() => {
     if (code) {
@@ -44,10 +45,10 @@ export default function FamilyResults() {
   const loadResults = async () => {
     try {
       setLoading(true);
-      
+
       // Set assessment service context
       assessmentService.setContext(code as string, 'student');
-      
+
       // Load results
       const assessmentResults = await assessmentService.loadAssessmentResults();
       setResults(assessmentResults);
@@ -55,6 +56,46 @@ export default function FamilyResults() {
       console.error('Error loading results:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRetakeAssessment = async () => {
+    // Use window.confirm on web, Alert.alert on native
+    const confirmed = Platform.OS === 'web'
+      ? window.confirm('This will clear your current results. Are you sure you want to retake the assessment?')
+      : await new Promise<boolean>((resolve) => {
+          Alert.alert(
+            'Retake Assessment',
+            'This will clear your current results. Are you sure you want to retake the assessment?',
+            [
+              { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+              { text: 'Retake', style: 'destructive', onPress: () => resolve(true) }
+            ]
+          );
+        });
+
+    if (!confirmed) return;
+
+    try {
+      setIsRetaking(true);
+
+      // Set context and clear assessment data from Firebase and localStorage
+      assessmentService.setContext(code as string, 'student');
+      await assessmentService.clearAssessmentResults();
+
+      console.log('✅ Assessment cleared, navigating to assessment page');
+
+      // Navigate to assessment page
+      router.push(`/family/${code}/assessment`);
+    } catch (error) {
+      console.error('Error clearing assessment:', error);
+      if (Platform.OS === 'web') {
+        window.alert('Failed to clear assessment. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to clear assessment. Please try again.');
+      }
+    } finally {
+      setIsRetaking(false);
     }
   };
 
@@ -131,18 +172,26 @@ export default function FamilyResults() {
       </View>
 
       <View style={styles.actionButtons}>
-        <TouchableOpacity 
-          style={styles.primaryButton} 
+        <TouchableOpacity
+          style={styles.primaryButton}
           onPress={() => router.push('/(tabs)' as any)}
         >
           <Text style={styles.primaryButtonText}>Back to Home</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.secondaryButton} 
-          onPress={() => router.push(`/family/${code}/assessment`)}
+
+        <TouchableOpacity
+          style={[styles.secondaryButton, isRetaking && styles.buttonDisabled]}
+          onPress={handleRetakeAssessment}
+          disabled={isRetaking}
         >
-          <Text style={styles.secondaryButtonText}>Retake Assessment</Text>
+          {isRetaking ? (
+            <View style={styles.retakingContainer}>
+              <ActivityIndicator size="small" color="#7F8C8D" />
+              <Text style={[styles.secondaryButtonText, { marginLeft: 8 }]}>Clearing...</Text>
+            </View>
+          ) : (
+            <Text style={styles.secondaryButtonText}>Retake Assessment</Text>
+          )}
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -270,6 +319,14 @@ const styles = StyleSheet.create({
     color: '#7F8C8D',
     fontSize: 16,
     fontWeight: '500',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  retakingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   button: {
     backgroundColor: '#007AFF',

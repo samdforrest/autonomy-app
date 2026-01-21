@@ -185,12 +185,12 @@ export class FamilyService {
    * Save assessment results for a student
    */
   async saveAssessmentResults(
-    familyCode: string, 
-    studentId: string, 
+    familyCode: string,
+    studentId: string,
     assessmentData: any
   ): Promise<void> {
     const assessmentId = `assessment_${Date.now()}`;
-    
+
     await updateDoc(doc(db, 'families', familyCode), {
       [`students.${studentId}.assessments.${assessmentId}`]: {
         ...assessmentData,
@@ -199,6 +199,33 @@ export class FamilyService {
     });
 
     console.log('✅ Saved assessment results for:', studentId, 'in family:', familyCode);
+  }
+
+  /**
+   * Clear all assessment results for a student (for retaking assessment)
+   */
+  async clearAssessmentResults(
+    familyCode: string,
+    studentId: string
+  ): Promise<void> {
+    try {
+      // Get current family data to find all assessment keys
+      const familyData = await this.getFamilyData(familyCode);
+      if (!familyData?.students?.[studentId]?.assessments) {
+        console.log('📝 No assessments to clear for student:', studentId);
+        return;
+      }
+
+      // Set assessments to empty object to clear all
+      await updateDoc(doc(db, 'families', familyCode), {
+        [`students.${studentId}.assessments`]: {}
+      });
+
+      console.log('✅ Cleared assessment results for:', studentId, 'in family:', familyCode);
+    } catch (error) {
+      console.error('❌ Error clearing assessment results:', error);
+      throw error;
+    }
   }
 
   /**

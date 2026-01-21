@@ -27,7 +27,7 @@ export default function AssessmentScreen() {
   const [showQuestions, setShowQuestions] = useState(false);
   
   // Get family context for saving assessment to correct family
-  const { isInFamilyMode, currentFamilyCode } = useAppMode();
+  const { isInFamilyMode, currentFamilyCode, userMode } = useAppMode();
 
   // Debug current state
   console.log('🎯 AssessmentScreen render:', { 
@@ -180,22 +180,31 @@ export default function AssessmentScreen() {
       
       setResults(priorities);
       setShowQuestions(false); // Switch to results view
-      
-      Alert.alert(
-        'Assessment Complete!',
-        summary.summary,
-        [
-          { text: 'View Results', onPress: () => {} },
-          { text: 'Start Learning', onPress: () => {
-            // Only navigate to explore for students, parents go to home
-            if (userMode === 'student') {
-              router.push('/(tabs)/explore');
-            } else {
-                  router.push('/(tabs)');
-            }
-          } }
-        ]
-      );
+
+      if (userMode === 'student') {
+        // Student-specific completion message
+        Alert.alert(
+          'Assessment Complete!',
+          "Thanks for showing us where you are now! Let's hear from some other kids who already use the tools you're about to learn.",
+          [
+            { text: 'Continue', onPress: () => {
+              router.push('/intro-student');
+            } }
+          ]
+        );
+      } else {
+        // Parent completion message
+        Alert.alert(
+          'Assessment Complete!',
+          summary.summary,
+          [
+            { text: 'View Results', onPress: () => {} },
+            { text: 'Start Learning', onPress: () => {
+              router.push('/(tabs)');
+            } }
+          ]
+        );
+      }
       
     } catch (error) {
       console.error('❌ Assessment submission error:', error);
@@ -211,24 +220,24 @@ export default function AssessmentScreen() {
 
   const handleRetakeAssessment = () => {
     console.log('🔄 Retake button pressed');
-    
+
     Alert.alert(
       'Retake Assessment',
       'This will clear your current results. Are you sure?',
       [
         { text: 'Cancel', style: 'cancel', onPress: () => console.log('❌ Retake cancelled') },
-        { 
-          text: 'Retake', 
+        {
+          text: 'Retake',
           style: 'destructive',
           onPress: async () => {
             console.log('✅ Retake confirmed, clearing data...');
-            // Clear all assessment data
-            assessmentService.clearAssessmentResults();
+            // Clear all assessment data (now async with Firebase)
+            await assessmentService.clearAssessmentResults();
             setResults(null);
             setResponses([]);
             setIsSubmitting(false);
             setShowQuestions(true); // Force show questions
-            
+
             console.log('🔄 Assessment retake: All data cleared, showing questions');
           }
         }
@@ -330,11 +339,11 @@ export default function AssessmentScreen() {
             </TouchableOpacity>
             
             {/* Alternative retake button without Alert */}
-            <TouchableOpacity 
-              style={[styles.secondaryButton, { backgroundColor: '#F39C12', marginTop: 8 }]} 
-              onPress={() => {
+            <TouchableOpacity
+              style={[styles.secondaryButton, { backgroundColor: '#F39C12', marginTop: 8 }]}
+              onPress={async () => {
                 console.log('🔄 Direct retake (no alert)');
-                assessmentService.clearAssessmentResults();
+                await assessmentService.clearAssessmentResults();
                 setResults(null);
                 setResponses([]);
                 setIsSubmitting(false);
@@ -346,13 +355,13 @@ export default function AssessmentScreen() {
                 🔄 Retake (Direct)
               </ThemedText>
             </TouchableOpacity>
-            
+
             {/* Debug button - remove in production */}
-            <TouchableOpacity 
-              style={[styles.secondaryButton, { backgroundColor: '#E74C3C', marginTop: 8 }]} 
-              onPress={() => {
+            <TouchableOpacity
+              style={[styles.secondaryButton, { backgroundColor: '#E74C3C', marginTop: 8 }]}
+              onPress={async () => {
                 console.log('🧹 Force clearing all assessment data');
-                assessmentService.clearAssessmentResults();
+                await assessmentService.clearAssessmentResults();
                 setResults(null);
                 setResponses([]);
                 setShowQuestions(true);

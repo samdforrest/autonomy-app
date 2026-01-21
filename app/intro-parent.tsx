@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { TextWithYouTube } from '@/components/TextWithYouTube';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { TextWithYouTube } from '@/components/TextWithYouTube';
-import { useGoogleDocsContent } from '@/hooks/useGoogleDocsContent';
-import { useColorInheritance } from '@/hooks/useColorInheritance';
 import { useAppMode } from '@/contexts/AppModeContext';
-import { familyService } from '@/services/family-service';
+import { useColorInheritance } from '@/hooks/useColorInheritance';
+import { useGoogleDocsContent } from '@/hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '@/services/api';
+import { familyService } from '@/services/family-service';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function ParentIntroScreen() {
   const router = useRouter();
@@ -106,8 +106,8 @@ export default function ParentIntroScreen() {
       console.log('👨‍👩‍👧‍👦 Parent intro completed, marking as complete');
       await familyService.markParentIntroComplete(currentFamilyCode);
       
-      console.log('🎓 Navigating to student intro');
-      router.replace('/intro-student');
+      console.log('🎓 Navigating to home');
+      router.replace('/');
     } catch (error) {
       console.error('❌ Error completing parent intro:', error);
       setIsCompleting(false);
@@ -152,7 +152,7 @@ export default function ParentIntroScreen() {
             disabled={isCompleting}
           >
             <ThemedText style={styles.buttonText}>
-              {isCompleting ? 'Continuing...' : 'Continue to Student Introduction'}
+              {isCompleting ? 'Continuing...' : 'Continue to Home'}
             </ThemedText>
           </TouchableOpacity>
         </View>

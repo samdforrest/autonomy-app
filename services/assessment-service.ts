@@ -382,14 +382,38 @@ export class AssessmentService {
   }
 
   /**
-   * Clear assessment results (student-specific)
+   * Clear assessment results (student-specific) - clears both Firebase and localStorage
    */
-  clearAssessmentResults(): void {
+  async clearAssessmentResults(): Promise<void> {
     try {
+      // Auto-sync context from global state if not set
+      if (!this.currentFamilyCode || !this.currentStudentId) {
+        console.log('🔄 Syncing context before clearing...');
+        this.syncFromGlobalContext();
+      }
+
+      // Clear from Firebase if we have family context
+      if (this.currentFamilyCode && this.currentStudentId) {
+        try {
+          console.log('☁️ Clearing assessment results from Firebase...');
+          const { familyService } = await import('./family-service');
+          await familyService.clearAssessmentResults(
+            this.currentFamilyCode,
+            this.currentStudentId
+          );
+          console.log('✅ Assessment results cleared from Firebase');
+        } catch (firebaseError) {
+          console.error('❌ Failed to clear from Firebase:', firebaseError);
+          // Continue to clear localStorage even if Firebase fails
+        }
+      }
+
+      // Always clear from localStorage
       localStorage.removeItem(this.getStorageKey());
-      console.log('✅ Assessment results cleared for student:', this.getCurrentStudentId());
+      console.log('✅ Assessment results cleared from localStorage for student:', this.getCurrentStudentId());
     } catch (error) {
       console.error('❌ Failed to clear assessment results:', error);
+      throw error;
     }
   }
 
