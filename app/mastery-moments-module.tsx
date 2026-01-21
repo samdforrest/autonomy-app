@@ -376,7 +376,7 @@ export default function MasteryMomentsModuleScreen() {
         <ThemedView style={styles.header}>
           <ThemedText style={styles.title}>🏆 Mastery Moments Module</ThemedText>
           <ThemedText style={styles.subtitle}>
-            Celebrating success
+            I notice the wins along the way.
           </ThemedText>
         </ThemedView>
 

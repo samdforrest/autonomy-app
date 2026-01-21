@@ -487,7 +487,7 @@ export default function CollaborationModuleScreen() {
       <ThemedView style={styles.header}>
         <ThemedText type="title" style={styles.moduleTitle}>Collaboration & Teamwork</ThemedText>
         <ThemedText style={styles.moduleSubtitle}>
-          Build strong relationships and work effectively with others through 5 focused days...
+           I can actively collaborate.
         </ThemedText>
       </ThemedView>
 

@@ -33,7 +33,7 @@ export default function SelfMonitoringModuleScreen() {
   const { content, loading, error, refetch } = useGoogleDocsContent(
     DOCUMENT_REFS.MAIN_DOCUMENT,
     'raw',
-    { tab: 'Self Monitoring', day: currentDay }
+    { tab: 'Self-Monitoring', day: currentDay }
   );
 
 
@@ -538,7 +538,7 @@ export default function SelfMonitoringModuleScreen() {
       <ThemedView style={styles.header}>
         <ThemedText type="title" style={styles.moduleTitle}>🌱 Self-Monitoring Module</ThemedText>
         <ThemedText style={styles.moduleSubtitle}>
-          Making sure I understand
+          I can self-monitor my understanding.
         </ThemedText>
       </ThemedView>
 

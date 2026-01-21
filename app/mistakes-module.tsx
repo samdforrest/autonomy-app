@@ -486,7 +486,7 @@ export default function MistakesModuleScreen() {
       <ThemedView style={styles.header}>
         <ThemedText type="title" style={styles.moduleTitle}>Mistakes & Learning</ThemedText>
         <ThemedText style={styles.moduleSubtitle}>
-          Transform mistakes into growth opportunities through 5 focused days...
+          I can use mistakes as information.
         </ThemedText>
       </ThemedView>
 

@@ -582,7 +582,7 @@ export default function ResponsibilityModuleScreen() {
       <ThemedView style={styles.header}>
         <ThemedText type="title" style={styles.moduleTitle}>💼 Responsibility Module</ThemedText>
         <ThemedText style={styles.moduleSubtitle}>
-          What is my job? Understanding workplace roles and responsibilities through 5 focused days...
+          I contribute to a learning community.
         </ThemedText>
       </ThemedView>
 

@@ -376,7 +376,7 @@ export default function NeuroplasticityModuleScreen() {
         <ThemedView style={styles.header}>
           <ThemedText style={styles.title}>🧠 Neuroplasticity Module</ThemedText>
           <ThemedText style={styles.subtitle}>
-            How does my brain grow?
+            When I challenge myself, my brain grows. 
           </ThemedText>
         </ThemedView>
 

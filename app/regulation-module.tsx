@@ -486,7 +486,7 @@ export default function RegulationModuleScreen() {
       <ThemedView style={styles.header}>
         <ThemedText type="title" style={styles.moduleTitle}>Self-Regulation & Control</ThemedText>
         <ThemedText style={styles.moduleSubtitle}>
-          Build emotional awareness and self-regulation skills through 5 focused days...
+          I can breathe to help me calm and make decisions.
         </ThemedText>
       </ThemedView>
 

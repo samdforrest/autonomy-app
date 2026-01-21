@@ -376,7 +376,7 @@ export default function ShapeOfLearningModuleScreen() {
         <ThemedView style={styles.header}>
           <ThemedText style={styles.title}>🔄 Shape of Learning Module</ThemedText>
           <ThemedText style={styles.subtitle}>
-            Understanding how learning works and how to optimize it
+            Learning is a process that takes time and effort.
           </ThemedText>
         </ThemedView>
 

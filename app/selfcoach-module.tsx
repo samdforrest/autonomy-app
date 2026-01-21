@@ -376,7 +376,7 @@ export default function SelfCoachModuleScreen() {
         <ThemedView style={styles.header}>
           <ThemedText style={styles.title}>🧘‍♂️ Self-Coaching Module</ThemedText>
           <ThemedText style={styles.subtitle}>
-            Building self-awareness and personal growth skills
+            I can coach myself.
           </ThemedText>
         </ThemedView>
 

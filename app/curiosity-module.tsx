@@ -376,7 +376,7 @@ export default function CuriosityModuleScreen() {
         <ThemedView style={styles.header}>
           <ThemedText style={styles.title}>❓ Curiosity Module</ThemedText>
           <ThemedText style={styles.subtitle}>
-            Developing curiosity and inquiry skills
+            I can ask clarifying, wondering, and deepening questions.
           </ThemedText>
         </ThemedView>
 
