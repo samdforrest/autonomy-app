@@ -42,7 +42,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     id: 'family-concept',
-    title: 'How Families Work Here 👨‍👩‍👧‍👦',
+    title: 'How Families Work In the App 👨‍👩‍👧‍👦',
     description: 'Your family code connects everyone! Parents can track progress while students do fun learning activities. Everyone stays connected but has their own experience.',
     perspective: 'both',
     emoji: '🔗'
@@ -66,13 +66,13 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     targetArea: 'family-dashboard',
     emoji: '🎛️'
   },
-  {
-    id: 'parent-dashboard',
-    title: 'Family Dashboard & Progress Tracking 📈',
-    description: 'Here in the Profile section, parents can see detailed family progress, manage settings, and track each module\'s completion. This is your family\'s home base!',
-    perspective: 'parent',
-    emoji: '🏠'
-  },
+  // {
+  //   id: 'parent-dashboard',
+  //   title: 'Family Dashboard & Progress Tracking 📈',
+  //   description: 'Here in the Profile section, parents can see detailed family progress, manage settings, and track each module\'s completion. This is your family\'s home base!',
+  //   perspective: 'parent',
+  //   emoji: '🏠'
+  // },
   {
     id: 'assessment-purpose',
     title: 'The Learning Assessment 🎯',
