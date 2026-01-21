@@ -102,7 +102,7 @@ export default function ProfileScreen() {
         <View style={styles.profileIconContainer}>
           <IconSymbol size={80} name="person.fill" color="#666" />
         </View>
-        <ThemedText type="title" style={styles.title}>Profile</ThemedText>
+        <ThemedText type="title" style={styles.title}>Progress Tracking</ThemedText>
         <ThemedText style={styles.subtitle}>
           {isInFamilyMode ? `Family: ${currentFamilyCode}` : 'Manage your learning journey'}
         </ThemedText>
