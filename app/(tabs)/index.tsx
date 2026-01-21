@@ -533,7 +533,7 @@ export default function HomeScreen() {
                   </ThemedText>
                 </TouchableOpacity>
 
-                {/* DEBUG: Reset tutorial for testing auto-trigger */}
+                {/* DEBUG: Reset tutorial for testing auto-trigger
                 <TouchableOpacity 
                   style={[styles.tutorialButton, { backgroundColor: '#ff6b6b', marginTop: 8 }]}
                   onPress={async () => {
@@ -545,7 +545,7 @@ export default function HomeScreen() {
                   <ThemedText style={styles.tutorialButtonText}>
                     🧹 Reset Tutorial (Debug)
                   </ThemedText>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </ThemedView>
             )}
 
