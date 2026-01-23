@@ -3,6 +3,7 @@ import { ThemedView } from '@/components/ThemedView';
 import React, { useState } from 'react';
 import {
   Animated,
+  Image,
   LayoutAnimation,
   Platform,
   StyleSheet,
@@ -14,6 +15,15 @@ import {
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
+
+// Day icon images mapping
+const dayImages: Record<number, any> = {
+  1: require('../assets/images/day-icons/day1.png'),
+  2: require('../assets/images/day-icons/day2.png'),
+  3: require('../assets/images/day-icons/day3.png'),
+  4: require('../assets/images/day-icons/day4.png'),
+  5: require('../assets/images/day-icons/day5.png'),
+};
 
 interface DayModule {
   id: string;
@@ -94,7 +104,7 @@ export default function CollapsibleDayCard({
           </ThemedView>
           
           <ThemedView style={styles.dayBody}>
-            <ThemedText style={styles.dayIcon}>{day.icon}</ThemedText>
+            <Image source={dayImages[day.dayNumber]} style={styles.dayIcon} resizeMode="contain" />
             <ThemedText style={styles.dayTitle}>{day.title}</ThemedText>
             <ThemedText style={styles.dayDescription}>{day.description}</ThemedText>
           </ThemedView>
@@ -152,9 +162,9 @@ const styles = StyleSheet.create({
   },
   dayNumber: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: 'white',
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    fontFamily: 'Poppins_700Bold',
+    color: '#000',
+    backgroundColor: 'rgba(0,0,0,0.1)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -162,8 +172,9 @@ const styles = StyleSheet.create({
   },
   typeLabel: {
     fontSize: 12,
-    color: 'white',
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    fontFamily: 'Poppins_500Medium',
+    color: '#000',
+    backgroundColor: 'rgba(0,0,0,0.1)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -174,7 +185,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   completedBadge: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(0,0,0,0.1)',
     borderRadius: 20,
     width: 24,
     height: 24,
@@ -183,33 +194,35 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   completedText: {
-    color: 'white',
+    color: '#000',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Poppins_700Bold',
   },
   arrowIcon: {
     fontSize: 16,
-    color: 'white',
-    fontWeight: 'bold',
+    color: '#000',
+    fontFamily: 'Poppins_700Bold',
   },
   dayBody: {
     alignItems: 'center',
     backgroundColor: 'transparent',
   },
   dayIcon: {
-    fontSize: 40,
+    width: 50,
+    height: 50,
     marginBottom: 8,
   },
   dayTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
+    fontFamily: 'Poppins_700Bold',
+    color: '#000',
     marginBottom: 4,
     textAlign: 'center',
   },
   dayDescription: {
     fontSize: 14,
-    color: 'white',
+    fontFamily: 'Poppins_400Regular',
+    color: '#000',
     opacity: 0.9,
     textAlign: 'center',
   },

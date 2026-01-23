@@ -732,31 +732,31 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: '#009688', // Teal border
   },
-  // Day-specific bubble styles that match day card colors (collaboration theme)
+  // Day-specific bubble styles - all gray for consistent appearance
   bubbleDay1: {
-    backgroundColor: '#FFF8E1', // Light version of #FFC93C
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#FFC93C', // Day 1 golden yellow (Building Connections)
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay2: {
-    backgroundColor: '#FFF3E0', // Light version of #FF9A3C  
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#FF9A3C', // Day 2 orange (Active Listening)
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay3: {
-    backgroundColor: '#FFEBE0', // Light version of #FF6F3C
-    borderLeftWidth: 4, 
-    borderLeftColor: '#FF6F3C', // Day 3 red-orange (Teamwork Skills)
+    backgroundColor: '#F5F5F5',
+    borderLeftWidth: 4,
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay4: {
-    backgroundColor: '#E0F4F3', // Light version of #155263
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#155263', // Day 4 dark teal (Conflict Resolution)
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay5: {
-    backgroundColor: '#F5F5F5', // Light version of #939393
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#939393', // Day 5 gray (Collaborative Success)
+    borderLeftColor: '#BDBDBD',
   },
   // Bold header style
   bubbleHeaderBold: {
