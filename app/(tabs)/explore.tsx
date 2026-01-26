@@ -10,9 +10,9 @@ import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 interface Module {
   id: string;
   title: string;
-  emoji: string;
   description: string;
   isActive: boolean;
+  day5Color: string;
 }
 
 export default function TabTwoScreen() {
@@ -24,72 +24,72 @@ export default function TabTwoScreen() {
     {
       id: '1',
       title: 'Responsibility',
-      emoji: '💼',
       description: 'What is my job?',
-      isActive: true
+      isActive: true,
+      day5Color: '#A2C8E6'
     },
     {
       id: '2',
       title: 'Collaboration',
-      emoji: '🤝',
       description: 'Teamwork 101',
-      isActive: true
+      isActive: true,
+      day5Color: '#C75B25'
     },
     {
       id: '3',
       title: 'Self-Monitoring',
-      emoji: '🌱',
       description: 'Making sure I understand',
-      isActive: true
+      isActive: true,
+      day5Color: '#D9A400'
     },
     {
       id: '4',
       title: 'Self-Regulation',
-      emoji: '📏',
       description: 'Who is in control?',
-      isActive: true
+      isActive: true,
+      day5Color: '#D88F7B'
     },
     {
       id: '5',
       title: 'Curiosity',
-      emoji: '❓',
       description: 'Questions are expected',
-      isActive: true
+      isActive: true,
+      day5Color: '#005B5B'
     },
     {
       id: '6',
       title: 'Shape of Learning',
-      emoji: '🔄',
       description: 'It is not a sprint',
-      isActive: true
+      isActive: true,
+      day5Color: '#005B5B'
     },
     {
       id: '7',
       title: 'Self Coach',
-      emoji: '🧘‍♂️',
       description: 'Helpful self-talk',
-      isActive: true
+      isActive: true,
+      day5Color: '#D88F7B'
     },
     {
       id: '8',
       title: 'Mistakes',
-      emoji: '❌',
       description: 'Learning from errors and setbacks',
-      isActive: true
+      isActive: true,
+      day5Color: '#A2C8E6'
     },
     {
       id: '9',
       title: 'Neuroplasticity',
-      emoji: '🧠',
       description: 'How does my brain grow?',
-      isActive: true
+      isActive: true,
+      day5Color: '#C75B25'
     },
     {
       id: '10',
       title: 'Mastery Moments',
-      emoji: '🏆',
       description: 'Celebrating success',
-      isActive: true
+      isActive: true,
+      day5Color: '#D9A400'
     }
   ];
 
@@ -97,72 +97,72 @@ export default function TabTwoScreen() {
     {
       id: '1',
       title: 'Responsibility',
-      emoji: '💼',
       description: 'How to guide responsibility development',
-      isActive: true
+      isActive: true,
+      day5Color: '#A2C8E6'
     },
     {
       id: '2',
       title: 'Collaboration',
-      emoji: '🤝',
       description: 'Supporting teamwork skills',
-      isActive: true
+      isActive: true,
+      day5Color: '#C75B25'
     },
     {
       id: '3',
       title: 'Self-Monitoring',
-      emoji: '🌱',
       description: 'Helping your child self-assess',
-      isActive: true
+      isActive: true,
+      day5Color: '#D9A400'
     },
     {
       id: '4',
       title: 'Self-Regulation',
-      emoji: '📏',
       description: 'Teaching self-control strategies',
-      isActive: true
+      isActive: true,
+      day5Color: '#D88F7B'
     },
     {
       id: '5',
       title: 'Curiosity',
-      emoji: '❓',
       description: 'Encouraging questions and exploration',
-      isActive: true
+      isActive: true,
+      day5Color: '#005B5B'
     },
     {
       id: '6',
       title: 'Shape of Learning',
-      emoji: '🔄',
       description: 'Understanding the learning process',
-      isActive: true
+      isActive: true,
+      day5Color: '#005B5B'
     },
     {
       id: '7',
       title: 'Self Coach',
-      emoji: '🧘‍♂️',
       description: 'Modeling positive self-talk',
-      isActive: true
+      isActive: true,
+      day5Color: '#D88F7B'
     },
     {
       id: '8',
       title: 'Mistakes',
-      emoji: '❌',
       description: 'Helping process errors constructively',
-      isActive: true
+      isActive: true,
+      day5Color: '#A2C8E6'
     },
     {
       id: '9',
       title: 'Neuroplasticity',
-      emoji: '🧠',
       description: 'Explaining brain growth to your child',
-      isActive: true
+      isActive: true,
+      day5Color: '#C75B25'
     },
     {
       id: '10',
       title: 'Mastery Moments',
-      emoji: '🏆',
       description: 'Celebrating achievements effectively',
-      isActive: true
+      isActive: true,
+      day5Color: '#D9A400'
     }
   ];
 
@@ -198,30 +198,35 @@ export default function TabTwoScreen() {
 
   // Parent Dashboard Components
   const renderModule = ({ item }: { item: Module }) => {
-    
+
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[
           styles.moduleCard,
           !item.isActive && styles.moduleCardLocked
-        ]} 
+        ]}
         onPress={() => handleModulePress(item)}
         disabled={!item.isActive}
       >
         <View style={[
           styles.progressCircle,
-          !item.isActive && styles.progressCircleLocked
+          !item.isActive && styles.progressCircleLocked,
+          item.isActive && { backgroundColor: item.day5Color, borderColor: item.day5Color }
         ]}>
           <View style={[
             styles.progressInner,
             !item.isActive && styles.progressInnerLocked
           ]}>
-            <ThemedText style={styles.moduleIcon}>{item.emoji}</ThemedText>
+            <Image
+              source={require('@/assets/images/autonomy-brain.png')}
+              style={styles.moduleBrainIcon}
+              contentFit="contain"
+            />
           </View>
-          <View style={styles.daysBadge}>
+          <View style={[styles.daysBadge, { backgroundColor: item.day5Color }]}>
             <ThemedText style={styles.daysText}>5</ThemedText>
           </View>
-          
+
         </View>
         <ThemedText style={[
           styles.moduleTitle,
@@ -347,37 +352,36 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#FFC107',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
     position: 'relative',
-    borderWidth: 3,
-    borderColor: '#FFD54F',
+    borderWidth: 4,
   },
   progressCircleLocked: {
     backgroundColor: '#dee2e6',
     borderColor: '#adb5bd',
+    borderWidth: 4,
   },
   progressInner: {
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: '#FF9800',
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   progressInnerLocked: {
     backgroundColor: '#6c757d',
   },
-  moduleIcon: {
-    fontSize: 32,
+  moduleBrainIcon: {
+    width: 45,
+    height: 45,
   },
   daysBadge: {
     position: 'absolute',
     bottom: -5,
     right: -5,
-    backgroundColor: '#FFC107',
     borderRadius: 15,
     width: 30,
     height: 30,
@@ -389,7 +393,7 @@ const styles = StyleSheet.create({
   daysText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#FFFFFF',
   },
   moduleTitle: {
     fontSize: 18,
