@@ -103,7 +103,7 @@ export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
         {hasCompletedAssessment && (
           <ThemedView style={styles.statusContainer}>
             <ThemedView style={styles.statusBadge}>
-              <ThemedText style={styles.statusText}>✅ Completed</ThemedText>
+              <ThemedText style={styles.statusText}>Completed</ThemedText>
             </ThemedView>
           </ThemedView>
         )}

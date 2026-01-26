@@ -1,8 +1,8 @@
+import { useAppMode } from '@/contexts/AppModeContext';
 import React from 'react';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
-import { useAppMode } from '@/contexts/AppModeContext';
 
 interface ModeToggleProps {
   style?: any;
@@ -20,7 +20,7 @@ export function ModeToggle({ style, compact = false }: ModeToggleProps) {
     <ThemedView style={[styles.container, compact && styles.containerCompact, style]}>
       <ThemedView style={styles.modeSwitcher}>
         <ThemedText style={[styles.modeLabel, compact && styles.modeLabelCompact]}>
-          {userMode === 'parent' ? '👨‍👩‍👧‍👦 Parent View' : '🧒 Student View'}
+          {userMode === 'parent' ? 'Parent View' : 'Student View'}
         </ThemedText>
         <TouchableOpacity 
           style={[

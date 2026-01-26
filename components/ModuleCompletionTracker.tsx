@@ -241,7 +241,7 @@ export function ModuleCompletionTracker({
             styles.dayButtonText,
             currentDay <= completedDays && styles.dayButtonTextCompleted
           ]}>
-            {currentDay <= completedDays ? '✅ Day Completed' : `Mark Day ${currentDay} Complete`}
+            {currentDay <= completedDays ? 'Day Completed' : `Mark Day ${currentDay} Complete`}
           </ThemedText>
         </TouchableOpacity>
 
@@ -260,7 +260,7 @@ export function ModuleCompletionTracker({
         {isCompleted && (
           <ThemedView style={styles.completedBadge}>
             <ThemedText style={styles.completedText}>
-              ✅ Module Completed!
+              Module Completed!
             </ThemedText>
             {completionData?.completedAt && (
               <ThemedText style={styles.completedDate}>

@@ -83,7 +83,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
   },
   // {
   //   id: 'student-view',
-  //   title: 'Student View: Where Learning Happens ✨',
+  //   title: 'Student View: Where Learning Happens',
   //   description: 'In Student View, kids find their personalized modules, watch videos, and track their own progress. It\'s designed to be engaging and age-appropriate! Let\'s see the student profile.',
   //   perspective: 'student',
   //   action: 'switch-to-student-and-navigate-profile',
@@ -422,7 +422,7 @@ export function FamilyOnboardingTutorial({
                  ) : (
                    <View style={styles.completedMessage}>
                      <Text style={styles.completedText}>
-                       ✅ Perfect! You've tried both modes. Notice how each view is designed for different users. Ready to continue?
+                       Perfect! You've tried both modes. Notice how each view is designed for different users. Ready to continue?
                      </Text>
                    </View>
                  )}

@@ -83,7 +83,7 @@ export function YouTubeVideoCard({
     return (
       <ThemedView style={[styles.card, style]}>
         <ThemedView style={styles.errorContainer}>
-          <ThemedText style={styles.errorText}>❌ Invalid YouTube URL</ThemedText>
+          <ThemedText style={styles.errorText}>Invalid YouTube URL</ThemedText>
           <ThemedText style={styles.errorSubtext}>Please provide a valid YouTube link</ThemedText>
         </ThemedView>
       </ThemedView>
@@ -91,13 +91,8 @@ export function YouTubeVideoCard({
   }
 
   const getCategoryIcon = () => {
-    switch (category) {
-      case 'lesson': return '📚';
-      case 'example': return '💡';
-      case 'exercise': return '🎯';
-      case 'assessment': return '✅';
-      default: return '🎥';
-    }
+    // Icons removed
+    return '';
   };
 
   const getCategoryColor = () => {
@@ -276,7 +271,7 @@ export function YouTubeVideoCard({
           <ThemedView style={styles.statusContainer}>
             {isWatched && (
               <View style={styles.statusBadge}>
-                <ThemedText style={styles.statusText}>✅ Watched</ThemedText>
+                <ThemedText style={styles.statusText}>Watched</ThemedText>
               </View>
             )}
             

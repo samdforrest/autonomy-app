@@ -70,7 +70,7 @@ export default function CuriosityModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#CCDEDE',
-      icon: '❓',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -374,7 +374,7 @@ export default function CuriosityModuleScreen() {
     <ThemedView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <ThemedView style={styles.header}>
-          <ThemedText style={styles.title}>❓ Curiosity Module</ThemedText>
+          <ThemedText style={styles.title}>Curiosity Module</ThemedText>
           <ThemedText style={styles.subtitle}>
             I can ask clarifying, wondering, and deepening questions.
           </ThemedText>
@@ -400,7 +400,7 @@ export default function CuriosityModuleScreen() {
 
                   {error && (
                     <ThemedView style={styles.errorContainer}>
-                      <ThemedText style={styles.errorText}>⚠️ {error}</ThemedText>
+                      <ThemedText style={styles.errorText}>{error}</ThemedText>
                       <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
                         <ThemedText style={styles.refreshButtonText}>🔄 Retry</ThemedText>
                       </TouchableOpacity>

@@ -57,7 +57,7 @@ export function YouTubePlayer({
       return (
         <ThemedView style={[styles.container, { height }, style]}>
           <ThemedView style={styles.errorContainer}>
-            <ThemedText style={styles.errorText}>❌ Could not load video</ThemedText>
+            <ThemedText style={styles.errorText}>Could not load video</ThemedText>
             <ThemedText style={styles.errorSubtext}>Unable to parse YouTube URL</ThemedText>
           </ThemedView>
         </ThemedView>
@@ -136,7 +136,7 @@ export function YouTubePlayer({
     return (
       <ThemedView style={[styles.container, { height }, style]}>
         <ThemedView style={styles.errorContainer}>
-          <ThemedText style={styles.errorText}>❌ Invalid YouTube URL</ThemedText>
+          <ThemedText style={styles.errorText}>Invalid YouTube URL</ThemedText>
           <ThemedText style={styles.errorSubtext}>Please provide a valid YouTube link</ThemedText>
         </ThemedView>
       </ThemedView>
@@ -155,7 +155,7 @@ export function YouTubePlayer({
     return (
       <ThemedView style={[styles.container, { height }, style]}>
         <ThemedView style={styles.errorContainer}>
-          <ThemedText style={styles.errorText}>❌ Could not load video</ThemedText>
+          <ThemedText style={styles.errorText}>Could not load video</ThemedText>
           <ThemedText style={styles.errorSubtext}>Unable to parse YouTube URL</ThemedText>
         </ThemedView>
       </ThemedView>
@@ -198,7 +198,7 @@ export function YouTubePlayer({
       
       {hasError ? (
         <ThemedView style={styles.errorContainer}>
-          <ThemedText style={styles.errorText}>❌ Failed to load video</ThemedText>
+          <ThemedText style={styles.errorText}>Failed to load video</ThemedText>
           <ThemedText style={styles.errorSubtext}>Check your internet connection</ThemedText>
           <TouchableOpacity 
             style={styles.retryButton}

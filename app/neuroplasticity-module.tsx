@@ -114,7 +114,7 @@ export default function NeuroplasticityModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#C75B25',
-      icon: '⚡',
+      icon: '',
       type: 'evaluation'
     }
   ];
@@ -400,7 +400,7 @@ export default function NeuroplasticityModuleScreen() {
 
                   {error && (
                     <ThemedView style={styles.errorContainer}>
-                      <ThemedText style={styles.errorText}>⚠️ {error}</ThemedText>
+                      <ThemedText style={styles.errorText}>{error}</ThemedText>
                       <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
                         <ThemedText style={styles.refreshButtonText}>🔄 Retry</ThemedText>
                       </TouchableOpacity>

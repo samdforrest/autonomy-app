@@ -67,7 +67,7 @@ export default function SurveyButton({ moduleId, moduleName, dayNumber }: Survey
         <View style={styles.completedSurveyContent}>
           <View style={styles.completedSurveyTextContainer}>
             <ThemedText style={styles.completedSurveyTitle}>
-              ✅ Survey Completed
+              Survey Completed
             </ThemedText>
             <ThemedText style={styles.completedSurveySubtitle}>
               Thank you for your feedback on this lesson!

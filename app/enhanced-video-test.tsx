@@ -1,8 +1,8 @@
-import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { TextWithYouTube } from '@/components/TextWithYouTube';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { TextWithYouTube } from '@/components/TextWithYouTube';
+import React from 'react';
+import { ScrollView, StyleSheet } from 'react-native';
 
 /**
  * Test screen to verify enhanced YouTube video cards are working
@@ -104,19 +104,19 @@ This exercise will help you identify emotional triggers and develop coping strat
 
         {/* Results Summary */}
         <ThemedView style={styles.summarySection}>
-          <ThemedText style={styles.summaryTitle}>✨ What You Should See</ThemedText>
-          
+          <ThemedText style={styles.summaryTitle}>What You Should See</ThemedText>
+
           <ThemedView style={styles.checklistContainer}>
-            <ThemedText style={styles.checklistItem}>✅ Rich video cards with thumbnails and metadata</ThemedText>
-            <ThemedText style={styles.checklistItem}>✅ Automatic title extraction from surrounding text</ThemedText>
-            <ThemedText style={styles.checklistItem}>✅ Category-based styling (lesson=blue, example=green, exercise=orange)</ThemedText>
-            <ThemedText style={styles.checklistItem}>✅ Professional card design matching your app's style</ThemedText>
-            <ThemedText style={styles.checklistItem}>✅ Play buttons and interactive elements</ThemedText>
-            <ThemedText style={styles.checklistItem}>✅ Fallback to original player when enhanced cards are disabled</ThemedText>
+            <ThemedText style={styles.checklistItem}>Rich video cards with thumbnails and metadata</ThemedText>
+            <ThemedText style={styles.checklistItem}>Automatic title extraction from surrounding text</ThemedText>
+            <ThemedText style={styles.checklistItem}>Category-based styling (lesson=blue, example=green, exercise=orange)</ThemedText>
+            <ThemedText style={styles.checklistItem}>Professional card design matching your app's style</ThemedText>
+            <ThemedText style={styles.checklistItem}>Play buttons and interactive elements</ThemedText>
+            <ThemedText style={styles.checklistItem}>Fallback to original player when enhanced cards are disabled</ThemedText>
           </ThemedView>
 
           <ThemedView style={styles.integrationNote}>
-            <ThemedText style={styles.integrationTitle}>🚀 Integration Complete!</ThemedText>
+            <ThemedText style={styles.integrationTitle}>Integration Complete!</ThemedText>
             <ThemedText style={styles.integrationText}>
               All your existing module screens now automatically use enhanced video cards. 
               The TextWithYouTube component intelligently extracts titles and context from 

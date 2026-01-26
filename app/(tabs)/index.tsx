@@ -278,7 +278,7 @@ export default function HomeScreen() {
               return (
                 <ThemedView key={idx} style={styles.chartPlaceholder}>
                   <ThemedText style={styles.chartTitle}>
-                    📈 {item.title || 'Chart'}
+                    {item.title || 'Chart'}
                   </ThemedText>
                   <ThemedText style={styles.chartSubtitle}>
                     Type: {item.chartType || 'Unknown'}
@@ -299,7 +299,7 @@ export default function HomeScreen() {
   const renderSection = (sectionKey: string, section: any, defaultIcon: string) => (
     <ThemedView key={sectionKey} style={styles.section}>
       <ThemedText style={styles.sectionTitle}>
-        {defaultIcon} {section.title}
+        {section.title}
       </ThemedText>
       
       {/* Render bullet points */}
@@ -328,14 +328,8 @@ export default function HomeScreen() {
   );
 
   const getSectionIcon = (sectionKey: string): string => {
-    const iconMap: Record<string, string> = {
-      welcome: userMode === 'parent' ? '👨‍👩‍👧‍👦' : '🎓',
-      introduction: '📖',
-      getting_started: '🚀',
-      overview: '📋',
-      important: '⚠️',
-    };
-    return iconMap[sectionKey] || (userMode === 'parent' ? '👨‍👩‍👧‍👦' : '🎓');
+    // Icons removed - returning empty string
+    return '';
   };
 
   const getModuleDisplayName = (moduleId: string): string => {
@@ -359,7 +353,7 @@ export default function HomeScreen() {
       return (
         <ThemedView style={styles.assessmentResultsSection}>
           <ThemedText style={styles.sectionTitle}>
-            {userMode === 'parent' ? '📊 Student Learning Priorities' : '📊 Your Learning Priorities'}
+            {userMode === 'parent' ? 'Student Learning Priorities' : 'Your Learning Priorities'}
           </ThemedText>
           <ThemedView style={styles.loadingContainer}>
             <ActivityIndicator size="small" color="#2196F3" />
@@ -373,7 +367,7 @@ export default function HomeScreen() {
       return (
         <ThemedView style={styles.assessmentResultsSection}>
           <ThemedText style={styles.sectionTitle}>
-            {userMode === 'parent' ? '📊 Student Learning Priorities' : '📊 Your Learning Priorities'}
+            {userMode === 'parent' ? 'Student Learning Priorities' : 'Your Learning Priorities'}
           </ThemedText>
           <ThemedText style={styles.noResultsText}>
             {userMode === 'parent' 
@@ -406,7 +400,7 @@ export default function HomeScreen() {
       <ThemedView style={styles.assessmentResultsSection}>
         <ThemedView style={styles.resultsHeader}>
           <ThemedText style={styles.sectionTitle}>
-            {userMode === 'parent' ? '📊 Student Learning Priorities' : '📊 Your Learning Priorities'}
+            {userMode === 'parent' ? 'Student Learning Priorities' : 'Your Learning Priorities'}
           </ThemedText>
           <TouchableOpacity 
             style={styles.viewFullResultsButton}
@@ -453,7 +447,7 @@ export default function HomeScreen() {
             style={styles.retakeAssessmentButton}
             onPress={() => router.push('/assessment')}
           >
-            <ThemedText style={styles.retakeAssessmentButtonText}>🔄 Retake Assessment</ThemedText>
+            <ThemedText style={styles.retakeAssessmentButtonText}>Retake Assessment</ThemedText>
           </TouchableOpacity>
         )}
       </ThemedView>
@@ -493,7 +487,7 @@ export default function HomeScreen() {
         {isInFamilyMode && currentFamilyCode && (
           <ThemedView style={styles.familyContextIndicator}>
             <ThemedText style={styles.familyContextTitle}>
-              👨‍👩‍👧‍👦 Currently in Family: {currentFamilyCode}
+              Currently in Family: {currentFamilyCode}
             </ThemedText>
             <ThemedText style={styles.familyContextSubtitle} />
             <ThemedView style={styles.familyContextActions}>
@@ -519,7 +513,7 @@ export default function HomeScreen() {
         {isInFamilyMode && (
               <ThemedView style={styles.tutorialSection}>
                 <ThemedText style={styles.tutorialSectionTitle}>
-                  📚 New to the App?
+                  New to the App?
                 </ThemedText>
                 <ThemedText style={styles.tutorialSectionSubtitle}>
                   Take our interactive tutorial to learn how families can use the platform together - perfect for both parents and students!
@@ -529,7 +523,7 @@ export default function HomeScreen() {
                   onPress={() => tutorial.showTutorial()}
                 >
                   <ThemedText style={styles.tutorialButtonText}>
-                    🎯 Start Interactive Tutorial
+                    Start Interactive Tutorial
                   </ThemedText>
                 </TouchableOpacity>
 
@@ -552,7 +546,7 @@ export default function HomeScreen() {
         {/* Family Access Section - Only show if NOT in family mode */}
         {!isInFamilyMode && (
           <ThemedView style={styles.familySection}>
-            <ThemedText style={styles.familySectionTitle}>👨‍👩‍👧‍👦 Family Access</ThemedText>
+            <ThemedText style={styles.familySectionTitle}>Family Access</ThemedText>
             <ThemedText style={styles.familySectionSubtitle}>
               Track progress across multiple students with family codes
             </ThemedText>
@@ -570,7 +564,7 @@ export default function HomeScreen() {
                 onPress={() => router.push('/join-family')}
               >
                 <ThemedText style={[styles.familyButtonText, styles.familyButtonTextSecondary]}>
-                  🔗 Join Family
+                  Join Family
                 </ThemedText>
               </TouchableOpacity>
             </ThemedView>
@@ -596,7 +590,7 @@ export default function HomeScreen() {
         {/* Error state */}
         {error && (
           <ThemedView style={styles.errorContainer}>
-            <ThemedText style={styles.errorTitle}>⚠️ Content Unavailable</ThemedText>
+            <ThemedText style={styles.errorTitle}>Content Unavailable</ThemedText>
             <ThemedText style={styles.errorText}>{error}</ThemedText>
             <TouchableOpacity style={styles.retryButton} onPress={refetch}>
               <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>
@@ -609,7 +603,7 @@ export default function HomeScreen() {
           <>
             {/* Refresh button */}
             <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
-              <ThemedText style={styles.refreshButtonText}>🔄 Refresh Content</ThemedText>
+              <ThemedText style={styles.refreshButtonText}>Refresh Content</ThemedText>
             </TouchableOpacity>
 
             {content?.contentBlocks && content.contentBlocks.length > 0 ? (
@@ -654,7 +648,7 @@ export default function HomeScreen() {
               // Fallback content if no Google Docs content is available
               <ThemedView style={styles.section}>
                 <ThemedText style={styles.sectionTitle}>
-                  {userMode === 'parent' ? '👨‍👩‍👧‍👦 Parent Guide' : '🎓 Student Welcome'}
+                  {userMode === 'parent' ? 'Parent Guide' : 'Student Welcome'}
                 </ThemedText>
                 <ThemedText style={styles.contentText}>
                   {userMode === 'parent' 

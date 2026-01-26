@@ -70,7 +70,7 @@ export default function CollapsibleDayCard({
   };
 
   const getArrowIcon = () => {
-    if (day.isLocked) return '🔒';
+    if (day.isLocked) return '';
     return isExpanded ? '▲' : '▼';
   };
 

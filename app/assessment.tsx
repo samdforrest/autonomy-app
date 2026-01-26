@@ -264,7 +264,7 @@ export default function AssessmentScreen() {
     return (
       <ThemedView style={styles.container}>
         <ThemedView style={styles.errorContainer}>
-          <ThemedText style={styles.errorTitle}>⚠️ Assessment Unavailable</ThemedText>
+          <ThemedText style={styles.errorTitle}>Assessment Unavailable</ThemedText>
           <ThemedText style={styles.errorText}>{error}</ThemedText>
           <TouchableOpacity style={styles.retryButton} onPress={refetch}>
             <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>

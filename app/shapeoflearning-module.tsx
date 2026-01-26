@@ -92,7 +92,7 @@ export default function ShapeOfLearningModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#669D9D',
-      icon: '⚡',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -400,7 +400,7 @@ export default function ShapeOfLearningModuleScreen() {
 
                   {error && (
                     <ThemedView style={styles.errorContainer}>
-                      <ThemedText style={styles.errorText}>⚠️ {error}</ThemedText>
+                      <ThemedText style={styles.errorText}>{error}</ThemedText>
                       <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
                         <ThemedText style={styles.refreshButtonText}>🔄 Retry</ThemedText>
                       </TouchableOpacity>

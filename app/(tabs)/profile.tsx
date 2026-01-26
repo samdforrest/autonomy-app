@@ -114,7 +114,7 @@ export default function ProfileScreen() {
         {/* Mode Switcher */}
         <ThemedView style={styles.modeSwitcher}>
           <ThemedText style={styles.modeLabel}>
-            {userMode === 'parent' ? '👨‍👩‍👧‍👦 Parent View' : '🧒 Student View'}
+            {userMode === 'parent' ? 'Parent View' : 'Student View'}
           </ThemedText>
           <TouchableOpacity 
             style={[
@@ -143,7 +143,7 @@ export default function ProfileScreen() {
           {/* Family Welcome Section */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
-              Family Dashboard {isAdminFamily && <Text style={styles.adminBadge}>🔧 ADMIN</Text>}
+              Family Dashboard {isAdminFamily && <Text style={styles.adminBadge}>ADMIN</Text>}
             </Text>
             <Text style={styles.parentName}>
               Welcome, {currentFamily.settings?.parentName || 'Parent'}!
@@ -170,14 +170,14 @@ export default function ProfileScreen() {
                 );
               }}
             >
-              <Text style={styles.quickActionText}>🔗 Share Family Code</Text>
+              <Text style={styles.quickActionText}>Share Family Code</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
               style={[styles.quickAction, styles.logoutAction]}
               onPress={handleLogout}
             >
-              <Text style={[styles.quickActionText, styles.logoutActionText]}>🚪 Sign Out</Text>
+              <Text style={[styles.quickActionText, styles.logoutActionText]}>Sign Out</Text>
             </TouchableOpacity>
           </View>
 
@@ -185,7 +185,7 @@ export default function ProfileScreen() {
           {isAdminFamily && (
             <View style={[styles.section, styles.adminSection]}>
               <Text style={[styles.sectionTitle, styles.adminTitle]}>
-                🔧 Admin Controls
+                Admin Controls
               </Text>
               <Text style={styles.sectionSubtitle}>
                 Administrative functions for managing the platform
@@ -196,7 +196,7 @@ export default function ProfileScreen() {
                 onPress={() => router.push('/create-family')}
               >
                 <Text style={[styles.familyButtonText, styles.adminButtonText]}>
-                  🆕 Create New Family (Admin)
+                  Create New Family (Admin)
                 </Text>
               </TouchableOpacity>
 
@@ -205,7 +205,7 @@ export default function ProfileScreen() {
                 onPress={() => router.push('/admin/thumbnails')}
               >
                 <Text style={[styles.familyButtonText, styles.adminButtonText]}>
-                  🖼️ Manage Video Thumbnails
+                  Manage Video Thumbnails
                 </Text>
               </TouchableOpacity>
             </View>
@@ -213,7 +213,7 @@ export default function ProfileScreen() {
 
           {/* Family Access Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>👨‍👩‍👧‍👦 Family Access</Text>
+            <Text style={styles.sectionTitle}>Family Access</Text>
             <Text style={styles.sectionSubtitle}>
               Invite others to join your family or switch between families
             </Text>
@@ -224,7 +224,7 @@ export default function ProfileScreen() {
                 onPress={() => router.push('/join-family')}
               >
                 <Text style={[styles.familyButtonText, styles.familyButtonTextSecondary]}>
-                  🔗 Join Different Family
+                  Join Different Family
                 </Text>
               </TouchableOpacity>
             </View>
@@ -285,7 +285,7 @@ export default function ProfileScreen() {
       {/* Tutorial launcher for families */}
       {isInFamilyMode && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📚 App Tutorial</Text>
+          <Text style={styles.sectionTitle}>App Tutorial</Text>
           <Text style={styles.sectionSubtitle}>
             New to the app? Take a guided tour to learn how parents and students can use the platform together effectively.
           </Text>
@@ -295,7 +295,7 @@ export default function ProfileScreen() {
             onPress={() => tutorial.showTutorial()}
           >
             <Text style={[styles.familyButtonText, styles.tutorialButtonText]}>
-              🎯 Start Guided Tour
+              Start Guided Tour
             </Text>
           </TouchableOpacity>
         </View>

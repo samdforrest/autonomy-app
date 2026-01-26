@@ -400,7 +400,7 @@ export default function SelfCoachModuleScreen() {
 
                   {error && (
                     <ThemedView style={styles.errorContainer}>
-                      <ThemedText style={styles.errorText}>⚠️ {error}</ThemedText>
+                      <ThemedText style={styles.errorText}>{error}</ThemedText>
                       <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
                         <ThemedText style={styles.refreshButtonText}>🔄 Retry</ThemedText>
                       </TouchableOpacity>

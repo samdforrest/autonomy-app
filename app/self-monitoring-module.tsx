@@ -82,7 +82,7 @@ export default function SelfMonitoringModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#F0DB99',
-      icon: '✅',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -93,7 +93,7 @@ export default function SelfMonitoringModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#E8C866',
-      icon: '❓',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -464,7 +464,7 @@ export default function SelfMonitoringModuleScreen() {
       if (error) {
         return (
           <ThemedView style={styles.errorContainer}>
-            <ThemedText style={styles.errorTitle}>⚠️ Content Unavailable</ThemedText>
+            <ThemedText style={styles.errorTitle}>Content Unavailable</ThemedText>
             <ThemedText style={styles.errorText}>{error}</ThemedText>
             <TouchableOpacity style={styles.retryButton} onPress={refetch}>
               <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>

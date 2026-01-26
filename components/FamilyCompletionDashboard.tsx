@@ -110,9 +110,9 @@ export function FamilyCompletionDashboard() {
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.header}>
-        <ThemedText style={styles.title}>📊 Family Progress</ThemedText>
+        <ThemedText style={styles.title}>Family Progress</ThemedText>
         <TouchableOpacity style={styles.refreshButton} onPress={refreshStats}>
-          <ThemedText style={styles.refreshButtonText}>🔄 Refresh</ThemedText>
+          <ThemedText style={styles.refreshButtonText}>Refresh</ThemedText>
         </TouchableOpacity>
       </ThemedView>
 

@@ -6,15 +6,15 @@ import { DOCUMENT_REFS } from '@/services/api';
 import { surveyService, type SurveyQuestion, type SurveyResponse } from '@/services/survey-service';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity
 } from 'react-native';
 
 interface SurveyModalProps {
@@ -228,7 +228,7 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName }: 
     return (
       <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
         <ThemedView style={styles.completedContainer}>
-          <ThemedText style={styles.completedTitle}>✅ Survey Completed!</ThemedText>
+          <ThemedText style={styles.completedTitle}>Survey Completed!</ThemedText>
           <ThemedText style={styles.completedText}>
             Thank you for your feedback on the {moduleName} module. Your responses help us improve the learning experience.
           </ThemedText>
