@@ -1,10 +1,10 @@
 import { FamilyCompletionDashboard } from '@/components/FamilyCompletionDashboard';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import { useAppMode } from '@/contexts/AppModeContext';
 import { useFamilyTutorial } from '@/contexts/TutorialContext';
 import { familyService } from '@/services/family-service';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -100,7 +100,11 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container}>
       <ThemedView style={styles.header}>
         <View style={styles.profileIconContainer}>
-          <IconSymbol size={80} name="person.fill" color="#666" />
+          <Image
+            source={require('@/assets/images/autonomy-brain.png')}
+            style={styles.brainLogo}
+            contentFit="contain"
+          />
         </View>
         <ThemedText type="title" style={styles.title}>Progress Tracking</ThemedText>
         <ThemedText style={styles.subtitle}>
@@ -331,6 +335,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+  },
+  brainLogo: {
+    width: 80,
+    height: 80,
   },
   title: {
     fontSize: 28,
