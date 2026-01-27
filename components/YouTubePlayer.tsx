@@ -67,10 +67,10 @@ export function YouTubePlayer({
     // Handle thumbnail view for web
     if (showThumbnail && !showVideo) {
       const thumbnailUrl = getYouTubeThumbnail(url, 'medium');
-      
+
       return (
-        <TouchableOpacity 
-          style={[styles.container, { height, width }, style]}
+        <TouchableOpacity
+          style={[styles.container, styles.webContainer, { height }, style]}
           onPress={() => setShowVideo(true)}
         >
           <ThemedView style={styles.thumbnailContainer}>
@@ -87,16 +87,16 @@ export function YouTubePlayer({
               />
             )}
             <View style={styles.playButton}>
-              <ThemedText style={styles.playButtonText}>▶️</ThemedText>
+              <ThemedText style={styles.playButtonText}>▶</ThemedText>
             </View>
           </ThemedView>
         </TouchableOpacity>
       );
     }
 
-    // Web iframe implementation
+    // Web iframe implementation - constrained width for desktop
     return (
-      <ThemedView style={[styles.container, { height, width }, style]}>
+      <ThemedView style={[styles.container, styles.webContainer, { height }, style]}>
         <iframe
           src={embedUrl}
           style={{
@@ -121,10 +121,10 @@ export function YouTubePlayer({
         onPress={() => Linking.openURL(url)}
       >
         <ThemedView style={styles.fallbackContainer}>
-          <ThemedText style={styles.fallbackTitle}>🎥 YouTube Video</ThemedText>
+          <ThemedText style={styles.fallbackTitle}>YouTube Video</ThemedText>
           <ThemedText style={styles.fallbackText}>Tap to open in YouTube app</ThemedText>
           <View style={styles.playButton}>
-            <ThemedText style={styles.playButtonText}>▶️</ThemedText>
+            <ThemedText style={styles.playButtonText}>▶</ThemedText>
           </View>
         </ThemedView>
       </TouchableOpacity>
@@ -180,7 +180,7 @@ export function YouTubePlayer({
             />
           )}
           <View style={styles.playButton}>
-            <ThemedText style={styles.playButtonText}>▶️</ThemedText>
+            <ThemedText style={styles.playButtonText}>▶</ThemedText>
           </View>
         </ThemedView>
       </TouchableOpacity>
@@ -238,6 +238,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: 'hidden',
     position: 'relative',
+  },
+  webContainer: {
+    maxWidth: 560,
+    width: '100%',
+    alignSelf: 'center',
+    aspectRatio: 16 / 9,
   },
   webview: {
     flex: 1,
