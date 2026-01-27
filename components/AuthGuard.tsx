@@ -2,6 +2,7 @@ import JoinFamily from '@/app/join-family';
 import { useAppMode } from '@/contexts/AppModeContext';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { ThemedText } from './ThemedText';
 
 interface AuthGuardProps {
@@ -14,8 +15,22 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
 
-  // Show splash screen for 5 seconds on app launch
+  // Reanimated shared value for zoom effect (1 -> 1.15 = 15% enlargement)
+  const scale = useSharedValue(1);
+
+  // Animated style for the splash logo
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  // Show splash screen for 5 seconds on app launch with zoom animation
   useEffect(() => {
+    // Start the zoom animation with near-linear easing for maximum smoothness
+    scale.value = withTiming(1.15, {
+      duration: 5000,
+      easing: Easing.bezier(0.05, 0, 0.05, 1),
+    });
+
     const splashTimer = setTimeout(() => {
       setShowSplash(false);
     }, 5000);
@@ -47,8 +62,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
     return (
       <View style={styles.splashContainer}>
         <Image
+          source={require('../assets/images/autonomy-brain.png')}
+          style={styles.brainLogo}
+          resizeMode="contain"
+        />
+        <Animated.Image
           source={require('../assets/images/autonomylogotext.png')}
-          style={styles.splashLogo}
+          style={[styles.splashLogo, animatedStyle]}
           resizeMode="contain"
         />
       </View>
@@ -82,6 +102,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#ffffff',
+  },
+  brainLogo: {
+    width: 120,
+    height: 120,
+    marginBottom: -25,
   },
   splashLogo: {
     width: '80%',
