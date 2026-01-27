@@ -8,22 +8,8 @@ import {
 } from '@expo-google-fonts/poppins';
 import { router, Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Platform, Text, TouchableOpacity, TextStyle } from 'react-native';
+import { Platform, Text, TouchableOpacity } from 'react-native';
 import 'react-native-reanimated';
-
-// Set default font for all Text components
-const oldTextRender = (Text as any).render;
-(Text as any).render = function (...args: any[]) {
-  const origin = oldTextRender.call(this, ...args);
-  const defaultStyle: TextStyle = { fontFamily: 'Poppins_400Regular' };
-  return {
-    ...origin,
-    props: {
-      ...origin.props,
-      style: [defaultStyle, origin.props.style],
-    },
-  };
-};
 
 // Component to handle tutorial inside providers
 function TutorialManager() {
