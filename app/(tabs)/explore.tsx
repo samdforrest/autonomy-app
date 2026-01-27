@@ -12,6 +12,7 @@ interface Module {
   title: string;
   description: string;
   isActive: boolean;
+  day3Color: string;
   day5Color: string;
 }
 
@@ -26,6 +27,7 @@ export default function TabTwoScreen() {
       title: 'Responsibility',
       description: 'What is my job?',
       isActive: true,
+      day3Color: '#C7DEF0',
       day5Color: '#A2C8E6'
     },
     {
@@ -33,6 +35,7 @@ export default function TabTwoScreen() {
       title: 'Collaboration',
       description: 'Teamwork 101',
       isActive: true,
+      day3Color: '#DD9D7C',
       day5Color: '#C75B25'
     },
     {
@@ -40,6 +43,7 @@ export default function TabTwoScreen() {
       title: 'Self-Monitoring',
       description: 'Making sure I understand',
       isActive: true,
+      day3Color: '#E8C866',
       day5Color: '#D9A400'
     },
     {
@@ -47,6 +51,7 @@ export default function TabTwoScreen() {
       title: 'Self-Regulation',
       description: 'Who is in control?',
       isActive: true,
+      day3Color: '#E8BCB0',
       day5Color: '#D88F7B'
     },
     {
@@ -54,6 +59,7 @@ export default function TabTwoScreen() {
       title: 'Curiosity',
       description: 'Questions are expected',
       isActive: true,
+      day3Color: '#669D9D',
       day5Color: '#005B5B'
     },
     {
@@ -61,6 +67,7 @@ export default function TabTwoScreen() {
       title: 'Shape of Learning',
       description: 'It is not a sprint',
       isActive: true,
+      day3Color: '#669D9D',
       day5Color: '#005B5B'
     },
     {
@@ -68,6 +75,7 @@ export default function TabTwoScreen() {
       title: 'Self Coach',
       description: 'Helpful self-talk',
       isActive: true,
+      day3Color: '#E8BCB0',
       day5Color: '#D88F7B'
     },
     {
@@ -75,6 +83,7 @@ export default function TabTwoScreen() {
       title: 'Mistakes',
       description: 'Learning from errors and setbacks',
       isActive: true,
+      day3Color: '#C7DEF0',
       day5Color: '#A2C8E6'
     },
     {
@@ -82,6 +91,7 @@ export default function TabTwoScreen() {
       title: 'Neuroplasticity',
       description: 'How does my brain grow?',
       isActive: true,
+      day3Color: '#DD9D7C',
       day5Color: '#C75B25'
     },
     {
@@ -89,6 +99,7 @@ export default function TabTwoScreen() {
       title: 'Mastery Moments',
       description: 'Celebrating success',
       isActive: true,
+      day3Color: '#E8C866',
       day5Color: '#D9A400'
     }
   ];
@@ -99,6 +110,7 @@ export default function TabTwoScreen() {
       title: 'Responsibility',
       description: 'How to guide responsibility development',
       isActive: true,
+      day3Color: '#C7DEF0',
       day5Color: '#A2C8E6'
     },
     {
@@ -106,6 +118,7 @@ export default function TabTwoScreen() {
       title: 'Collaboration',
       description: 'Supporting teamwork skills',
       isActive: true,
+      day3Color: '#DD9D7C',
       day5Color: '#C75B25'
     },
     {
@@ -113,6 +126,7 @@ export default function TabTwoScreen() {
       title: 'Self-Monitoring',
       description: 'Helping your child self-assess',
       isActive: true,
+      day3Color: '#E8C866',
       day5Color: '#D9A400'
     },
     {
@@ -120,6 +134,7 @@ export default function TabTwoScreen() {
       title: 'Self-Regulation',
       description: 'Teaching self-control strategies',
       isActive: true,
+      day3Color: '#E8BCB0',
       day5Color: '#D88F7B'
     },
     {
@@ -127,6 +142,7 @@ export default function TabTwoScreen() {
       title: 'Curiosity',
       description: 'Encouraging questions and exploration',
       isActive: true,
+      day3Color: '#669D9D',
       day5Color: '#005B5B'
     },
     {
@@ -134,6 +150,7 @@ export default function TabTwoScreen() {
       title: 'Shape of Learning',
       description: 'Understanding the learning process',
       isActive: true,
+      day3Color: '#669D9D',
       day5Color: '#005B5B'
     },
     {
@@ -141,6 +158,7 @@ export default function TabTwoScreen() {
       title: 'Self Coach',
       description: 'Modeling positive self-talk',
       isActive: true,
+      day3Color: '#E8BCB0',
       day5Color: '#D88F7B'
     },
     {
@@ -148,6 +166,7 @@ export default function TabTwoScreen() {
       title: 'Mistakes',
       description: 'Helping process errors constructively',
       isActive: true,
+      day3Color: '#C7DEF0',
       day5Color: '#A2C8E6'
     },
     {
@@ -155,6 +174,7 @@ export default function TabTwoScreen() {
       title: 'Neuroplasticity',
       description: 'Explaining brain growth to your child',
       isActive: true,
+      day3Color: '#DD9D7C',
       day5Color: '#C75B25'
     },
     {
@@ -162,6 +182,7 @@ export default function TabTwoScreen() {
       title: 'Mastery Moments',
       description: 'Celebrating achievements effectively',
       isActive: true,
+      day3Color: '#E8C866',
       day5Color: '#D9A400'
     }
   ];
@@ -198,6 +219,7 @@ export default function TabTwoScreen() {
 
   // Parent Dashboard Components
   const renderModule = ({ item }: { item: Module }) => {
+    const ringColor = parseInt(item.id) <= 5 ? item.day3Color : item.day5Color;
 
     return (
       <TouchableOpacity
@@ -211,7 +233,7 @@ export default function TabTwoScreen() {
         <View style={[
           styles.progressCircle,
           !item.isActive && styles.progressCircleLocked,
-          item.isActive && { backgroundColor: item.day5Color, borderColor: item.day5Color }
+          item.isActive && { backgroundColor: ringColor, borderColor: ringColor }
         ]}>
           <View style={[
             styles.progressInner,
@@ -223,7 +245,7 @@ export default function TabTwoScreen() {
               contentFit="contain"
             />
           </View>
-          <View style={[styles.daysBadge, { backgroundColor: item.day5Color }]}>
+          <View style={[styles.daysBadge, { backgroundColor: ringColor }]}>
             <ThemedText style={styles.daysText}>5</ThemedText>
           </View>
 
