@@ -63,11 +63,11 @@ export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
           ? `Student assessment completed. Recommended starting point: ${topModule}`
           : 'Your student needs to take the assessment to personalize their learning path.',
         buttonText: hasCompletedAssessment ? 'View Student Progress' : 'Remind Student',
-        icon: hasCompletedAssessment ? '📈' : '⏳'
+        // icon: hasCompletedAssessment ? '📈' : '⏳'
       };
     } else {
       return {
-        title: '🎯 Learning Assessment',
+        title: 'Learning Assessment',
         subtitle: hasCompletedAssessment 
           ? 'See your personalized learning path'
           : 'Discover your learning priorities',
@@ -75,7 +75,7 @@ export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
           ? `Your recommended starting point: ${topModule}`
           : 'Take a quick assessment to find out which skills to focus on first.',
         buttonText: hasCompletedAssessment ? 'Take Assessment' : 'Take Assessment',
-        icon: hasCompletedAssessment ? '🌟' : '🚀'
+        // icon: hasCompletedAssessment ? '🌟' : '🚀'
       };
     }
   };

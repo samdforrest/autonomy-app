@@ -29,97 +29,64 @@ interface TutorialStep {
    action?: 'switch-to-parent' | 'switch-to-student' | 'switch-to-parent-and-navigate-profile' | 'switch-to-student-and-navigate-profile' | 'navigate-to-assessment' | 'navigate-to-explore' | 'navigate-to-profile' | 'navigate-to-home' | 'none';
    isInteractive?: boolean; // Requires user interaction before proceeding
    interactionTarget?: 'mode-switcher'; // What the user needs to interact with
-   emoji?: string;
 }
 
 const TUTORIAL_STEPS: TutorialStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to Your Family Learning Journey! 🏠',
+    title: 'Welcome to Your Family Learning Journey!',
     description: 'Hi! We\'re excited you joined our learning platform. This quick tour will show both parents and students how to use the app together.',
     perspective: 'both',
-    emoji: '👋'
   },
   {
     id: 'family-concept',
-    title: 'How Families Work In the App 👨‍👩‍👧‍👦',
+    title: 'How Families Work In the App',
     description: 'Your family code connects everyone! Parents can track progress while students do fun learning activities. Everyone stays connected but has their own experience.',
     perspective: 'both',
-    emoji: '🔗'
   },
    {
      id: 'mode-switcher-intro',
-     title: 'Try the Mode Switcher! 🔄',
+     title: 'Try the Mode Switcher!',
      description: 'See this toggle? It switches between Parent View (for tracking and insights) and Student View (for learning and activities). Go ahead - try switching it! We\'ll wait for you to explore both modes.',
      perspective: 'both',
      targetArea: 'mode-switcher',
      isInteractive: true,
      interactionTarget: 'mode-switcher',
-     emoji: '👆'
    },
   {
     id: 'parent-view',
-    title: 'Parent View: Your Mission Control 📊',
+    title: 'Parent View: Your Mission Control',
     description: 'In Parent View, you can see learning progress, assessment results, and help prioritize what to work on next. It\'s like having a learning dashboard! Let\'s check out your family profile.',
     perspective: 'parent',
     action: 'switch-to-parent-and-navigate-profile',
     targetArea: 'family-dashboard',
-    emoji: '🎛️'
   },
-  // {
-  //   id: 'parent-dashboard',
-  //   title: 'Family Dashboard & Progress Tracking 📈',
-  //   description: 'Here in the Profile section, parents can see detailed family progress, manage settings, and track each module\'s completion. This is your family\'s home base!',
-  //   perspective: 'parent',
-  //   emoji: '🏠'
-  // },
   {
     id: 'assessment-purpose',
-    title: 'The Learning Assessment 🎯',
+    title: 'The Learning Assessment',
     description: 'Students take a quick assessment that creates a personalized learning path. It figures out which skills to focus on first - pretty cool, right? Here\'s what it looks like!',
     perspective: 'both',
     action: 'navigate-to-assessment',
-    emoji: '🧠'
   },
-  // {
-  //   id: 'student-view',
-  //   title: 'Student View: Where Learning Happens',
-  //   description: 'In Student View, kids find their personalized modules, watch videos, and track their own progress. It\'s designed to be engaging and age-appropriate! Let\'s see the student profile.',
-  //   perspective: 'student',
-  //   action: 'switch-to-student-and-navigate-profile',
-  //   emoji: '📚'
-  // },
   {
     id: 'modules-explained',
-    title: 'Learning Modules: Your Growth Areas 🌟',
+    title: 'Learning Modules: Your Growth Areas',
     description: 'Each module focuses on important skills like handling mistakes, self-regulation, and curiosity. Parent view has a guide to each lesson. Student view walks you both through the five activities you complete together!',
     perspective: 'student',
     action: 'navigate-to-explore',
     targetArea: 'modules',
-    emoji: '🎓'
   },
-  // {
-  //   id: 'navigation',
-  //   title: 'Getting Around the App 🧭',
-  //   description: 'Use the tabs at the bottom to navigate. Home has your dashboard, Explore shows learning modules, and Profile manages your family settings. Back to home we go!',
-  //   perspective: 'both',
-  //   action: 'navigate-to-home',
-  //   targetArea: 'bottom-tabs',
-  //   emoji: '🗺️'
-  // },
   {
     id: 'working-together',
-    title: 'Learning Together Works Best 🤝',
+    title: 'Learning Together Works Best',
     description: 'The magic happens when families use this together! Parents can support learning while kids stay engaged with age-appropriate content.',
     perspective: 'both',
-    emoji: '💪'
   },
   {
     id: 'ready-to-start',
-    title: 'You\'re Ready to Begin! 🚀',
+    title: 'You\'re Ready to Begin!',
     description: 'While your child starts with the learning assessment, you can start by watching the intro videos in the parent and student guide! Parents can always switch views to check progress. Happy learning!',
     perspective: 'both',
-    emoji: '🎉'
   }
 ];
 
@@ -352,7 +319,7 @@ export function FamilyOnboardingTutorial({
         step.perspective === 'parent' ? styles.parentBadge : styles.studentBadge
       ]}>
         <Text style={styles.perspectiveBadgeText}>
-          {step.perspective === 'parent' ? '👨‍👩‍👧‍👦 Parent Focus' : '🧒 Student Focus'}
+          {step.perspective === 'parent' ? 'Parent Focus' : 'Student Focus'}
         </Text>
       </View>
     );
@@ -389,11 +356,7 @@ export function FamilyOnboardingTutorial({
           {/* Step content */}
           <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
             {getPerspectiveBadge()}
-            
-            <View style={styles.emojiContainer}>
-              <Text style={styles.emoji}>{currentTutorialStep.emoji}</Text>
-            </View>
-            
+
             <ThemedText style={styles.stepTitle}>
               {currentTutorialStep.title}
             </ThemedText>
@@ -406,7 +369,7 @@ export function FamilyOnboardingTutorial({
              {currentTutorialStep.isInteractive && currentTutorialStep.interactionTarget === 'mode-switcher' && (
                <View style={styles.interactiveSection}>
                  <ThemedText style={styles.interactionPrompt}>
-                   👇 Try the toggle below - switch between Parent and Student views:
+                   Try the toggle below - switch between Parent and Student views:
                  </ThemedText>
                  
                  <View style={styles.embeddedToggleContainer}>
@@ -416,7 +379,7 @@ export function FamilyOnboardingTutorial({
                  {!hasInteractedWithModeSwitch ? (
                    <View style={styles.waitingMessage}>
                      <Text style={styles.waitingText}>
-                       💡 Switch modes to see how the interface changes for parents vs students!
+                       Switch modes to see how the interface changes for parents vs students!
                      </Text>
                    </View>
                  ) : (
@@ -433,7 +396,7 @@ export function FamilyOnboardingTutorial({
             {(currentTutorialStep.perspective !== 'both' || currentTutorialStep.action) && (
               <View style={styles.modeIndicator}>
                 <Text style={styles.currentModeText}>
-                  Currently in: {currentUserMode === 'parent' ? '👨‍👩‍👧‍👦 Parent' : '🧒 Student'} View
+                  Currently in: {currentUserMode === 'parent' ? 'Parent' : 'Student'} View
                 </Text>
               </View>
             )}
@@ -441,13 +404,6 @@ export function FamilyOnboardingTutorial({
 
           {/* Navigation buttons */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity 
-              style={[styles.button, styles.skipButton]} 
-              onPress={handleSkip}
-            >
-              <Text style={styles.skipButtonText}>Skip Tour</Text>
-            </TouchableOpacity>
-
             <View style={styles.navButtons}>
               {currentStep > 0 && (
                 <TouchableOpacity 
@@ -551,13 +507,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
-  emojiContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  emoji: {
-    fontSize: 48,
-  },
   stepTitle: {
     fontSize: 22,
     fontWeight: 'bold',
@@ -598,15 +547,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     minWidth: 100,
-  },
-  skipButton: {
-    backgroundColor: 'transparent',
-    alignSelf: 'center',
-  },
-  skipButtonText: {
-    fontSize: 16,
-    color: '#999',
-    textDecorationLine: 'underline',
   },
   previousButton: {
     backgroundColor: '#F8F9FA',
