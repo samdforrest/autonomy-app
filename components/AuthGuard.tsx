@@ -1,7 +1,7 @@
 import JoinFamily from '@/app/join-family';
 import { useAppMode } from '@/contexts/AppModeContext';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
 import { ThemedText } from './ThemedText';
 
 interface AuthGuardProps {
@@ -12,6 +12,16 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const { isInFamilyMode, familyContext } = useAppMode();
   const [isLoading, setIsLoading] = useState(true);
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+
+  // Show splash screen for 5 seconds on app launch
+  useEffect(() => {
+    const splashTimer = setTimeout(() => {
+      setShowSplash(false);
+    }, 5000);
+
+    return () => clearTimeout(splashTimer);
+  }, []);
 
   useEffect(() => {
     // Give the AppModeProvider time to load persisted family context
@@ -25,12 +35,25 @@ export function AuthGuard({ children }: AuthGuardProps) {
 
   // Add effect to log auth state changes for debugging
   useEffect(() => {
-    console.log('🔍 AuthGuard - Auth state changed:', {
+    console.log('AuthGuard - Auth state changed:', {
       isInFamilyMode,
       isActive: familyContext.isActive,
       familyCode: familyContext.familyCode
     });
   }, [isInFamilyMode, familyContext.isActive, familyContext.familyCode]);
+
+  // Show splash screen with logo
+  if (showSplash) {
+    return (
+      <View style={styles.splashContainer}>
+        <Image
+          source={require('../assets/images/autonomylogotext.png')}
+          style={styles.splashLogo}
+          resizeMode="contain"
+        />
+      </View>
+    );
+  }
 
   // Show loading spinner while checking authentication
   if (isLoading || !authCheckComplete) {
@@ -54,6 +77,17 @@ export function AuthGuard({ children }: AuthGuardProps) {
 }
 
 const styles = StyleSheet.create({
+  splashContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+  },
+  splashLogo: {
+    width: '80%',
+    maxWidth: 400,
+    height: 200,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
