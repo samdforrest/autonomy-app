@@ -1,5 +1,6 @@
 import CollapsibleDayCard from '@/components/CollapsibleDayCard';
 import { ImageViewer } from '@/components/ImageViewer';
+import { ModuleCompletionTracker } from '@/components/ModuleCompletionTracker';
 import SurveyButton from '@/components/SurveyButton';
 import { TableViewer } from '@/components/TableViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
@@ -461,8 +462,19 @@ export default function CollaborationModuleScreen() {
             </ThemedView>
           )}
 
+          {/* Module Completion Tracker */}
+          <ModuleCompletionTracker
+            moduleId="collaboration"
+            moduleName="Collaboration & Teamwork"
+            currentDay={day.dayNumber}
+            totalDays={5}
+            onProgressUpdate={(completedDays, isCompleted) => {
+              console.log('Progress updated:', { completedDays, isCompleted });
+            }}
+          />
+
           {/* Survey Button - Only show for Day 5 */}
-          <SurveyButton 
+          <SurveyButton
             moduleId="collaboration"
             moduleName="Collaboration & Teamwork"
             dayNumber={day.dayNumber}
@@ -470,7 +482,7 @@ export default function CollaborationModuleScreen() {
         </ThemedView>
       );
     }
-    
+
     // This shouldn't happen with our new logic, but keeping as fallback
     return (
       <ThemedView>

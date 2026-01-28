@@ -1,5 +1,6 @@
 import CollapsibleDayCard from '@/components/CollapsibleDayCard';
 import { ImageViewer } from '@/components/ImageViewer';
+import { ModuleCompletionTracker } from '@/components/ModuleCompletionTracker';
 import SurveyButton from '@/components/SurveyButton';
 import { TableViewer } from '@/components/TableViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
@@ -437,8 +438,19 @@ export default function MasteryMomentsModuleScreen() {
                         </ThemedView>
                       )}
 
+                      {/* Module Completion Tracker */}
+                      <ModuleCompletionTracker
+                        moduleId="masterymoments"
+                        moduleName="Mastery Moments"
+                        currentDay={day.dayNumber}
+                        totalDays={5}
+                        onProgressUpdate={(completedDays, isCompleted) => {
+                          console.log('Progress updated:', { completedDays, isCompleted });
+                        }}
+                      />
+
                       {/* Survey Button - Only show for Day 5 */}
-                      <SurveyButton 
+                      <SurveyButton
                         moduleId="masterymoments"
                         moduleName="Mastery Moments"
                         dayNumber={day.dayNumber}
