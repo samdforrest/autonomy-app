@@ -2,9 +2,11 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { ModeToggle } from '@/components/ModeToggle';
 import { useAppMode } from '@/contexts/AppModeContext';
+import { useCompletion } from '@/contexts/CompletionContext';
+import { FamilyService } from '@/services/family-service';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface Module {
@@ -16,9 +18,68 @@ interface Module {
   day5Color: string;
 }
 
+// Map module titles to their IDs used in Firebase
+const MODULE_TITLE_TO_ID: Record<string, string> = {
+  'Responsibility': 'job',
+  'Collaboration': 'collaboration',
+  'Self-Monitoring': 'selfmonitoring',
+  'Self-Regulation': 'regulation',
+  'Curiosity': 'curiosity',
+  'Shape of Learning': 'shapeoflearning',
+  'Self Coach': 'selfcoach',
+  'Mistakes': 'mistakes',
+  'Neuroplasticity': 'neuroplasticity',
+  'Mastery Moments': 'masterymoments',
+};
+
 export default function TabTwoScreen() {
-  const { userMode } = useAppMode();
-  
+  const { userMode, isInFamilyMode, currentFamilyCode, currentStudentId } = useAppMode();
+  const { refreshTrigger } = useCompletion();
+  const [moduleCompletions, setModuleCompletions] = useState<Record<string, number>>({});
+  const familyService = new FamilyService();
+
+  // Fetch module completion data
+  useEffect(() => {
+    const loadCompletionData = async () => {
+      if (!isInFamilyMode || !currentFamilyCode) {
+        setModuleCompletions({});
+        return;
+      }
+
+      try {
+        let studentId = currentStudentId;
+        if (!studentId) {
+          studentId = await familyService.ensureDefaultStudent(currentFamilyCode);
+        }
+
+        const completions = await familyService.getStudentModuleCompletions(
+          currentFamilyCode,
+          studentId
+        );
+
+        if (completions) {
+          const completedDaysMap: Record<string, number> = {};
+          Object.entries(completions).forEach(([moduleId, data]: [string, any]) => {
+            completedDaysMap[moduleId] = data.completedDays || 0;
+          });
+          setModuleCompletions(completedDaysMap);
+        }
+      } catch (error) {
+        console.error('Failed to load module completions:', error);
+      }
+    };
+
+    loadCompletionData();
+  }, [isInFamilyMode, currentFamilyCode, currentStudentId, refreshTrigger]);
+
+  // Helper to get remaining days for a module
+  const getRemainingDays = (moduleTitle: string): number => {
+    const moduleId = MODULE_TITLE_TO_ID[moduleTitle];
+    if (!moduleId) return 5;
+    const completedDays = moduleCompletions[moduleId] || 0;
+    return Math.max(0, 5 - completedDays);
+  };
+
   // No redirect needed - parents can access explore page
   
   const studentModules: Module[] = [
@@ -220,6 +281,7 @@ export default function TabTwoScreen() {
   // Parent Dashboard Components
   const renderModule = ({ item }: { item: Module }) => {
     const ringColor = parseInt(item.id) <= 5 ? item.day3Color : item.day5Color;
+    const remainingDays = getRemainingDays(item.title);
 
     return (
       <TouchableOpacity
@@ -245,10 +307,11 @@ export default function TabTwoScreen() {
               contentFit="contain"
             />
           </View>
-          <View style={[styles.daysBadge, { backgroundColor: ringColor }]}>
-            <ThemedText style={styles.daysText}>5</ThemedText>
-          </View>
-
+          {remainingDays > 0 && (
+            <View style={[styles.daysBadge, { backgroundColor: ringColor }]}>
+              <ThemedText style={styles.daysText}>{remainingDays}</ThemedText>
+            </View>
+          )}
         </View>
         <ThemedText style={[
           styles.moduleTitle,
