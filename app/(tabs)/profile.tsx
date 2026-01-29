@@ -439,9 +439,10 @@ const styles = StyleSheet.create({
   // Family Dashboard Styles
   section: {
     backgroundColor: '#fff',
-    margin: 15,
+    marginHorizontal: 20,
+    marginBottom: 16,
     padding: 20,
-    borderRadius: 10,
+    borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

@@ -158,7 +158,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
-    marginVertical: 8,
+    marginHorizontal: 20,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -204,9 +205,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
     borderRadius: 8,
     padding: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+    marginBottom: 8,
   },
   moduleHeader: {
     flexDirection: 'row',

@@ -827,7 +827,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -1141,8 +1141,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
     borderRadius: 12,
     padding: 20,
-    marginHorizontal: 16,
-    marginVertical: 16,
+    marginBottom: 16,
     borderLeftWidth: 4,
     borderLeftColor: '#17A2B8',
   },
