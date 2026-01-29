@@ -1,3 +1,12 @@
+// This route is deprecated - use regulation-module.tsx instead
+import { Redirect } from 'expo-router';
+
+export default function RegulationDay1Screen() {
+  // Redirect to the main regulation module
+  return <Redirect href="/regulation-module" />;
+}
+
+// Original implementation (commented out):
 // import { ThemedText } from '@/components/ThemedText';
 // import { ThemedView } from '@/components/ThemedView';
 // import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
