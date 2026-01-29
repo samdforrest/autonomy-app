@@ -129,21 +129,19 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: 'white',
     borderRadius: 12,
-    marginVertical: 8,
     marginHorizontal: 20,
     marginBottom: 16,
     padding: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   cardContent: {
-    padding: 20,
     backgroundColor: 'transparent',
   },
   cardHeader: {

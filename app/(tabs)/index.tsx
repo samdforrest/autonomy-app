@@ -948,7 +948,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   familySectionSubtitle: {
     fontSize: 14,
@@ -994,12 +994,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#1976D2',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   familyContextSubtitle: {
     fontSize: 14,
     color: '#1976D2',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   familyContextActions: {
     flexDirection: 'row',
