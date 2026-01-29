@@ -87,6 +87,7 @@ function TutorialManager() {
 }
 
 import { AuthGuard } from '@/components/AuthGuard';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { IntroGuard } from '@/components/IntroGuard';
 import { FamilyOnboardingTutorial } from '@/components/FamilyOnboardingTutorial';
 import { AppModeProvider, useAppMode } from '@/contexts/AppModeContext';
@@ -164,12 +165,13 @@ export default function RootLayout() {
   });
 
   return (
-    <TutorialProvider>
-      <AppModeProvider>
-        <CompletionProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <AuthGuard>
-              <IntroGuard>
+    <ErrorBoundary>
+      <TutorialProvider>
+        <AppModeProvider>
+          <CompletionProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <AuthGuard>
+                <IntroGuard>
                 <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen 
@@ -270,12 +272,13 @@ export default function RootLayout() {
                 <Stack.Screen name="+not-found" />
               </Stack>
               <TutorialManager />
-              </IntroGuard>
-            </AuthGuard>
-            <StatusBar style="auto" />
-          </ThemeProvider>
-        </CompletionProvider>
-      </AppModeProvider>
-    </TutorialProvider>
+                </IntroGuard>
+              </AuthGuard>
+              <StatusBar style="auto" />
+            </ThemeProvider>
+          </CompletionProvider>
+        </AppModeProvider>
+      </TutorialProvider>
+    </ErrorBoundary>
   );
 }

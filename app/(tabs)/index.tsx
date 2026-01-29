@@ -1,7 +1,6 @@
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { AssessmentCard } from '@/components/AssessmentCard';
 import { EnhancedYouTubePlayer } from '@/components/EnhancedYouTubePlayer';
@@ -21,6 +20,12 @@ import { assessmentService, type AssessmentSummary } from '@/services/assessment
 export default function HomeScreen() {
   const componentId = React.useRef(Math.random().toString(36).substr(2, 9));
   console.log('🏠🏠🏠 HOME SCREEN COMPONENT RENDER (ID:', componentId.current + ')');
+
+  // Debug: Log when component mounts/unmounts
+  React.useEffect(() => {
+    console.log('🏠 HOME SCREEN MOUNTED');
+    return () => console.log('🏠 HOME SCREEN UNMOUNTED');
+  }, []);
   
   const router = useRouter();
   const { userMode, isInFamilyMode, currentFamilyCode, currentFamily, clearFamilyContext } = useAppMode();
@@ -40,6 +45,8 @@ export default function HomeScreen() {
     'raw',
     { tab: tabName }
   );
+
+  console.log('🏠 Google Docs state:', { loading, error: !!error, hasContent: !!content, blockCount: content?.contentBlocks?.length });
 
   // Color inheritance hook for styled content blocks
   const { getBubbleStyle } = useColorInheritance(content?.contentBlocks, {
@@ -72,7 +79,7 @@ export default function HomeScreen() {
         if (isInFamilyMode && currentFamilyCode) {
           assessmentService.setContext(currentFamilyCode, 'student');
         } else {
-          assessmentService.syncFromGlobalContext();
+          await assessmentService.syncFromGlobalContext();
         }
         
         const results = await assessmentService.loadAssessmentResults();
@@ -148,8 +155,12 @@ export default function HomeScreen() {
   };
 
   const renderContentBlock = (block: any, index: number) => {
-    // Check if this block's header is a YouTube URL
-    const isVideoBlock = isYouTubeUrl(block.header);
+    console.log('🏠 Rendering content block:', index, block?.header?.substring?.(0, 30));
+    console.log('🏠 Block content types:', block?.content?.map((item: any) => item.type));
+
+    try {
+      // Check if this block's header is a YouTube URL
+      const isVideoBlock = isYouTubeUrl(block.header);
     
     return (
       <ThemedView key={block.id || index} style={[styles.bubble, getBubbleStyle(block.header, index, block.id)]}>
@@ -293,7 +304,15 @@ export default function HomeScreen() {
           })}
         </ThemedView>
       </ThemedView>
-    );
+      );
+    } catch (blockError) {
+      console.error('🏠 ERROR rendering block', index, ':', blockError);
+      return (
+        <ThemedView key={block.id || index} style={styles.bubble}>
+          <ThemedText>Error rendering block {index}</ThemedText>
+        </ThemedView>
+      );
+    }
   };
 
   const renderSection = (sectionKey: string, section: any, defaultIcon: string) => (
@@ -454,14 +473,17 @@ export default function HomeScreen() {
     );
   };
 
-  return (
-    <ThemedView style={styles.container}>
+  console.log('🏠 HOME SCREEN ABOUT TO RENDER JSX');
+
+  try {
+    return (
+      <ThemedView style={styles.container}>
       <ThemedView style={styles.header}>
         <ThemedView style={styles.logoContainer}>
-          <Image 
-            source={require('@/assets/images/autonomy-brain.png')} 
+          <Image
+            source={require('@/assets/images/autonomy-brain.png')}
             style={styles.brainLogo}
-            contentFit="contain"
+            resizeMode="contain"
           />
         </ThemedView>
         <ThemedText type="title" style={styles.title}>
@@ -676,7 +698,15 @@ export default function HomeScreen() {
         )}
       </ScrollView>
     </ThemedView>
-  );
+    );
+  } catch (renderError) {
+    console.error('🏠 HOME SCREEN RENDER ERROR:', renderError);
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedText>Error rendering home screen. Check logs.</ThemedText>
+      </ThemedView>
+    );
+  }
 }
 
 const styles = StyleSheet.create({

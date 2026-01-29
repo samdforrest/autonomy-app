@@ -85,9 +85,9 @@ export default function AssessmentScreen() {
         } else {
           // Make sure to sync context from global state for non-family users
           console.log('👤 Assessment: Syncing context for individual user');
-          assessmentService.syncFromGlobalContext();
+          await assessmentService.syncFromGlobalContext();
         }
-        
+
         const existingResults = await assessmentService.loadAssessmentResults();
         console.log('🔍 Loaded existing results:', !!existingResults);
         
@@ -168,9 +168,9 @@ export default function AssessmentScreen() {
       } else {
         // Make sure to sync context from global state for non-family users
         console.log('👤 Assessment: Syncing context for individual user');
-        assessmentService.syncFromGlobalContext();
+        await assessmentService.syncFromGlobalContext();
       }
-      
+
       // Calculate module priorities
       const priorities = assessmentService.calculateModulePriorities(responses, assessmentQuestions);
       
