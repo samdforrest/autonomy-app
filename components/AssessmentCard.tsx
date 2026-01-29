@@ -10,15 +10,19 @@ interface AssessmentCardProps {
 }
 
 export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
-  const hasCompletedAssessment = assessmentService.hasCompletedAssessment();
+  const [hasCompletedAssessment, setHasCompletedAssessment] = React.useState(false);
   const [assessmentResults, setAssessmentResults] = React.useState<any>(null);
 
   React.useEffect(() => {
-    const loadResults = async () => {
-      const results = await assessmentService.loadAssessmentResults();
+    const loadData = async () => {
+      const [completed, results] = await Promise.all([
+        assessmentService.hasCompletedAssessment(),
+        assessmentService.loadAssessmentResults()
+      ]);
+      setHasCompletedAssessment(completed);
       setAssessmentResults(results);
     };
-    loadResults();
+    loadData();
   }, []);
 
   const handlePress = () => {

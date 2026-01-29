@@ -1,5 +1,6 @@
 import { FamilyData } from '@/services/family-service';
-import React, { createContext, ReactNode, useContext, useEffect, useReducer } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, ReactNode, useContext, useEffect, useReducer, useRef } from 'react';
 
 // Types
 export type UserMode = 'parent' | 'student';
@@ -159,19 +160,8 @@ function appModeReducer(state: AppModeState, action: AppModeAction): AppModeStat
         isActive: true,
         isAdmin: familyData?.settings?.isAdmin === true
       };
-      
-      // Persist to localStorage
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('autonomy_current_family', JSON.stringify({
-            ...newFamilyContext,
-            timestamp: Date.now()
-          }));
-        } catch (error) {
-          console.error('❌ Failed to persist family context:', error);
-        }
-      }
-      
+
+      // Storage is handled via useEffect, not in reducer
       return {
         ...state,
         familyContext: newFamilyContext
@@ -182,38 +172,15 @@ function appModeReducer(state: AppModeState, action: AppModeAction): AppModeStat
         ...state.familyContext,
         currentStudentId: action.payload
       };
-      
-      // Update localStorage
-      if (typeof window !== 'undefined' && state.familyContext.isActive) {
-        try {
-          const stored = localStorage.getItem('autonomy_current_family');
-          if (stored) {
-            const parsedData = JSON.parse(stored);
-            localStorage.setItem('autonomy_current_family', JSON.stringify({
-              ...parsedData,
-              currentStudentId: action.payload
-            }));
-          }
-        } catch (error) {
-          console.error('❌ Failed to update student in storage:', error);
-        }
-      }
-      
+
+      // Storage is handled via useEffect, not in reducer
       return {
         ...state,
         familyContext: updatedContext
       };
     
     case 'CLEAR_FAMILY_CONTEXT':
-      // Clear localStorage
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.removeItem('autonomy_current_family');
-        } catch (error) {
-          console.error('❌ Failed to clear family context from storage:', error);
-        }
-      }
-      
+      // Storage is handled via useEffect, not in reducer
       return {
         ...state,
         familyContext: {
@@ -232,14 +199,7 @@ function appModeReducer(state: AppModeState, action: AppModeAction): AppModeStat
       };
     
     case 'RESET_STATE':
-      // Also clear family context when resetting
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.removeItem('autonomy_current_family');
-        } catch (error) {
-          console.error('❌ Failed to clear family context during reset:', error);
-        }
-      }
+      // Storage is handled via useEffect, not in reducer
       return initialState;
     
     default:
@@ -276,35 +236,73 @@ const FAMILY_EXPIRY_DAYS = 7; // Family context expires after 7 days
 
 export function AppModeProvider({ children }: AppModeProviderProps) {
   const [state, dispatch] = useReducer(appModeReducer, initialState);
+  const isInitialMount = useRef(true);
+  const previousFamilyContext = useRef(state.familyContext);
 
   // Load persisted family context on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    const loadPersistedFamily = async () => {
       try {
-        const stored = localStorage.getItem(FAMILY_STORAGE_KEY);
+        const stored = await AsyncStorage.getItem(FAMILY_STORAGE_KEY);
         if (stored) {
           const parsedData = JSON.parse(stored);
           const { timestamp, ...familyContext } = parsedData;
-          
+
           // Check if not expired
           const isExpired = Date.now() - timestamp > FAMILY_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
-          
+
           if (!isExpired && familyContext.familyCode && familyContext.familyData) {
             console.log('✅ Loaded persisted family context:', familyContext.familyCode);
             dispatch({ type: 'LOAD_PERSISTED_FAMILY', payload: familyContext });
           } else {
             // Expired or invalid, clear storage
             console.log('🗑️ Clearing expired family context');
-            localStorage.removeItem(FAMILY_STORAGE_KEY);
+            await AsyncStorage.removeItem(FAMILY_STORAGE_KEY);
           }
         }
       } catch (error) {
         console.error('❌ Failed to load persisted family context:', error);
         // Clear corrupted data
-        localStorage.removeItem(FAMILY_STORAGE_KEY);
+        try {
+          await AsyncStorage.removeItem(FAMILY_STORAGE_KEY);
+        } catch (clearError) {
+          console.error('❌ Failed to clear corrupted data:', clearError);
+        }
       }
-    }
+    };
+    loadPersistedFamily();
   }, []);
+
+  // Persist family context changes to AsyncStorage
+  useEffect(() => {
+    // Skip on initial mount (we just loaded from storage)
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      previousFamilyContext.current = state.familyContext;
+      return;
+    }
+
+    const persistFamilyContext = async () => {
+      try {
+        if (state.familyContext.isActive && state.familyContext.familyCode) {
+          // Save active family context
+          await AsyncStorage.setItem(FAMILY_STORAGE_KEY, JSON.stringify({
+            ...state.familyContext,
+            timestamp: Date.now()
+          }));
+          console.log('💾 Persisted family context:', state.familyContext.familyCode);
+        } else if (previousFamilyContext.current.isActive && !state.familyContext.isActive) {
+          // Family context was cleared
+          await AsyncStorage.removeItem(FAMILY_STORAGE_KEY);
+          console.log('🗑️ Cleared family context from storage');
+        }
+        previousFamilyContext.current = state.familyContext;
+      } catch (error) {
+        console.error('❌ Failed to persist family context:', error);
+      }
+    };
+    persistFamilyContext();
+  }, [state.familyContext]);
 
   return (
     <AppModeContext.Provider value={{ state, dispatch }}>
