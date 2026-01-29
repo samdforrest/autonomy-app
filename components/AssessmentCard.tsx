@@ -128,9 +128,11 @@ export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: 'white',
-    borderRadius: 16,
+    borderRadius: 12,
     marginVertical: 8,
-    marginHorizontal: 16,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,

@@ -728,8 +728,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 20,
     paddingTop: 10,
+    paddingBottom: 20,
   },
   loadingContainer: {
     justifyContent: 'center',
@@ -798,9 +798,10 @@ const styles = StyleSheet.create({
   },
   section: {
     backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 12,
+    padding: 20,
+    marginHorizontal: 20,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
@@ -826,7 +827,8 @@ const styles = StyleSheet.create({
   bubble: {
     backgroundColor: 'white',
     borderRadius: 12,
-    padding: 16,
+    padding: 20,
+    marginHorizontal: 20,
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: {
@@ -931,6 +933,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 20,
+    marginHorizontal: 20,
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: {
@@ -981,7 +984,8 @@ const styles = StyleSheet.create({
   familyContextIndicator: {
     backgroundColor: '#E3F2FD',
     borderRadius: 12,
-    padding: 16,
+    padding: 20,
+    marginHorizontal: 20,
     marginBottom: 16,
     borderLeftWidth: 4,
     borderLeftColor: '#2196F3',
@@ -1027,6 +1031,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 20,
+    marginHorizontal: 20,
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: {
@@ -1141,6 +1146,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
     borderRadius: 12,
     padding: 20,
+    marginHorizontal: 20,
     marginBottom: 16,
     borderLeftWidth: 4,
     borderLeftColor: '#17A2B8',
