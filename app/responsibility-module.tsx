@@ -41,7 +41,7 @@ export default function ResponsibilityModuleScreen() {
   // Debug: Log content structure to help troubleshoot images
   React.useEffect(() => {
     if (content) {
-      console.log('📄 Content loaded:', {
+      console.log('Content loaded:', {
         hasContentBlocks: !!content.contentBlocks,
         contentBlocksLength: content.contentBlocks?.length || 0,
         hasSections: !!content.sections,
@@ -53,7 +53,7 @@ export default function ResponsibilityModuleScreen() {
         content.contentBlocks.forEach((block, index) => {
           const imageCount = block.content?.filter(item => item.type === 'image').length || 0;
           if (imageCount > 0) {
-            console.log(`🖼️ Block ${index + 1} has ${imageCount} images`);
+            console.log(`Block ${index + 1} has ${imageCount} images`);
             block.content?.filter(item => item.type === 'image').forEach((img, imgIndex) => {
               const isDataUrl = img.uri?.startsWith('data:');
               console.log(`   Image ${imgIndex + 1}: ${isDataUrl ? 'DATA URL' : 'EXTERNAL URL'} - ${img.alt}`);
@@ -72,7 +72,7 @@ export default function ResponsibilityModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#ECF4FA',
-      icon: '👔',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -83,7 +83,7 @@ export default function ResponsibilityModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#DAE9F5',
-      icon: '💬',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -94,7 +94,7 @@ export default function ResponsibilityModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#C7DEF0',
-      icon: '🤝',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -105,7 +105,7 @@ export default function ResponsibilityModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#B5D3EB',
-      icon: '💡',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -116,7 +116,7 @@ export default function ResponsibilityModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#A2C8E6',
-      icon: '🌟',
+      icon: '',
       type: 'evaluation'
     }
   ];
@@ -135,17 +135,17 @@ export default function ResponsibilityModuleScreen() {
   };
 
   const toggleRevealAnswer = (blockId: number) => {
-    console.log('🔄 Toggle Answer for block:', blockId);
+    console.log('Toggle Answer for block:', blockId);
     setRevealedAnswers(prev => {
       const newSet = new Set(prev);
       if (newSet.has(blockId)) {
-        console.log('➖ Hiding answer for block:', blockId);
+        console.log('Hiding answer for block:', blockId);
         newSet.delete(blockId);
       } else {
-        console.log('➕ Revealing answer for block:', blockId);
+        console.log('Revealing answer for block:', blockId);
         newSet.add(blockId);
       }
-      console.log('📊 Updated revealed answers:', Array.from(newSet));
+      console.log('Updated revealed answers:', Array.from(newSet));
       return newSet;
     });
   };
@@ -210,7 +210,7 @@ export default function ResponsibilityModuleScreen() {
         }
       });
       
-      console.log('🔍 Scenario Block Parsed:', {
+      console.log('Scenario Block Parsed:', {
         blockId: block.id,
         hasQuestion: !!scenarioQuestion,
         optionsCount: scenarioOptions.length,
@@ -233,7 +233,7 @@ export default function ResponsibilityModuleScreen() {
         }
       });
       
-      console.log('🔍 Job Block Parsed:', {
+      console.log('Job Block Parsed:', {
         blockId: block.id,
         hasQuestion: !!scenarioQuestion,
         optionsCount: scenarioOptions.length,
@@ -335,7 +335,7 @@ export default function ResponsibilityModuleScreen() {
                 />
               );
             } else if (item.type === 'table') {
-              console.log('📊 Rendering TableViewer with:', { 
+              console.log('Rendering TableViewer with:', { 
                 id: item.id, 
                 rows: item.rows?.length, 
                 columns: item.columns 
@@ -348,7 +348,7 @@ export default function ResponsibilityModuleScreen() {
                 />
               );
             } else if (item.type === 'chart') {
-              console.log('📈 Rendering chart placeholder with:', { 
+              console.log('Rendering chart placeholder with:', { 
                 id: item.id, 
                 title: item.title, 
                 chartType: item.chartType 
@@ -356,7 +356,7 @@ export default function ResponsibilityModuleScreen() {
               return (
                 <ThemedView key={idx} style={styles.chartPlaceholder}>
                   <ThemedText style={styles.chartTitle}>
-                    📈 {item.title || 'Chart'}
+                    {item.title || 'Chart'}
                   </ThemedText>
                   <ThemedText style={styles.chartSubtitle}>
                     Type: {item.chartType || 'Unknown'}
@@ -500,7 +500,7 @@ export default function ResponsibilityModuleScreen() {
         <ThemedView>
           {/* Refresh button */}
           <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
-            <ThemedText style={styles.refreshButtonText}>🔄 Refresh Content</ThemedText>
+            <ThemedText style={styles.refreshButtonText}>Refresh Content</ThemedText>
           </TouchableOpacity>
 
           {content?.contentBlocks && content.contentBlocks.length > 0 ? (
@@ -514,7 +514,7 @@ export default function ResponsibilityModuleScreen() {
           ) : (
             // Fallback content if no Google Docs content is available
             <ThemedView style={styles.section}>
-              <ThemedText style={styles.sectionTitle}>📝 Day {day.dayNumber} Content</ThemedText>
+              <ThemedText style={styles.sectionTitle}>Day {day.dayNumber} Content</ThemedText>
               <ThemedText style={styles.contentText}>
                 Content is loading from Google Docs...
               </ThemedText>
@@ -525,7 +525,7 @@ export default function ResponsibilityModuleScreen() {
           {content?.metadata && (
             // Fallback content if no Google Docs content is available
             <ThemedView style={styles.section}>
-              <ThemedText style={styles.sectionTitle}>📝 Day {day.dayNumber} Content</ThemedText>
+              <ThemedText style={styles.sectionTitle}>Day {day.dayNumber} Content</ThemedText>
               <ThemedText style={styles.contentText}>
                 Content is loading from Google Docs...
               </ThemedText>
@@ -552,7 +552,7 @@ export default function ResponsibilityModuleScreen() {
             currentDay={day.dayNumber}
             totalDays={5}
             onProgressUpdate={(completedDays, isCompleted) => {
-              console.log('📊 Progress updated:', { completedDays, isCompleted });
+              console.log('Progress updated:', { completedDays, isCompleted });
             }}
           />
 
@@ -569,7 +569,7 @@ export default function ResponsibilityModuleScreen() {
     // This shouldn't happen with our new logic, but keeping as fallback
     return (
       <ThemedView>
-        <ThemedText style={styles.contentTitle}>🚀 Loading...</ThemedText>
+        <ThemedText style={styles.contentTitle}>Loading...</ThemedText>
         <ThemedText style={styles.contentText}>
           Preparing Day {day.dayNumber} content...
         </ThemedText>
@@ -580,7 +580,7 @@ export default function ResponsibilityModuleScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedView style={styles.header}>
-        <ThemedText type="title" style={styles.moduleTitle}>💼 Responsibility Module</ThemedText>
+        <ThemedText type="title" style={styles.moduleTitle}>Responsibility Module</ThemedText>
         <ThemedText style={styles.moduleSubtitle}>
           I contribute to a learning community.
         </ThemedText>

@@ -40,7 +40,7 @@ export default function RegulationModuleScreen() {
   // Debug: Log content structure to help troubleshoot images
   React.useEffect(() => {
     if (content) {
-      console.log('📄 Content loaded:', {
+      console.log('Content loaded:', {
         hasContentBlocks: !!content.contentBlocks,
         contentBlocksLength: content.contentBlocks?.length || 0,
         hasSections: !!content.sections,
@@ -51,7 +51,7 @@ export default function RegulationModuleScreen() {
         content.contentBlocks.forEach((block, index) => {
           const imageCount = block.content?.filter(item => item.type === 'image').length || 0;
           if (imageCount > 0) {
-            console.log(`🖼️ Block ${index + 1} has ${imageCount} images`);
+            console.log(`Block ${index + 1} has ${imageCount} images`);
             block.content?.filter(item => item.type === 'image').forEach((img, imgIndex) => {
               const isDataUrl = img.uri?.startsWith('data:');
               console.log(`   Image ${imgIndex + 1}: ${isDataUrl ? 'DATA URL' : 'EXTERNAL URL'} - ${img.alt}`);
@@ -71,7 +71,7 @@ export default function RegulationModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#F7E9E5',
-      icon: '😊',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -82,7 +82,7 @@ export default function RegulationModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#EFD2CA',
-      icon: '🧘',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -93,7 +93,7 @@ export default function RegulationModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#E8BCB0',
-      icon: '🔍',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -104,7 +104,7 @@ export default function RegulationModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#E0A595',
-      icon: '💪',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -115,7 +115,7 @@ export default function RegulationModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#D88F7B',
-      icon: '🌟',
+      icon: '',
       type: 'evaluation'
     }
   ];
@@ -134,17 +134,17 @@ export default function RegulationModuleScreen() {
   };
 
   const toggleRevealAnswer = (blockId: number) => {
-    console.log('🔄 Toggle Answer for block:', blockId);
+    console.log('Toggle Answer for block:', blockId);
     setRevealedAnswers(prev => {
       const newSet = new Set(prev);
       if (newSet.has(blockId)) {
-        console.log('➖ Hiding answer for block:', blockId);
+        console.log('Hiding answer for block:', blockId);
         newSet.delete(blockId);
       } else {
-        console.log('➕ Revealing answer for block:', blockId);
+        console.log('Revealing answer for block:', blockId);
         newSet.add(blockId);
       }
-      console.log('📊 Updated revealed answers:', Array.from(newSet));
+      console.log('Updated revealed answers:', Array.from(newSet));
       return newSet;
     });
   };
@@ -210,7 +210,7 @@ export default function RegulationModuleScreen() {
         }
       });
       
-      console.log('🔍 Scenario Block Parsed:', {
+      console.log('Scenario Block Parsed:', {
         blockId: block.id,
         hasQuestion: !!scenarioQuestion,
         optionsCount: scenarioOptions.length,
@@ -312,7 +312,7 @@ export default function RegulationModuleScreen() {
                 />
               );
             } else if (item.type === 'table') {
-              console.log('📊 Rendering TableViewer with:', { 
+              console.log('Rendering TableViewer with:', { 
                 id: item.id, 
                 rows: item.rows?.length, 
                 columns: item.columns 
@@ -325,7 +325,7 @@ export default function RegulationModuleScreen() {
                 />
               );
             } else if (item.type === 'chart') {
-              console.log('📈 Rendering chart placeholder with:', { 
+              console.log('Rendering chart placeholder with:', { 
                 id: item.id, 
                 title: item.title, 
                 chartType: item.chartType 
@@ -333,7 +333,7 @@ export default function RegulationModuleScreen() {
               return (
                 <ThemedView key={idx} style={styles.chartPlaceholder}>
                   <ThemedText style={styles.chartTitle}>
-                    📈 {item.title || 'Chart'}
+                    {item.title || 'Chart'}
                   </ThemedText>
                   <ThemedText style={styles.chartSubtitle}>
                     Type: {item.chartType || 'Unknown'}
@@ -381,14 +381,14 @@ export default function RegulationModuleScreen() {
 
   const getSectionIcon = (sectionKey: string): string => {
     const iconMap: Record<string, string> = {
-      rules: '📋',
-      instructions: '💭', 
-      activities: '🎯',
-      understanding_emotions: '😊',
-      think_together: '💭',
-      todays_activities: '🎯',
+      rules: '',
+      instructions: '',
+      activities: '',
+      understanding_emotions: '',
+      think_together: '',
+      todays_activities: '',
     };
-    return iconMap[sectionKey] || '📝';
+    return iconMap[sectionKey] || '';
   };
 
   const renderDayContent = (day: DayModule) => {
@@ -427,7 +427,7 @@ export default function RegulationModuleScreen() {
         <ThemedView>
           {/* Refresh button */}
           <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
-            <ThemedText style={styles.refreshButtonText}>🔄 Refresh Content</ThemedText>
+            <ThemedText style={styles.refreshButtonText}>Refresh Content</ThemedText>
           </TouchableOpacity>
 
           {content?.contentBlocks && content.contentBlocks.length > 0 ? (
@@ -441,7 +441,7 @@ export default function RegulationModuleScreen() {
           ) : (
             // Fallback content if no Google Docs content is available
             <ThemedView style={styles.section}>
-              <ThemedText style={styles.sectionTitle}>📝 Day {day.dayNumber} Content</ThemedText>
+              <ThemedText style={styles.sectionTitle}>Day {day.dayNumber} Content</ThemedText>
               <ThemedText style={styles.contentText}>
                 Content is loading from Google Docs...
               </ThemedText>
@@ -485,7 +485,7 @@ export default function RegulationModuleScreen() {
     // This shouldn't happen with our new logic, but keeping as fallback
     return (
       <ThemedView>
-        <ThemedText style={styles.contentTitle}>🚀 Loading...</ThemedText>
+        <ThemedText style={styles.contentTitle}>Loading...</ThemedText>
         <ThemedText style={styles.contentText}>
           Preparing Day {day.dayNumber} content...
         </ThemedText>

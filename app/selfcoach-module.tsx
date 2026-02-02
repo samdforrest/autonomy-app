@@ -40,7 +40,7 @@ export default function SelfCoachModuleScreen() {
   // Debug: Log content structure to help troubleshoot images
   React.useEffect(() => {
     if (content) {
-      console.log('📄 Content loaded:', {
+      console.log('Content loaded:', {
         hasContentBlocks: !!content.contentBlocks,
         contentBlocksLength: content.contentBlocks?.length || 0,
         hasSections: !!content.sections,
@@ -51,7 +51,7 @@ export default function SelfCoachModuleScreen() {
         content.contentBlocks.forEach((block, index) => {
           const imageCount = block.content?.filter(item => item.type === 'image').length || 0;
           if (imageCount > 0) {
-            console.log(`🖼️ Block ${index + 1} has ${imageCount} images`);
+            console.log(`Block ${index + 1} has ${imageCount} images`);
             block.content?.filter(item => item.type === 'image').forEach((img, imgIndex) => {
               const isDataUrl = img.uri?.startsWith('data:');
               console.log(`   Image ${imgIndex + 1}: ${isDataUrl ? 'DATA URL' : 'EXTERNAL URL'} - ${img.alt}`);
@@ -71,7 +71,7 @@ export default function SelfCoachModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#F7E9E5',
-      icon: '🪞',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -82,7 +82,7 @@ export default function SelfCoachModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#EFD2CA',
-      icon: '🎯',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -93,7 +93,7 @@ export default function SelfCoachModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#E8BCB0',
-      icon: '💭',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -104,7 +104,7 @@ export default function SelfCoachModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#E0A595',
-      icon: '🧩',
+      icon: '',
       type: 'collaborative'
     },
     {
@@ -115,7 +115,7 @@ export default function SelfCoachModuleScreen() {
       isCompleted: false,
       isLocked: false,
       color: '#D88F7B',
-      icon: '🌱',
+      icon: '',
       type: 'evaluation'
     }
   ];
@@ -202,7 +202,7 @@ export default function SelfCoachModuleScreen() {
         }
       });
       
-      console.log('🔍 Scenario Block Parsed:', {
+      console.log('Scenario Block Parsed:', {
         blockId: block.id,
         hasQuestion: !!scenarioQuestion,
         optionsCount: scenarioOptions.length,
@@ -304,7 +304,7 @@ export default function SelfCoachModuleScreen() {
                 />
               );
             } else if (item.type === 'table') {
-              console.log('📊 Rendering TableViewer with:', { 
+              console.log('Rendering TableViewer with:', { 
                 id: item.id, 
                 rows: item.rows?.length, 
                 columns: item.columns 
@@ -317,7 +317,7 @@ export default function SelfCoachModuleScreen() {
                 />
               );
             } else if (item.type === 'chart') {
-              console.log('📈 Rendering chart placeholder with:', { 
+              console.log('Rendering chart placeholder with:', { 
                 id: item.id, 
                 title: item.title, 
                 chartType: item.chartType 
@@ -325,7 +325,7 @@ export default function SelfCoachModuleScreen() {
               return (
                 <ThemedView key={idx} style={styles.chartPlaceholder}>
                   <ThemedText style={styles.chartTitle}>
-                    📈 {item.title || 'Chart'}
+                    {item.title || 'Chart'}
                   </ThemedText>
                   <ThemedText style={styles.chartSubtitle}>
                     Type: {item.chartType || 'Unknown'}
@@ -375,7 +375,7 @@ export default function SelfCoachModuleScreen() {
     <ThemedView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <ThemedView style={styles.header}>
-          <ThemedText style={styles.title}>🧘‍♂️ Self-Coaching Module</ThemedText>
+          <ThemedText style={styles.title}>Self-Coaching Module</ThemedText>
           <ThemedText style={styles.subtitle}>
             I can coach myself.
           </ThemedText>
@@ -403,7 +403,7 @@ export default function SelfCoachModuleScreen() {
                     <ThemedView style={styles.errorContainer}>
                       <ThemedText style={styles.errorText}>{error}</ThemedText>
                       <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
-                        <ThemedText style={styles.refreshButtonText}>🔄 Retry</ThemedText>
+                        <ThemedText style={styles.refreshButtonText}>Retry</ThemedText>
                       </TouchableOpacity>
                     </ThemedView>
                   )}
@@ -422,10 +422,10 @@ export default function SelfCoachModuleScreen() {
                       {/* Fallback: Render legacy sections format if no content blocks */}
                       {(!content.contentBlocks || content.contentBlocks.length === 0) && content.sections && (
                         <ThemedView style={styles.sectionsContainer}>
-                          {content.sections.learning_goals && renderSection('learning_goals', content.sections.learning_goals, '🎯')}
-                          {content.sections.vocabulary && renderSection('vocabulary', content.sections.vocabulary, '📖')}
-                          {content.sections.activity && renderSection('activity', content.sections.activity, '🎨')}
-                          {content.sections.reflection && renderSection('reflection', content.sections.reflection, '💭')}
+                          {content.sections.learning_goals && renderSection('learning_goals', content.sections.learning_goals, '')}
+                          {content.sections.vocabulary && renderSection('vocabulary', content.sections.vocabulary, '')}
+                          {content.sections.activity && renderSection('activity', content.sections.activity, '')}
+                          {content.sections.reflection && renderSection('reflection', content.sections.reflection, '')}
                         </ThemedView>
                       )}
 
@@ -433,7 +433,7 @@ export default function SelfCoachModuleScreen() {
                       {content.metadata && (
                         <ThemedView style={styles.metadataContainer}>
                           <ThemedText style={styles.metadataText}>
-                            📄 Sections: {content.metadata.totalSections}
+                            Sections: {content.metadata.totalSections}
                           </ThemedText>
                         </ThemedView>
                       )}
