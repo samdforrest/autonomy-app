@@ -281,7 +281,17 @@ class DocumentParser {
       console.warn('⚠️ parseParagraph called with undefined paragraph');
       return;
     }
-    
+
+    // Check for native Google Docs bullet FIRST (before text-based detection)
+    if (paragraph.bullet) {
+      const text = this.extractTextFromParagraph(paragraph);
+      if (text) {
+        console.log('📌 Native bullet detected:', text.substring(0, 50));
+        this.processBulletPoint(text);
+      }
+      return;
+    }
+
     const elements = paragraph.elements || [];
     let text = '';
     let isHeader = false;
