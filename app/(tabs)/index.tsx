@@ -478,33 +478,32 @@ export default function HomeScreen() {
   try {
     return (
       <ThemedView style={styles.container}>
-      <ThemedView style={styles.header}>
-        <ThemedView style={styles.logoContainer}>
-          <Image
-            source={require('@/assets/images/autonomy-brain.png')}
-            style={styles.brainLogo}
-            resizeMode="contain"
-          />
-        </ThemedView>
-        <ThemedText type="title" style={styles.title}>
-          {userMode === 'parent' ? 'Parent Guide' : 'Welcome, Student!'}
-        </ThemedText>
-        <ThemedText style={styles.subtitle}>
-          {userMode === 'parent' 
-            ? 'Supporting your student\'s learning journey' 
-            : 'Begin your Autonomy Learning adventure'
-          }
-        </ThemedText>
-      </ThemedView>
-
-      {/* Mode Toggle */}
-      <ModeToggle />
-
-      <ScrollView 
+      <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
+        <ThemedView style={styles.header}>
+          <ThemedView style={styles.logoContainer}>
+            <Image
+              source={require('@/assets/images/autonomy-brain.png')}
+              style={styles.brainLogo}
+              resizeMode="contain"
+            />
+          </ThemedView>
+          <ThemedText type="title" style={styles.title}>
+            {userMode === 'parent' ? 'Parent Guide' : 'Welcome, Student!'}
+          </ThemedText>
+          <ThemedText style={styles.subtitle}>
+            {userMode === 'parent'
+              ? 'Supporting your student\'s learning journey'
+              : 'Begin your Autonomy Learning adventure'
+            }
+          </ThemedText>
+        </ThemedView>
+
+        {/* Mode Toggle */}
+        <ModeToggle />
         {/* Family Context Indicator */}
         {isInFamilyMode && currentFamilyCode && (
           <ThemedView style={styles.familyContextIndicator}>

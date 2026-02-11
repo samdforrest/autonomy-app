@@ -329,12 +329,12 @@ export default function TabTwoScreen() {
     );
   };
 
-  return (
-    <ThemedView style={styles.container}>
+  const renderHeader = () => (
+    <>
       <ThemedView style={styles.header}>
         <ThemedView style={styles.logoContainer}>
-          <Image 
-            source={require('@/assets/images/autonomy-brain.png')} 
+          <Image
+            source={require('@/assets/images/autonomy-brain.png')}
             style={styles.brainLogo}
             contentFit="contain"
           />
@@ -346,10 +346,14 @@ export default function TabTwoScreen() {
           {userMode === 'parent' ? 'Guide your child\'s learning journey' : 'Start your learning journey'}
         </ThemedText>
       </ThemedView>
-      
+
       {/* Mode Toggle */}
       <ModeToggle />
-      
+    </>
+  );
+
+  return (
+    <ThemedView style={styles.container}>
       <FlatList
         data={modules}
         renderItem={renderModule}
@@ -358,6 +362,7 @@ export default function TabTwoScreen() {
         contentContainerStyle={styles.moduleGrid}
         columnWrapperStyle={styles.moduleRow}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={renderHeader}
       />
     </ThemedView>
   );
