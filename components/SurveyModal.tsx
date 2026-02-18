@@ -1,9 +1,7 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAppMode } from '@/contexts/AppModeContext';
-import { useGoogleDocsContent } from '@/hooks/useGoogleDocsContent';
-import { DOCUMENT_REFS } from '@/services/api';
-import { surveyService, type SurveyQuestion, type SurveyResponse } from '@/services/survey-service';
+import { surveyService } from '@/services/survey-service';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,44 +15,52 @@ import {
   TouchableOpacity
 } from 'react-native';
 
+type SurveyType = 'child' | 'parent';
+
+interface SurveyQuestion {
+  id: string;
+  text: string;
+}
+
 interface SurveyModalProps {
   visible: boolean;
   onClose: () => void;
   moduleId: string;
   moduleName: string;
+  surveyType: SurveyType;
 }
 
-export default function SurveyModal({ visible, onClose, moduleId, moduleName }: SurveyModalProps) {
-  const { userMode, currentFamilyCode } = useAppMode();
-  const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
+// Static questions for each survey type
+const CHILD_SURVEY_QUESTIONS: SurveyQuestion[] = [
+  { id: 'q1', text: '1. How was the time together for you and your parent?' },
+  { id: 'q2', text: '2. What part of the lesson helped you the most?' },
+];
+
+const PARENT_SURVEY_QUESTIONS: SurveyQuestion[] = [
+  { id: 'q1', text: '1. How was the time together for you and your child?' },
+  { id: 'q2', text: '2. What part of the lesson do you think helped your child the most?' },
+];
+
+export default function SurveyModal({ visible, onClose, moduleId, moduleName, surveyType }: SurveyModalProps) {
+  const { currentFamilyCode } = useAppMode();
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [surveyCompleted, setSurveyCompleted] = useState(false);
 
-  // Fetch survey content from Google Docs
-  const { content, loading, error } = useGoogleDocsContent(
-    DOCUMENT_REFS.MAIN_DOCUMENT,
-    'raw',
-    { tab: 'Choose to Grow – Parent Feedback Survey', autoFetch: visible }
-  );
+  // Get questions based on survey type
+  const questions = surveyType === 'child' ? CHILD_SURVEY_QUESTIONS : PARENT_SURVEY_QUESTIONS;
 
-  // Parse questions when content loads
+  // Initialize responses when modal opens
   useEffect(() => {
-    if (content?.contentBlocks) {
-      console.log('📋 Parsing survey questions from content blocks...');
-      const parsedQuestions = surveyService.parseSurveyQuestions(content.contentBlocks);
-      console.log('📋 Parsed questions:', parsedQuestions.length, 'questions found');
-      setQuestions(parsedQuestions);
-      
-      // Initialize responses object
+    if (visible) {
       const initialResponses: Record<string, string> = {};
-      parsedQuestions.forEach(q => {
+      questions.forEach(q => {
         initialResponses[q.id] = '';
       });
       setResponses(initialResponses);
     }
-  }, [content]);
+  }, [visible, surveyType]);
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -65,7 +71,7 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName }: 
     }
   }, [visible]);
 
-  const handleResponse = (questionId: string, answer: string, answerLabel?: string) => {
+  const handleResponse = (questionId: string, answer: string) => {
     setResponses(prev => ({
       ...prev,
       [questionId]: answer
@@ -97,36 +103,24 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName }: 
       setIsSubmitting(true);
 
       // Convert responses to SurveyResponse format
-      const surveyResponses: SurveyResponse[] = questions.map(question => {
-        const answer = responses[question.id] || '';
-        let answerLabel: string | undefined = undefined;
+      const surveyResponses = questions.map(question => ({
+        questionId: question.id,
+        questionText: question.text,
+        answer: responses[question.id] || '',
+        timestamp: new Date()
+      }));
 
-        // For multiple choice, find the label of the selected option
-        if (question.type === 'multiple-choice' && question.options) {
-          const selectedOption = question.options.find(opt => opt.text === answer);
-          answerLabel = selectedOption?.label;
-        }
-
-        return {
-          questionId: question.id,
-          questionText: question.text,
-          answer,
-          answerLabel: answerLabel || undefined, // Keep undefined here, will be cleaned in service
-          timestamp: new Date()
-        };
-      });
-
-      // Submit survey
+      // Submit survey with survey type (child/parent)
       await surveyService.submitSurvey(
         surveyResponses,
         currentFamilyCode,
         moduleId,
         moduleName,
-        userMode
+        surveyType
       );
 
       setSurveyCompleted(true);
-      
+
       // Auto-close after 2 seconds
       setTimeout(() => {
         onClose();
@@ -145,84 +139,25 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName }: 
   };
 
   const renderQuestion = (question: SurveyQuestion) => {
-    if (question.type === 'multiple-choice' && question.options) {
-      return (
-        <ThemedView style={styles.questionContainer}>
-          <ThemedText style={styles.questionText}>
-            {question.text}
-          </ThemedText>
-          
-          <ThemedView style={styles.optionsContainer}>
-            {question.options.map((option, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.optionButton,
-                  responses[question.id] === option.text && styles.optionButtonSelected
-                ]}
-                onPress={() => handleResponse(question.id, option.text, option.label)}
-              >
-                <ThemedView style={styles.optionContent}>
-                  <ThemedText style={styles.optionLabel}>{option.label}.</ThemedText>
-                  <ThemedText style={[
-                    styles.optionText,
-                    responses[question.id] === option.text && styles.optionTextSelected
-                  ]}>
-                    {option.text}
-                  </ThemedText>
-                </ThemedView>
-              </TouchableOpacity>
-            ))}
-          </ThemedView>
-        </ThemedView>
-      );
-    } else {
-      // Open-ended question
-      return (
-        <ThemedView style={styles.questionContainer}>
-          <ThemedText style={styles.questionText}>
-            {question.text}
-          </ThemedText>
-          
-          <TextInput
-            style={styles.textInput}
-            value={responses[question.id] || ''}
-            onChangeText={(text) => handleResponse(question.id, text)}
-            placeholder="Type your response here..."
-            placeholderTextColor="#999"
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-          />
-        </ThemedView>
-      );
-    }
+    return (
+      <ThemedView style={styles.questionContainer}>
+        <ThemedText style={styles.questionText}>
+          {question.text}
+        </ThemedText>
+
+        <TextInput
+          style={styles.textInput}
+          value={responses[question.id] || ''}
+          onChangeText={(text) => handleResponse(question.id, text)}
+          placeholder="Type your response here..."
+          placeholderTextColor="#999"
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
+        />
+      </ThemedView>
+    );
   };
-
-  if (loading) {
-    return (
-      <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-        <ThemedView style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <ThemedText style={styles.loadingText}>Loading survey...</ThemedText>
-        </ThemedView>
-      </Modal>
-    );
-  }
-
-  if (error) {
-    return (
-      <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-        <ThemedView style={styles.errorContainer}>
-          <ThemedText style={styles.errorTitle}>Survey Unavailable</ThemedText>
-          <ThemedText style={styles.errorText}>{error}</ThemedText>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <ThemedText style={styles.closeButtonText}>Close</ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
-      </Modal>
-    );
-  }
 
   if (surveyCompleted) {
     return (
@@ -253,7 +188,9 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName }: 
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <ThemedText style={styles.closeButtonText}>✕</ThemedText>
           </TouchableOpacity>
-          <ThemedText style={styles.title}>Parent Feedback Survey</ThemedText>
+          <ThemedText style={styles.title}>
+            {surveyType === 'child' ? 'Child Feedback Survey' : 'Parent Feedback Survey'}
+          </ThemedText>
           <ThemedText style={styles.subtitle}>{moduleName} Module</ThemedText>
         </ThemedView>
 
@@ -387,41 +324,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     lineHeight: 26,
   },
-  optionsContainer: {
-    gap: 12,
-  },
-  optionButton: {
-    borderWidth: 2,
-    borderColor: '#e9ecef',
-    borderRadius: 8,
-    padding: 16,
-    backgroundColor: '#f8f9fa',
-  },
-  optionButtonSelected: {
-    borderColor: '#007AFF',
-    backgroundColor: '#e3f2fd',
-  },
-  optionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  optionLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginRight: 12,
-    minWidth: 24,
-  },
-  optionText: {
-    fontSize: 16,
-    color: '#333',
-    flex: 1,
-  },
-  optionTextSelected: {
-    color: '#007AFF',
-    fontWeight: '600',
-  },
   textInput: {
     borderWidth: 1,
     borderColor: '#e9ecef',
@@ -469,38 +371,6 @@ const styles = StyleSheet.create({
   },
   navButtonTextDisabled: {
     color: '#999',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    padding: 40,
-  },
-  errorTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#E74C3C',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 24,
   },
   completedContainer: {
     flex: 1,
