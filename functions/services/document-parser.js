@@ -483,27 +483,40 @@ class DocumentParser {
   processBulletPoint(text) {
     // Clean bullet point text
     const bulletText = text.replace(/^[\s-•]+/, '').trim();
-    
-    if (this.currentSection && bulletText) {
-      this.parsedContent.sections[this.currentSection].items.push(bulletText);
-    } else if (!this.currentSection) {
+
+    if (!bulletText) return; // Skip empty bullets
+
+    // Ensure we have a section to add to
+    if (!this.currentSection || !this.parsedContent.sections[this.currentSection]) {
       // Create default section if no header exists
       this.currentSection = 'general';
       this.parsedContent.sections[this.currentSection] = {
         title: 'General',
         type: 'section',
-        items: [bulletText],
+        items: [],
         content: ''
       };
     }
-    
-    // Add to current content block
-    if (this.currentBlock) {
-      this.currentBlock.content.push({
-        type: 'bullet',
-        text: bulletText
-      });
+
+    // Add to section items
+    this.parsedContent.sections[this.currentSection].items.push(bulletText);
+
+    // Ensure we have a content block
+    if (!this.currentBlock) {
+      this.currentBlock = {
+        id: this.parsedContent.contentBlocks.length + 1,
+        header: null,
+        content: [],
+        type: 'text'
+      };
+      this.parsedContent.contentBlocks.push(this.currentBlock);
     }
+
+    // Add to current content block
+    this.currentBlock.content.push({
+      type: 'bullet',
+      text: bulletText
+    });
   }
 
   /**
