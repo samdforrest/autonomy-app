@@ -1,6 +1,8 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAppMode } from '@/contexts/AppModeContext';
+import { useGoogleDocsContent } from '@/hooks/useGoogleDocsContent';
+import { DOCUMENT_REFS } from '@/services/api';
 import { surveyService } from '@/services/survey-service';
 import React, { useEffect, useState } from 'react';
 import {
@@ -30,37 +32,101 @@ interface SurveyModalProps {
   surveyType: SurveyType;
 }
 
-// Static questions for each survey type
-const CHILD_SURVEY_QUESTIONS: SurveyQuestion[] = [
-  { id: 'q1', text: '1. How was the time together for you and your parent?' },
-  { id: 'q2', text: '2. What part of the lesson helped you the most?' },
-];
+// Parse questions from Google Docs content blocks
+function parseQuestionsFromContent(contentBlocks: any[]): SurveyQuestion[] {
+  const questions: SurveyQuestion[] = [];
+  let questionCounter = 1;
 
-const PARENT_SURVEY_QUESTIONS: SurveyQuestion[] = [
-  { id: 'q1', text: '1. How was the time together for you and your child?' },
-  { id: 'q2', text: '2. What part of the lesson do you think helped your child the most?' },
-];
+  if (!contentBlocks) return questions;
+
+  contentBlocks.forEach((block) => {
+    // Check if block header contains a numbered question (e.g., "1. How was...")
+    if (block.header) {
+      const headerText = block.header.trim();
+      // Match patterns like "1. Question text" or just text that looks like a question
+      const numberedMatch = headerText.match(/^(\d+)\.\s*(.+)$/);
+      if (numberedMatch) {
+        questions.push({
+          id: `q${questionCounter}`,
+          text: headerText // Keep the full numbered format
+        });
+        questionCounter++;
+      } else if (headerText.endsWith('?') || headerText.length > 20) {
+        // Non-numbered question or longer text that might be a question
+        questions.push({
+          id: `q${questionCounter}`,
+          text: `${questionCounter}. ${headerText}`
+        });
+        questionCounter++;
+      }
+    }
+
+    // Check content items for questions (bullets and text)
+    if (block.content) {
+      block.content.forEach((item: any) => {
+        const text = item.text?.trim();
+        if (!text) return;
+
+        // Handle bullets as questions
+        if (item.type === 'bullet') {
+          questions.push({
+            id: `q${questionCounter}`,
+            text: `${questionCounter}. ${text}`
+          });
+          questionCounter++;
+        }
+        // Handle numbered text
+        else if (item.type === 'text') {
+          const numberedMatch = text.match(/^(\d+)\.\s*(.+)$/);
+          if (numberedMatch) {
+            questions.push({
+              id: `q${questionCounter}`,
+              text: text
+            });
+            questionCounter++;
+          }
+        }
+      });
+    }
+  });
+
+  return questions;
+}
 
 export default function SurveyModal({ visible, onClose, moduleId, moduleName, surveyType }: SurveyModalProps) {
   const { currentFamilyCode } = useAppMode();
+  const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [surveyCompleted, setSurveyCompleted] = useState(false);
 
-  // Get questions based on survey type
-  const questions = surveyType === 'child' ? CHILD_SURVEY_QUESTIONS : PARENT_SURVEY_QUESTIONS;
+  // Determine which tab to fetch based on survey type
+  const tabName = surveyType === 'child' ? 'Student Survey' : 'Parent Survey';
 
-  // Initialize responses when modal opens
+  // Fetch survey content from Google Docs
+  const { content, loading, error } = useGoogleDocsContent(
+    DOCUMENT_REFS.MAIN_DOCUMENT,
+    'raw',
+    { tab: tabName, autoFetch: visible }
+  );
+
+  // Parse questions when content loads
   useEffect(() => {
-    if (visible) {
+    if (content?.contentBlocks) {
+      console.log(`📋 Parsing ${surveyType} survey questions from content blocks...`);
+      const parsedQuestions = parseQuestionsFromContent(content.contentBlocks);
+      console.log('📋 Parsed questions:', parsedQuestions.length, 'questions found');
+      setQuestions(parsedQuestions);
+
+      // Initialize responses object
       const initialResponses: Record<string, string> = {};
-      questions.forEach(q => {
+      parsedQuestions.forEach(q => {
         initialResponses[q.id] = '';
       });
       setResponses(initialResponses);
     }
-  }, [visible, surveyType]);
+  }, [content, surveyType]);
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -158,6 +224,31 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName, su
       </ThemedView>
     );
   };
+
+  if (loading) {
+    return (
+      <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+        <ThemedView style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <ThemedText style={styles.loadingText}>Loading survey...</ThemedText>
+        </ThemedView>
+      </Modal>
+    );
+  }
+
+  if (error) {
+    return (
+      <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+        <ThemedView style={styles.errorContainer}>
+          <ThemedText style={styles.errorTitle}>Survey Unavailable</ThemedText>
+          <ThemedText style={styles.errorText}>{error}</ThemedText>
+          <TouchableOpacity style={styles.errorCloseButton} onPress={onClose}>
+            <ThemedText style={styles.errorCloseButtonText}>Close</ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
+      </Modal>
+    );
+  }
 
   if (surveyCompleted) {
     return (
@@ -371,6 +462,49 @@ const styles = StyleSheet.create({
   },
   navButtonTextDisabled: {
     color: '#999',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    padding: 40,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#E74C3C',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 24,
+  },
+  errorCloseButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  errorCloseButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   completedContainer: {
     flex: 1,
