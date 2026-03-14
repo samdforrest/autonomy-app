@@ -505,7 +505,7 @@ export default function HomeScreen() {
         {/* Mode Toggle */}
         <ModeToggle />
         {/* Family Context Indicator */}
-        {isInFamilyMode && currentFamilyCode && (
+        {/* {isInFamilyMode && currentFamilyCode && (
           <ThemedView style={styles.familyContextIndicator}>
             <ThemedText style={styles.familyContextTitle}>
               Currently in Family: {currentFamilyCode}
@@ -528,41 +528,8 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </ThemedView>
           </ThemedView>
-        )}
+        )} */}
 
-        {/* Tutorial launcher for families */}
-        {isInFamilyMode && (
-              <ThemedView style={styles.tutorialSection}>
-                <ThemedText style={styles.tutorialSectionTitle}>
-                  New to the App?
-                </ThemedText>
-                <ThemedText style={styles.tutorialSectionSubtitle}>
-                  Take our interactive tutorial to learn how families can use the platform together - perfect for both parents and students!
-                </ThemedText>
-                <TouchableOpacity 
-                  style={styles.tutorialButton}
-                  onPress={() => tutorial.showTutorial()}
-                >
-                  <ThemedText style={styles.tutorialButtonText}>
-                    Start Interactive Tutorial
-                  </ThemedText>
-                </TouchableOpacity>
-
-                {/* DEBUG: Reset tutorial for testing auto-trigger
-                <TouchableOpacity 
-                  style={[styles.tutorialButton, { backgroundColor: '#ff6b6b', marginTop: 8 }]}
-                  onPress={async () => {
-                    await tutorial.resetTutorialStatus();
-                    console.log('🧹 Tutorial status reset - refresh app to test auto-trigger');
-                    alert('Tutorial status reset! Refresh the app to test auto-trigger.');
-                  }}
-                >
-                  <ThemedText style={styles.tutorialButtonText}>
-                    🧹 Reset Tutorial (Debug)
-                  </ThemedText>
-                </TouchableOpacity> */}
-              </ThemedView>
-            )}
 
         {/* Family Access Section - Only show if NOT in family mode */}
         {!isInFamilyMode && (
@@ -1169,39 +1136,5 @@ const styles = StyleSheet.create({
     color: '#7F8C8D',
     fontSize: 14,
     fontWeight: '500',
-  },
-  // Tutorial launcher styles
-  tutorialSection: {
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-    padding: 20,
-    marginHorizontal: 20,
-    marginBottom: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#17A2B8',
-  },
-  tutorialSectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  tutorialSectionSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  tutorialButton: {
-    backgroundColor: '#17A2B8',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  tutorialButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
   },
 });
