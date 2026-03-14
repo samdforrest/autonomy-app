@@ -106,8 +106,8 @@ export default function StudentIntroScreen() {
       console.log('🎓 Student intro completed, marking as complete');
       await familyService.markStudentIntroComplete(currentFamilyCode);
       
-      console.log('🏠 All intros complete, navigating to home');
-      router.replace('/(tabs)');
+      console.log('📝 Navigating to assessment');
+      router.replace('/assessment');
     } catch (error) {
       console.error('❌ Error completing student intro:', error);
       setIsCompleting(false);
@@ -141,18 +141,27 @@ export default function StudentIntroScreen() {
           </ThemedText>
         </View>
 
-        {/* Content Blocks */}
-        {content?.contentBlocks?.map((block: any, index: number) => renderContentBlock(block, index))}
+        {/* Content Blocks - Videos first, then other content */}
+        {content?.contentBlocks && (() => {
+          // Separate video blocks from non-video blocks
+          const videoBlocks = content.contentBlocks.filter((block: any) => isYouTubeUrl(block.header));
+          const otherBlocks = content.contentBlocks.filter((block: any) => !isYouTubeUrl(block.header));
+          // Render videos first, then other content
+          return [...videoBlocks, ...otherBlocks].map((block: any, index: number) => renderContentBlock(block, index));
+        })()}
 
-        {/* Continue Button */}
+        {/* Assessment Prompt */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={[styles.continueButton, isCompleting && styles.buttonDisabled]} 
+          <ThemedText style={styles.assessmentPrompt}>
+            Now, take a few minutes to find out where your learning can grow.
+          </ThemedText>
+          <TouchableOpacity
+            style={[styles.continueButton, isCompleting && styles.buttonDisabled]}
             onPress={handleContinue}
             disabled={isCompleting}
           >
             <ThemedText style={styles.buttonText}>
-              {isCompleting ? 'Finishing...' : 'Start Using the App'}
+              {isCompleting ? 'Loading...' : 'Take the Assessment'}
             </ThemedText>
           </TouchableOpacity>
         </View>
@@ -226,6 +235,15 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: 30,
     alignItems: 'center',
+  },
+  assessmentPrompt: {
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: '#333',
+    marginBottom: 20,
+    lineHeight: 26,
+    paddingHorizontal: 10,
   },
   continueButton: {
     backgroundColor: '#007AFF',

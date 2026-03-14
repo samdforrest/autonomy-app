@@ -106,8 +106,8 @@ export default function ParentIntroScreen() {
       console.log('👨‍👩‍👧‍👦 Parent intro completed, marking as complete');
       await familyService.markParentIntroComplete(currentFamilyCode);
       
-      console.log('🎓 Navigating to home');
-      router.replace('/');
+      console.log('🎓 Navigating to student intro');
+      router.replace('/intro-student');
     } catch (error) {
       console.error('❌ Error completing parent intro:', error);
       setIsCompleting(false);
@@ -141,8 +141,14 @@ export default function ParentIntroScreen() {
           </ThemedText>
         </View>
 
-        {/* Content Blocks */}
-        {content?.contentBlocks?.map((block: any, index: number) => renderContentBlock(block, index))}
+        {/* Content Blocks - Videos first, then other content */}
+        {content?.contentBlocks && (() => {
+          // Separate video blocks from non-video blocks
+          const videoBlocks = content.contentBlocks.filter((block: any) => isYouTubeUrl(block.header));
+          const otherBlocks = content.contentBlocks.filter((block: any) => !isYouTubeUrl(block.header));
+          // Render videos first, then other content
+          return [...videoBlocks, ...otherBlocks].map((block: any, index: number) => renderContentBlock(block, index));
+        })()}
 
         {/* Continue Button */}
         <View style={styles.buttonContainer}>
@@ -152,7 +158,7 @@ export default function ParentIntroScreen() {
             disabled={isCompleting}
           >
             <ThemedText style={styles.buttonText}>
-              {isCompleting ? 'Continuing...' : 'Continue to Home'}
+              {isCompleting ? 'Continuing...' : 'Continue to Student Guide'}
             </ThemedText>
           </TouchableOpacity>
         </View>
