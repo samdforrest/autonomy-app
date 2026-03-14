@@ -1,9 +1,8 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform } from 'react-native';
+import { Image, Platform } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useAppMode } from '@/contexts/AppModeContext';
@@ -37,22 +36,39 @@ export default function TabLayout() {
           name="index"
           options={{
             title: 'Home',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+            tabBarIcon: ({ color }) => (
+              <Image
+                source={require('@/assets/images/home-icon.png')}
+                style={{ width: 28, height: 28, tintColor: color }}
+                resizeMode="contain"
+              />
+            ),
           }}
         />
         <Tabs.Screen
           name="explore"
           options={{
             title: 'Modules',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-            // Show explore tab for both students and parents
+            tabBarIcon: ({ color }) => (
+              <Image
+                source={require('@/assets/images/modules-icon.png')}
+                style={{ width: 28, height: 28, tintColor: color }}
+                resizeMode="contain"
+              />
+            ),
           }}
         />
         <Tabs.Screen
           name="profile"
           options={{
             title: 'Progress Tracking',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
+            tabBarIcon: ({ color }) => (
+              <Image
+                source={require('@/assets/images/progress-tracking-icon.png')}
+                style={{ width: 28, height: 28, tintColor: color }}
+                resizeMode="contain"
+              />
+            ),
           }}
         />
       </Tabs>
