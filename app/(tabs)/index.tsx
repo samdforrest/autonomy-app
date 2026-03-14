@@ -5,7 +5,6 @@ import { ActivityIndicator, Image, ScrollView, StyleSheet, TouchableOpacity } fr
 import { AssessmentCard } from '@/components/AssessmentCard';
 import { EnhancedYouTubePlayer } from '@/components/EnhancedYouTubePlayer';
 import { ImageViewer } from '@/components/ImageViewer';
-import { ModeToggle } from '@/components/ModeToggle';
 import { TableViewer } from '@/components/TableViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
 import { ThemedText } from '@/components/ThemedText';
@@ -352,8 +351,6 @@ export default function HomeScreen() {
           </ThemedText>
         </ThemedView>
 
-        {/* Mode Toggle */}
-        <ModeToggle />
         {/* Family Context Indicator */}
         {/* {isInFamilyMode && currentFamilyCode && (
           <ThemedView style={styles.familyContextIndicator}>

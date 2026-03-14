@@ -1,6 +1,5 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { ModeToggle } from '@/components/ModeToggle';
 import { useAppMode } from '@/contexts/AppModeContext';
 import { useCompletion } from '@/contexts/CompletionContext';
 import { FamilyService } from '@/services/family-service';
@@ -346,9 +345,6 @@ export default function TabTwoScreen() {
           {userMode === 'parent' ? 'Guide your child\'s learning journey' : 'Start your learning journey'}
         </ThemedText>
       </ThemedView>
-
-      {/* Mode Toggle */}
-      <ModeToggle />
     </>
   );
 

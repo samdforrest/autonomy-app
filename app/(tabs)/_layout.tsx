@@ -1,7 +1,8 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Image, Platform } from 'react-native';
+import { Image, Platform, View } from 'react-native';
 
+import { FloatingModeToggle } from '@/components/FloatingModeToggle';
 import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
@@ -17,7 +18,7 @@ export default function TabLayout() {
   console.log('🔍 TabLayout userMode type:', typeof userMode, 'exact value:', JSON.stringify(userMode));
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
@@ -72,7 +73,7 @@ export default function TabLayout() {
           }}
         />
       </Tabs>
-      
-    </>
+      <FloatingModeToggle />
+    </View>
   );
 }

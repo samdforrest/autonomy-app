@@ -11,7 +11,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
-  const { userMode, switchMode, isInFamilyMode, currentFamily, currentFamilyCode, isAdminFamily, setFamilyContext, clearFamilyContext } = useAppMode();
+  const { userMode, isInFamilyMode, currentFamily, currentFamilyCode, isAdminFamily, setFamilyContext, clearFamilyContext } = useAppMode();
   const tutorial = useFamilyTutorial(currentFamilyCode);
   const router = useRouter();
   const [familyCode, setFamilyCode] = useState('');
@@ -59,10 +59,6 @@ export default function ProfileScreen() {
   };
 
   // Auto-trigger removed - users can start tutorial manually from buttons below
-
-  const handleModeToggle = () => {
-    switchMode(userMode === 'parent' ? 'student' : 'parent');
-  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -151,31 +147,6 @@ export default function ProfileScreen() {
         <ThemedText style={styles.subtitle}>
           {isInFamilyMode ? `Family: ${currentFamilyCode}` : 'Manage your learning journey'}
         </ThemedText>
-        
-        {/* Mode Switcher */}
-        <ThemedView style={styles.modeSwitcher}>
-          <ThemedText style={styles.modeLabel}>
-            {userMode === 'parent' ? 'Parent View' : 'Student View'}
-          </ThemedText>
-          <TouchableOpacity 
-            style={[
-              styles.modeToggle,
-              userMode === 'parent' ? styles.modeToggleParent : styles.modeToggleChild
-            ]} 
-            onPress={handleModeToggle}
-          >
-            <View style={[
-              styles.modeToggleIndicator,
-              userMode === 'parent' ? styles.indicatorParent : styles.indicatorChild
-            ]} />
-            <ThemedText style={[
-              styles.modeToggleText,
-              userMode === 'parent' ? styles.textParent : styles.textChild
-            ]}>
-              {userMode === 'parent' ? 'Parent' : 'Student'}
-            </ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
       </ThemedView>
       
       {/* Family Dashboard Content - Only show when in family mode */}
@@ -489,76 +460,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     opacity: 0.8,
     textAlign: 'center',
-  },
-  modeSwitcher: {
-    marginTop: 30,
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  modeLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  modeToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 25,
-    padding: 4,
-    width: 140,
-    height: 50,
-    position: 'relative',
-  },
-  modeToggleParent: {
-    backgroundColor: '#E3F2FD', // Light blue for parent
-  },
-  modeToggleChild: {
-    backgroundColor: '#FFF3E0', // Light orange for student
-  },
-  modeToggleStudent: {
-    backgroundColor: '#FFF3E0', // Light orange for student
-  },
-  modeToggleIndicator: {
-    position: 'absolute',
-    width: 66,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  indicatorParent: {
-    left: 4,
-    backgroundColor: '#2196F3', // Blue for parent
-  },
-  indicatorChild: {
-    right: 4,
-    backgroundColor: '#FF9800', // Orange for student
-  },
-  indicatorStudent: {
-    right: 4,
-    backgroundColor: '#FF9800', // Orange for student
-  },
-  modeToggleText: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '600',
-    zIndex: 1,
-  },
-  textParent: {
-    color: 'white',
-  },
-  textChild: {
-    color: 'white',
   },
   // Family Dashboard Styles
   section: {
