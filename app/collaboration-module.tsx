@@ -1,5 +1,6 @@
 import CollapsibleDayCard from '@/components/CollapsibleDayCard';
 import { ImageViewer } from '@/components/ImageViewer';
+import { ModuleCompletionTracker } from '@/components/ModuleCompletionTracker';
 import SurveyButton from '@/components/SurveyButton';
 import { TableViewer } from '@/components/TableViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
@@ -39,7 +40,7 @@ export default function CollaborationModuleScreen() {
   // Debug: Log content structure to help troubleshoot images
   React.useEffect(() => {
     if (content) {
-      console.log('📄 Content loaded:', {
+      console.log('Content loaded:', {
         hasContentBlocks: !!content.contentBlocks,
         contentBlocksLength: content.contentBlocks?.length || 0,
         hasSections: !!content.sections,
@@ -50,7 +51,7 @@ export default function CollaborationModuleScreen() {
         content.contentBlocks.forEach((block, index) => {
           const imageCount = block.content?.filter(item => item.type === 'image').length || 0;
           if (imageCount > 0) {
-            console.log(`🖼️ Block ${index + 1} has ${imageCount} images`);
+            console.log(`Block ${index + 1} has ${imageCount} images`);
             block.content?.filter(item => item.type === 'image').forEach((img, imgIndex) => {
               const isDataUrl = img.uri?.startsWith('data:');
               console.log(`   Image ${imgIndex + 1}: ${isDataUrl ? 'DATA URL' : 'EXTERNAL URL'} - ${img.alt}`);
@@ -64,57 +65,57 @@ export default function CollaborationModuleScreen() {
   const dayModules: DayModule[] = [
     {
       id: 'day1',
-      title: 'Building Connections',
-      description: 'Learning to connect and communicate with others',
+      title: 'Connect and Understand',
+      description: '',
       dayNumber: 1,
       isCompleted: false,
       isLocked: false,
-      color: '#FFC93C',
-      icon: '🤝',
+      color: '#F4DED3',
+      icon: '',
       type: 'collaborative'
     },
     {
       id: 'day2',
-      title: 'Active Listening',
-      description: 'Developing skills to truly hear and understand others',
+      title: 'Think Together',
+      description: '',
       dayNumber: 2,
       isCompleted: false,
       isLocked: false,
-      color: '#FF9A3C',
-      icon: '👂',
+      color: '#E9BDA8',
+      icon: '',
       type: 'collaborative'
     },
     {
       id: 'day3',
-      title: 'Teamwork Skills',
-      description: 'Working together effectively toward common goals',
+      title: 'Choose and Observe',
+      description: '',
       dayNumber: 3,
       isCompleted: false,
       isLocked: false,
-      color: '#FF6F3C',
-      icon: '👥',
+      color: '#DD9D7C',
+      icon: '',
       type: 'collaborative'
     },
     {
       id: 'day4',
-      title: 'Conflict Resolution',
-      description: 'Handling disagreements and finding solutions together',
+      title: 'Lead and Learn',
+      description: '',
       dayNumber: 4,
       isCompleted: false,
       isLocked: false,
-      color: '#155263',
-      icon: '🤲',
+      color: '#D27C51',
+      icon: '',
       type: 'collaborative'
     },
     {
       id: 'day5',
-      title: 'Collaborative Success',
-      description: 'Celebrating achievements and strengthening partnerships',
+      title: 'Spotlight and Celebrate',
+      description: '',
       dayNumber: 5,
       isCompleted: false,
       isLocked: false,
-      color: '#939393',
-      icon: '🌟',
+      color: '#C75B25',
+      icon: '',
       type: 'evaluation'
     }
   ];
@@ -133,17 +134,17 @@ export default function CollaborationModuleScreen() {
   };
 
   const toggleRevealAnswer = (blockId: number) => {
-    console.log('🔄 Toggle Answer for block:', blockId);
+    console.log('Toggle Answer for block:', blockId);
     setRevealedAnswers(prev => {
       const newSet = new Set(prev);
       if (newSet.has(blockId)) {
-        console.log('➖ Hiding answer for block:', blockId);
+        console.log('Hiding answer for block:', blockId);
         newSet.delete(blockId);
       } else {
-        console.log('➕ Revealing answer for block:', blockId);
+        console.log('Revealing answer for block:', blockId);
         newSet.add(blockId);
       }
-      console.log('📊 Updated revealed answers:', Array.from(newSet));
+      console.log('Updated revealed answers:', Array.from(newSet));
       return newSet;
     });
   };
@@ -209,7 +210,7 @@ export default function CollaborationModuleScreen() {
         }
       });
       
-      console.log('🔍 Scenario Block Parsed:', {
+      console.log('Scenario Block Parsed:', {
         blockId: block.id,
         hasQuestion: !!scenarioQuestion,
         optionsCount: scenarioOptions.length,
@@ -311,7 +312,7 @@ export default function CollaborationModuleScreen() {
                 />
               );
             } else if (item.type === 'table') {
-              console.log('📊 Rendering TableViewer with:', { 
+              console.log('Rendering TableViewer with:', { 
                 id: item.id, 
                 rows: item.rows?.length, 
                 columns: item.columns 
@@ -324,7 +325,7 @@ export default function CollaborationModuleScreen() {
                 />
               );
             } else if (item.type === 'chart') {
-              console.log('📈 Rendering chart placeholder with:', { 
+              console.log('Rendering chart placeholder with:', { 
                 id: item.id, 
                 title: item.title, 
                 chartType: item.chartType 
@@ -332,7 +333,7 @@ export default function CollaborationModuleScreen() {
               return (
                 <ThemedView key={idx} style={styles.chartPlaceholder}>
                   <ThemedText style={styles.chartTitle}>
-                    📈 {item.title || 'Chart'}
+                    {item.title || 'Chart'}
                   </ThemedText>
                   <ThemedText style={styles.chartSubtitle}>
                     Type: {item.chartType || 'Unknown'}
@@ -380,15 +381,15 @@ export default function CollaborationModuleScreen() {
 
   const getSectionIcon = (sectionKey: string): string => {
     const iconMap: Record<string, string> = {
-      rules: '📋',
-      instructions: '💭', 
-      activities: '🎯',
-      collaboration_basics: '🤝',
-      teamwork: '👥',
-      communication: '💬',
-      todays_activities: '🎯',
+      rules: '',
+      instructions: '',
+      activities: '',
+      collaboration_basics: '',
+      teamwork: '',
+      communication: '',
+      todays_activities: '',
     };
-    return iconMap[sectionKey] || '🤝';
+    return iconMap[sectionKey] || '';
   };
 
   const renderDayContent = (day: DayModule) => {
@@ -413,7 +414,7 @@ export default function CollaborationModuleScreen() {
       if (error) {
         return (
           <ThemedView style={styles.errorContainer}>
-            <ThemedText style={styles.errorTitle}>⚠️ Content Unavailable</ThemedText>
+            <ThemedText style={styles.errorTitle}>Content Unavailable</ThemedText>
             <ThemedText style={styles.errorText}>{error}</ThemedText>
             <TouchableOpacity style={styles.retryButton} onPress={refetch}>
               <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>
@@ -427,7 +428,7 @@ export default function CollaborationModuleScreen() {
         <ThemedView>
           {/* Refresh button */}
           <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
-            <ThemedText style={styles.refreshButtonText}>🔄 Refresh Content</ThemedText>
+            <ThemedText style={styles.refreshButtonText}>Refresh Content</ThemedText>
           </TouchableOpacity>
 
           {content?.contentBlocks && content.contentBlocks.length > 0 ? (
@@ -441,7 +442,7 @@ export default function CollaborationModuleScreen() {
           ) : (
             // Fallback content if no Google Docs content is available
             <ThemedView style={styles.section}>
-              <ThemedText style={styles.sectionTitle}>🤝 Day {day.dayNumber} Content</ThemedText>
+              <ThemedText style={styles.sectionTitle}>Day {day.dayNumber} Content</ThemedText>
               <ThemedText style={styles.contentText}>
                 Content is loading from Google Docs...
               </ThemedText>
@@ -461,8 +462,19 @@ export default function CollaborationModuleScreen() {
             </ThemedView>
           )}
 
+          {/* Module Completion Tracker */}
+          <ModuleCompletionTracker
+            moduleId="collaboration"
+            moduleName="Collaboration & Teamwork"
+            currentDay={day.dayNumber}
+            totalDays={5}
+            onProgressUpdate={(completedDays, isCompleted) => {
+              console.log('Progress updated:', { completedDays, isCompleted });
+            }}
+          />
+
           {/* Survey Button - Only show for Day 5 */}
-          <SurveyButton 
+          <SurveyButton
             moduleId="collaboration"
             moduleName="Collaboration & Teamwork"
             dayNumber={day.dayNumber}
@@ -470,11 +482,11 @@ export default function CollaborationModuleScreen() {
         </ThemedView>
       );
     }
-    
+
     // This shouldn't happen with our new logic, but keeping as fallback
     return (
       <ThemedView>
-        <ThemedText style={styles.contentTitle}>🚀 Loading...</ThemedText>
+        <ThemedText style={styles.contentTitle}>Loading...</ThemedText>
         <ThemedText style={styles.contentText}>
           Preparing Day {day.dayNumber} content...
         </ThemedText>
@@ -487,7 +499,7 @@ export default function CollaborationModuleScreen() {
       <ThemedView style={styles.header}>
         <ThemedText type="title" style={styles.moduleTitle}>Collaboration & Teamwork</ThemedText>
         <ThemedText style={styles.moduleSubtitle}>
-          Build strong relationships and work effectively with others through 5 focused days...
+           I can actively collaborate.
         </ThemedText>
       </ThemedView>
 
@@ -732,31 +744,31 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: '#009688', // Teal border
   },
-  // Day-specific bubble styles that match day card colors (collaboration theme)
+  // Day-specific bubble styles - all gray for consistent appearance
   bubbleDay1: {
-    backgroundColor: '#FFF8E1', // Light version of #FFC93C
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#FFC93C', // Day 1 golden yellow (Building Connections)
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay2: {
-    backgroundColor: '#FFF3E0', // Light version of #FF9A3C  
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#FF9A3C', // Day 2 orange (Active Listening)
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay3: {
-    backgroundColor: '#FFEBE0', // Light version of #FF6F3C
-    borderLeftWidth: 4, 
-    borderLeftColor: '#FF6F3C', // Day 3 red-orange (Teamwork Skills)
+    backgroundColor: '#F5F5F5',
+    borderLeftWidth: 4,
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay4: {
-    backgroundColor: '#E0F4F3', // Light version of #155263
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#155263', // Day 4 dark teal (Conflict Resolution)
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay5: {
-    backgroundColor: '#F5F5F5', // Light version of #939393
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#939393', // Day 5 gray (Collaborative Success)
+    borderLeftColor: '#BDBDBD',
   },
   // Bold header style
   bubbleHeaderBold: {

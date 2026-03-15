@@ -1,12 +1,10 @@
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { AssessmentCard } from '@/components/AssessmentCard';
 import { EnhancedYouTubePlayer } from '@/components/EnhancedYouTubePlayer';
 import { ImageViewer } from '@/components/ImageViewer';
-import { ModeToggle } from '@/components/ModeToggle';
 import { TableViewer } from '@/components/TableViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
 import { ThemedText } from '@/components/ThemedText';
@@ -16,18 +14,21 @@ import { useTutorial } from '@/contexts/TutorialContext';
 import { useColorInheritance } from '@/hooks/useColorInheritance';
 import { useGoogleDocsContent } from '@/hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '@/services/api';
-import { assessmentService, type AssessmentSummary } from '@/services/assessment-service';
 
 export default function HomeScreen() {
   const componentId = React.useRef(Math.random().toString(36).substr(2, 9));
   console.log('🏠🏠🏠 HOME SCREEN COMPONENT RENDER (ID:', componentId.current + ')');
+
+  // Debug: Log when component mounts/unmounts
+  React.useEffect(() => {
+    console.log('🏠 HOME SCREEN MOUNTED');
+    return () => console.log('🏠 HOME SCREEN UNMOUNTED');
+  }, []);
   
   const router = useRouter();
   const { userMode, isInFamilyMode, currentFamilyCode, currentFamily, clearFamilyContext } = useAppMode();
   const tutorial = useTutorial();
-  const [assessmentResults, setAssessmentResults] = React.useState<AssessmentSummary | null>(null);
-  const [loadingResults, setLoadingResults] = React.useState(false);
-  
+
   // Tutorial auto-trigger logic (much simpler now!)
   const [hasTriggeredTutorial, setHasTriggeredTutorial] = React.useState(false);
   
@@ -40,6 +41,8 @@ export default function HomeScreen() {
     'raw',
     { tab: tabName }
   );
+
+  console.log('🏠 Google Docs state:', { loading, error: !!error, hasContent: !!content, blockCount: content?.contentBlocks?.length });
 
   // Color inheritance hook for styled content blocks
   const { getBubbleStyle } = useColorInheritance(content?.contentBlocks, {
@@ -62,31 +65,6 @@ export default function HomeScreen() {
            lowerHeader.includes('overview') ||
            lowerHeader.includes('important:');
   };
-
-  // Load assessment results
-  React.useEffect(() => {
-    const loadAssessmentResults = async () => {
-      setLoadingResults(true);
-      try {
-        // Set context based on current mode
-        if (isInFamilyMode && currentFamilyCode) {
-          assessmentService.setContext(currentFamilyCode, 'student');
-        } else {
-          assessmentService.syncFromGlobalContext();
-        }
-        
-        const results = await assessmentService.loadAssessmentResults();
-        setAssessmentResults(results);
-        console.log('🏠 Loaded assessment results:', !!results);
-      } catch (error) {
-        console.error('❌ Error loading assessment results:', error);
-      } finally {
-        setLoadingResults(false);
-      }
-    };
-
-    loadAssessmentResults();
-  }, [isInFamilyMode, currentFamilyCode]);
 
   // Debug: Log content structure when content changes
   React.useEffect(() => {
@@ -148,8 +126,12 @@ export default function HomeScreen() {
   };
 
   const renderContentBlock = (block: any, index: number) => {
-    // Check if this block's header is a YouTube URL
-    const isVideoBlock = isYouTubeUrl(block.header);
+    console.log('🏠 Rendering content block:', index, block?.header?.substring?.(0, 30));
+    console.log('🏠 Block content types:', block?.content?.map((item: any) => item.type));
+
+    try {
+      // Check if this block's header is a YouTube URL
+      const isVideoBlock = isYouTubeUrl(block.header);
     
     return (
       <ThemedView key={block.id || index} style={[styles.bubble, getBubbleStyle(block.header, index, block.id)]}>
@@ -278,7 +260,7 @@ export default function HomeScreen() {
               return (
                 <ThemedView key={idx} style={styles.chartPlaceholder}>
                   <ThemedText style={styles.chartTitle}>
-                    📈 {item.title || 'Chart'}
+                    {item.title || 'Chart'}
                   </ThemedText>
                   <ThemedText style={styles.chartSubtitle}>
                     Type: {item.chartType || 'Unknown'}
@@ -293,13 +275,21 @@ export default function HomeScreen() {
           })}
         </ThemedView>
       </ThemedView>
-    );
+      );
+    } catch (blockError) {
+      console.error('🏠 ERROR rendering block', index, ':', blockError);
+      return (
+        <ThemedView key={block.id || index} style={styles.bubble}>
+          <ThemedText>Error rendering block {index}</ThemedText>
+        </ThemedView>
+      );
+    }
   };
 
   const renderSection = (sectionKey: string, section: any, defaultIcon: string) => (
     <ThemedView key={sectionKey} style={styles.section}>
       <ThemedText style={styles.sectionTitle}>
-        {defaultIcon} {section.title}
+        {section.title}
       </ThemedText>
       
       {/* Render bullet points */}
@@ -328,172 +318,44 @@ export default function HomeScreen() {
   );
 
   const getSectionIcon = (sectionKey: string): string => {
-    const iconMap: Record<string, string> = {
-      welcome: userMode === 'parent' ? '👨‍👩‍👧‍👦' : '🎓',
-      introduction: '📖',
-      getting_started: '🚀',
-      overview: '📋',
-      important: '⚠️',
-    };
-    return iconMap[sectionKey] || (userMode === 'parent' ? '👨‍👩‍👧‍👦' : '🎓');
+    // Icons removed - returning empty string
+    return '';
   };
 
-  const getModuleDisplayName = (moduleId: string): string => {
-    const names: { [key: string]: string } = {
-      mistakes: 'Mistakes',
-      regulation: 'Regulation', 
-      job: 'Responsibility',
-      collaboration: 'Collaboration',
-      selfcoach: 'Self-Coaching',
-      curiosity: 'Curiosity',
-      shapeoflearning: 'Shape of Learning',
-      neuroplasticity: 'Neuroplasticity',
-      masterymoments: 'Mastery Moments',
-      selfmonitoring: 'Self-Monitoring'
-    };
-    return names[moduleId] || moduleId;
-  };
+  console.log('🏠 HOME SCREEN ABOUT TO RENDER JSX');
 
-  const renderAssessmentResults = () => {
-    if (loadingResults) {
-      return (
-        <ThemedView style={styles.assessmentResultsSection}>
-          <ThemedText style={styles.sectionTitle}>
-            {userMode === 'parent' ? '📊 Student Learning Priorities' : '📊 Your Learning Priorities'}
-          </ThemedText>
-          <ThemedView style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color="#2196F3" />
-            <ThemedText style={styles.loadingText}>Loading results...</ThemedText>
-          </ThemedView>
-        </ThemedView>
-      );
-    }
-
-    if (!assessmentResults) {
-      return (
-        <ThemedView style={styles.assessmentResultsSection}>
-          <ThemedText style={styles.sectionTitle}>
-            {userMode === 'parent' ? '📊 Student Learning Priorities' : '📊 Your Learning Priorities'}
-          </ThemedText>
-          <ThemedText style={styles.noResultsText}>
-            {userMode === 'parent' 
-              ? 'Student needs to take the assessment to see personalized learning priorities!'
-              : 'Take the assessment to see your personalized learning priorities!'
-            }
-          </ThemedText>
-          {/* <TouchableOpacity 
-            style={styles.takeAssessmentButton}
-            onPress={() => router.push('/assessment')}
-          >
-            <ThemedText style={styles.takeAssessmentButtonText}>Take Assessment</ThemedText>
-          </TouchableOpacity> */}
-        </ThemedView>
-      );
-    }
-
-    // Calculate module priorities from results
-    const moduleScores = Object.entries(assessmentResults.moduleScores || {})
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 5) // Show top 5 priorities
-      .map(([moduleId, score]) => ({
-        moduleId,
-        score,
-        displayName: getModuleDisplayName(moduleId),
-        percentage: Math.round((score / Math.max(...Object.values(assessmentResults.moduleScores || {}))) * 100)
-      }));
-
+  try {
     return (
-      <ThemedView style={styles.assessmentResultsSection}>
-        <ThemedView style={styles.resultsHeader}>
-          <ThemedText style={styles.sectionTitle}>
-            {userMode === 'parent' ? '📊 Student Learning Priorities' : '📊 Your Learning Priorities'}
-          </ThemedText>
-          <TouchableOpacity 
-            style={styles.viewFullResultsButton}
-            onPress={() => {
-              if (isInFamilyMode && currentFamilyCode) {
-                router.push(`/family/${currentFamilyCode}/results`);
-              } else {
-                router.push('/assessment');
-              }
-            }}
-          >
-            <ThemedText style={styles.viewFullResultsButtonText}>View Results</ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
-        
-        <ThemedText style={styles.resultsSubtitle}>
-          {userMode === 'parent' 
-            ? 'Based on your student\'s assessment, here are their top learning priorities:'
-            : 'Based on your assessment, here are your top learning priorities:'
-          }
-        </ThemedText>
-
-        {moduleScores.map((module, index) => (
-          <ThemedView key={module.moduleId} style={styles.priorityItem}>
-            <ThemedView style={styles.priorityHeader}>
-              <ThemedText style={styles.priorityRank}>#{index + 1}</ThemedText>
-              <ThemedText style={styles.priorityName}>{module.displayName}</ThemedText>
-              <ThemedText style={styles.priorityScore}>{module.score} pts</ThemedText>
-            </ThemedView>
-            
-            <ThemedView style={styles.priorityProgressBar}>
-              <ThemedView 
-                style={[
-                  styles.priorityProgressFill, 
-                  { width: `${module.percentage}%` }
-                ]} 
-              />
-            </ThemedView>
-          </ThemedView>
-        ))}
-
-        {userMode === 'student' && (
-          <TouchableOpacity 
-            style={styles.retakeAssessmentButton}
-            onPress={() => router.push('/assessment')}
-          >
-            <ThemedText style={styles.retakeAssessmentButtonText}>🔄 Retake Assessment</ThemedText>
-          </TouchableOpacity>
-        )}
-      </ThemedView>
-    );
-  };
-
-  return (
-    <ThemedView style={styles.container}>
-      <ThemedView style={styles.header}>
-        <ThemedView style={styles.logoContainer}>
-          <Image 
-            source={require('@/assets/images/autonomy-brain.png')} 
-            style={styles.brainLogo}
-            contentFit="contain"
-          />
-        </ThemedView>
-        <ThemedText type="title" style={styles.title}>
-          {userMode === 'parent' ? 'Parent Guide' : 'Welcome, Student!'}
-        </ThemedText>
-        <ThemedText style={styles.subtitle}>
-          {userMode === 'parent' 
-            ? 'Supporting your student\'s learning journey' 
-            : 'Begin your Autonomy Learning adventure'
-          }
-        </ThemedText>
-      </ThemedView>
-
-      {/* Mode Toggle */}
-      <ModeToggle />
-
-      <ScrollView 
+      <ThemedView style={styles.container}>
+      <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
+        <ThemedView style={styles.header}>
+          <ThemedView style={styles.logoContainer}>
+            <Image
+              source={require('@/assets/images/autonomy-brain.png')}
+              style={styles.brainLogo}
+              resizeMode="contain"
+            />
+          </ThemedView>
+          <ThemedText type="title" style={styles.title}>
+            {userMode === 'parent' ? 'Parent Guide' : 'Welcome, Student!'}
+          </ThemedText>
+          <ThemedText style={styles.subtitle}>
+            {userMode === 'parent'
+              ? 'Supporting your student\'s learning journey'
+              : 'Begin your Autonomy Learning adventure'
+            }
+          </ThemedText>
+        </ThemedView>
+
         {/* Family Context Indicator */}
-        {isInFamilyMode && currentFamilyCode && (
+        {/* {isInFamilyMode && currentFamilyCode && (
           <ThemedView style={styles.familyContextIndicator}>
             <ThemedText style={styles.familyContextTitle}>
-              👨‍👩‍👧‍👦 Currently in Family: {currentFamilyCode}
+              Currently in Family: {currentFamilyCode}
             </ThemedText>
             <ThemedText style={styles.familyContextSubtitle} />
             <ThemedView style={styles.familyContextActions}>
@@ -513,46 +375,13 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </ThemedView>
           </ThemedView>
-        )}
+        )} */}
 
-        {/* Tutorial launcher for families */}
-        {isInFamilyMode && (
-              <ThemedView style={styles.tutorialSection}>
-                <ThemedText style={styles.tutorialSectionTitle}>
-                  📚 New to the App?
-                </ThemedText>
-                <ThemedText style={styles.tutorialSectionSubtitle}>
-                  Take our interactive tutorial to learn how families can use the platform together - perfect for both parents and students!
-                </ThemedText>
-                <TouchableOpacity 
-                  style={styles.tutorialButton}
-                  onPress={() => tutorial.showTutorial()}
-                >
-                  <ThemedText style={styles.tutorialButtonText}>
-                    🎯 Start Interactive Tutorial
-                  </ThemedText>
-                </TouchableOpacity>
-
-                {/* DEBUG: Reset tutorial for testing auto-trigger */}
-                <TouchableOpacity 
-                  style={[styles.tutorialButton, { backgroundColor: '#ff6b6b', marginTop: 8 }]}
-                  onPress={async () => {
-                    await tutorial.resetTutorialStatus();
-                    console.log('🧹 Tutorial status reset - refresh app to test auto-trigger');
-                    alert('Tutorial status reset! Refresh the app to test auto-trigger.');
-                  }}
-                >
-                  <ThemedText style={styles.tutorialButtonText}>
-                    🧹 Reset Tutorial (Debug)
-                  </ThemedText>
-                </TouchableOpacity>
-              </ThemedView>
-            )}
 
         {/* Family Access Section - Only show if NOT in family mode */}
         {!isInFamilyMode && (
           <ThemedView style={styles.familySection}>
-            <ThemedText style={styles.familySectionTitle}>👨‍👩‍👧‍👦 Family Access</ThemedText>
+            <ThemedText style={styles.familySectionTitle}>Family Access</ThemedText>
             <ThemedText style={styles.familySectionSubtitle}>
               Track progress across multiple students with family codes
             </ThemedText>
@@ -570,7 +399,7 @@ export default function HomeScreen() {
                 onPress={() => router.push('/join-family')}
               >
                 <ThemedText style={[styles.familyButtonText, styles.familyButtonTextSecondary]}>
-                  🔗 Join Family
+                  Join Family
                 </ThemedText>
               </TouchableOpacity>
             </ThemedView>
@@ -579,9 +408,6 @@ export default function HomeScreen() {
 
         {/* Assessment Card - Only for students */}
         {userMode === 'student' && <AssessmentCard userMode={userMode} />}
-
-        {/* Assessment Results Display */}
-        {renderAssessmentResults()}
 
         {/* Loading state */}
         {loading && (
@@ -596,7 +422,7 @@ export default function HomeScreen() {
         {/* Error state */}
         {error && (
           <ThemedView style={styles.errorContainer}>
-            <ThemedText style={styles.errorTitle}>⚠️ Content Unavailable</ThemedText>
+            <ThemedText style={styles.errorTitle}>Content Unavailable</ThemedText>
             <ThemedText style={styles.errorText}>{error}</ThemedText>
             <TouchableOpacity style={styles.retryButton} onPress={refetch}>
               <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>
@@ -609,7 +435,7 @@ export default function HomeScreen() {
           <>
             {/* Refresh button */}
             <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
-              <ThemedText style={styles.refreshButtonText}>🔄 Refresh Content</ThemedText>
+              <ThemedText style={styles.refreshButtonText}>Refresh Content</ThemedText>
             </TouchableOpacity>
 
             {content?.contentBlocks && content.contentBlocks.length > 0 ? (
@@ -654,7 +480,7 @@ export default function HomeScreen() {
               // Fallback content if no Google Docs content is available
               <ThemedView style={styles.section}>
                 <ThemedText style={styles.sectionTitle}>
-                  {userMode === 'parent' ? '👨‍👩‍👧‍👦 Parent Guide' : '🎓 Student Welcome'}
+                  {userMode === 'parent' ? 'Parent Guide' : 'Student Welcome'}
                 </ThemedText>
                 <ThemedText style={styles.contentText}>
                   {userMode === 'parent' 
@@ -682,7 +508,15 @@ export default function HomeScreen() {
         )}
       </ScrollView>
     </ThemedView>
-  );
+    );
+  } catch (renderError) {
+    console.error('🏠 HOME SCREEN RENDER ERROR:', renderError);
+    return (
+      <ThemedView style={styles.container}>
+        <ThemedText>Error rendering home screen. Check logs.</ThemedText>
+      </ThemedView>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
@@ -734,8 +568,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 20,
     paddingTop: 10,
+    paddingBottom: 20,
   },
   loadingContainer: {
     justifyContent: 'center',
@@ -804,9 +638,10 @@ const styles = StyleSheet.create({
   },
   section: {
     backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 12,
+    padding: 20,
+    marginHorizontal: 20,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
@@ -832,8 +667,9 @@ const styles = StyleSheet.create({
   bubble: {
     backgroundColor: 'white',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    padding: 20,
+    marginHorizontal: 20,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -937,6 +773,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 20,
+    marginHorizontal: 20,
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: {
@@ -951,7 +788,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   familySectionSubtitle: {
     fontSize: 14,
@@ -987,7 +824,8 @@ const styles = StyleSheet.create({
   familyContextIndicator: {
     backgroundColor: '#E3F2FD',
     borderRadius: 12,
-    padding: 16,
+    padding: 20,
+    marginHorizontal: 20,
     marginBottom: 16,
     borderLeftWidth: 4,
     borderLeftColor: '#2196F3',
@@ -996,12 +834,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#1976D2',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   familyContextSubtitle: {
     fontSize: 14,
     color: '#1976D2',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   familyContextActions: {
     flexDirection: 'row',
@@ -1027,153 +865,5 @@ const styles = StyleSheet.create({
   },
   familyContextButtonTextSecondary: {
     color: '#2196F3',
-  },
-  // Assessment Results Styles
-  assessmentResultsSection: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  resultsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-    backgroundColor: 'transparent',
-  },
-  resultsSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
-    lineHeight: 20,
-  },
-  noResultsText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 16,
-    lineHeight: 24,
-  },
-  takeAssessmentButton: {
-    backgroundColor: '#27AE60',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  takeAssessmentButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  viewFullResultsButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-  },
-  viewFullResultsButtonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  priorityItem: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-  },
-  priorityHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    backgroundColor: 'transparent',
-  },
-  priorityRank: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#3498DB',
-    marginRight: 8,
-    minWidth: 24,
-  },
-  priorityName: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2C3E50',
-  },
-  priorityScore: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#27AE60',
-  },
-  priorityProgressBar: {
-    height: 4,
-    backgroundColor: '#ECF0F1',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  priorityProgressFill: {
-    height: '100%',
-    backgroundColor: '#3498DB',
-    borderRadius: 2,
-  },
-  retakeAssessmentButton: {
-    backgroundColor: 'transparent',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#BDC3C7',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  retakeAssessmentButtonText: {
-    color: '#7F8C8D',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  // Tutorial launcher styles
-  tutorialSection: {
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-    padding: 20,
-    marginHorizontal: 16,
-    marginVertical: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#17A2B8',
-  },
-  tutorialSectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  tutorialSectionSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  tutorialButton: {
-    backgroundColor: '#17A2B8',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  tutorialButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
   },
 });

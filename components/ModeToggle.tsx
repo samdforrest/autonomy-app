@@ -1,8 +1,8 @@
+import { useAppMode } from '@/contexts/AppModeContext';
 import React from 'react';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
-import { useAppMode } from '@/contexts/AppModeContext';
 
 interface ModeToggleProps {
   style?: any;
@@ -20,7 +20,7 @@ export function ModeToggle({ style, compact = false }: ModeToggleProps) {
     <ThemedView style={[styles.container, compact && styles.containerCompact, style]}>
       <ThemedView style={styles.modeSwitcher}>
         <ThemedText style={[styles.modeLabel, compact && styles.modeLabelCompact]}>
-          {userMode === 'parent' ? '👨‍👩‍👧‍👦 Parent View' : '🧒 Student View'}
+          {userMode === 'parent' ? 'Parent View' : 'Student View'}
         </ThemedText>
         <TouchableOpacity 
           style={[
@@ -35,13 +35,6 @@ export function ModeToggle({ style, compact = false }: ModeToggleProps) {
             compact && styles.modeToggleIndicatorCompact,
             userMode === 'parent' ? styles.indicatorParent : styles.indicatorChild
           ]} />
-          <ThemedText style={[
-            styles.modeToggleText,
-            compact && styles.modeToggleTextCompact,
-            userMode === 'parent' ? styles.textParent : styles.textChild
-          ]}>
-            {userMode === 'parent' ? 'Parent' : 'Student'}
-          </ThemedText>
         </TouchableOpacity>
       </ThemedView>
     </ThemedView>
@@ -114,21 +107,5 @@ const styles = StyleSheet.create({
   indicatorChild: {
     right: 4,
     backgroundColor: '#FF9800', // Orange for student
-  },
-  modeToggleText: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '600',
-    zIndex: 1,
-  },
-  modeToggleTextCompact: {
-    fontSize: 12,
-  },
-  textParent: {
-    color: 'white',
-  },
-  textChild: {
-    color: 'white',
   },
 });

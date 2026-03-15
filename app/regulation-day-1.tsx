@@ -1,3 +1,12 @@
+// This route is deprecated - use regulation-module.tsx instead
+import { Redirect } from 'expo-router';
+
+export default function RegulationDay1Screen() {
+  // Redirect to the main regulation module
+  return <Redirect href="/regulation-module" />;
+}
+
+// Original implementation (commented out):
 // import { ThemedText } from '@/components/ThemedText';
 // import { ThemedView } from '@/components/ThemedView';
 // import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
@@ -38,7 +47,7 @@
 //           <ThemedText style={styles.subtitle}>Parent + Child • Collaborative Learning</ThemedText>
 //         </ThemedView>
 //         <ThemedView style={styles.errorContainer}>
-//           <ThemedText style={styles.errorTitle}>⚠️ Content Unavailable</ThemedText>
+//           <ThemedText style={styles.errorTitle}>Content Unavailable</ThemedText>
 //           <ThemedText style={styles.errorText}>{error}</ThemedText>
 //           <TouchableOpacity style={styles.retryButton} onPress={refetch}>
 //             <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>

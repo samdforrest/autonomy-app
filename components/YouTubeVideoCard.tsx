@@ -83,7 +83,7 @@ export function YouTubeVideoCard({
     return (
       <ThemedView style={[styles.card, style]}>
         <ThemedView style={styles.errorContainer}>
-          <ThemedText style={styles.errorText}>❌ Invalid YouTube URL</ThemedText>
+          <ThemedText style={styles.errorText}>Invalid YouTube URL</ThemedText>
           <ThemedText style={styles.errorSubtext}>Please provide a valid YouTube link</ThemedText>
         </ThemedView>
       </ThemedView>
@@ -91,13 +91,8 @@ export function YouTubeVideoCard({
   }
 
   const getCategoryIcon = () => {
-    switch (category) {
-      case 'lesson': return '📚';
-      case 'example': return '💡';
-      case 'exercise': return '🎯';
-      case 'assessment': return '✅';
-      default: return '🎥';
-    }
+    // Icons removed
+    return '';
   };
 
   const getCategoryColor = () => {
@@ -148,12 +143,12 @@ export function YouTubeVideoCard({
 
     if (Platform.OS === 'web') {
       return (
-        <ThemedView style={[styles.card, styles.videoCard, style]}>
+        <ThemedView style={[styles.card, styles.videoCard, styles.webCard, style]}>
           <iframe
             src={embedUrl}
             style={{
               width: '100%',
-              height: 200,
+              height: 315,
               border: 'none',
               borderRadius: 8,
             }}
@@ -178,10 +173,14 @@ export function YouTubeVideoCard({
     }
   }
 
-  // Main card UI
+  // Main card UI - apply web constraints on desktop
+  const cardStyles = Platform.OS === 'web'
+    ? [styles.card, styles.webCard, style]
+    : [styles.card, style];
+
   return (
-    <TouchableOpacity 
-      style={[styles.card, style]} 
+    <TouchableOpacity
+      style={cardStyles}
       onPress={handleCardPress}
       activeOpacity={0.8}
     >
@@ -205,7 +204,7 @@ export function YouTubeVideoCard({
           )
         ) : (
           <ThemedView style={styles.thumbnailPlaceholder}>
-            <ThemedText style={styles.placeholderIcon}>🎥</ThemedText>
+            <ThemedText style={styles.placeholderIcon}>Video</ThemedText>
           </ThemedView>
         )}
         
@@ -251,7 +250,7 @@ export function YouTubeVideoCard({
                 onPress={handleBookmarkPress}
               >
                 <ThemedText style={styles.actionButtonText}>
-                  {isBookmarked ? '🔖' : '🔗'}
+                  {isBookmarked ? 'Saved' : 'Save'}
                 </ThemedText>
               </TouchableOpacity>
             )}
@@ -276,7 +275,7 @@ export function YouTubeVideoCard({
           <ThemedView style={styles.statusContainer}>
             {isWatched && (
               <View style={styles.statusBadge}>
-                <ThemedText style={styles.statusText}>✅ Watched</ThemedText>
+                <ThemedText style={styles.statusText}>Watched</ThemedText>
               </View>
             )}
             
@@ -320,6 +319,11 @@ const styles = StyleSheet.create({
   },
   videoCard: {
     padding: 0,
+  },
+  webCard: {
+    maxWidth: 560,
+    alignSelf: 'center',
+    width: '100%',
   },
   webview: {
     height: 200,

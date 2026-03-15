@@ -157,7 +157,7 @@ export default function VideoCardDemoScreen() {
           </ThemedView>
 
           <ThemedView style={styles.benefitsList}>
-            <ThemedText style={styles.benefitsTitle}>✨ Benefits:</ThemedText>
+            <ThemedText style={styles.benefitsTitle}>Benefits:</ThemedText>
             <ThemedText style={styles.benefitItem}>• Professional, polished appearance</ThemedText>
             <ThemedText style={styles.benefitItem}>• Better user engagement with rich metadata</ThemedText>
             <ThemedText style={styles.benefitItem}>• Progress tracking and bookmarking</ThemedText>

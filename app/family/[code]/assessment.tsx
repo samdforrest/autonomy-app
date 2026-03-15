@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useGoogleDocsContent } from '../../../hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '../../../services/api';
 import { AssessmentQuestion, AssessmentResponse, assessmentService } from '../../../services/assessment-service';
@@ -10,7 +10,7 @@ export default function FamilyAssessment() {
   const { code } = useLocalSearchParams<{ code: string }>();
   const { family, refreshFamily } = useFamilyContext();
   const router = useRouter();
-  
+
   const [responses, setResponses] = useState<AssessmentResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasExistingResults, setHasExistingResults] = useState(false);
@@ -22,7 +22,24 @@ export default function FamilyAssessment() {
     { tab: 'Assessment Questions' }
   );
 
-  const assessmentQuestions: AssessmentQuestion[] = assessmentContent?.questions || [];
+  // Extract assessment questions from content blocks
+  const assessmentQuestions: AssessmentQuestion[] = useMemo(() => {
+    if (!assessmentContent?.contentBlocks) return [];
+
+    const questions: AssessmentQuestion[] = [];
+    assessmentContent.contentBlocks.forEach(block => {
+      if (block.content) {
+        block.content.forEach(item => {
+          if (item.type === 'assessment' && item.questions) {
+            questions.push(...item.questions);
+          }
+        });
+      }
+    });
+
+    console.log('📋 Family assessment: Extracted questions:', questions.length);
+    return questions;
+  }, [assessmentContent]);
 
   useEffect(() => {
     if (code) {
@@ -71,7 +88,11 @@ export default function FamilyAssessment() {
 
   const handleSubmitAssessment = async () => {
     if (!isAssessmentComplete()) {
-      Alert.alert('Incomplete Assessment', 'Please answer all questions before submitting.');
+      if (Platform.OS === 'web') {
+        window.alert('Please answer all questions before submitting.');
+      } else {
+        Alert.alert('Incomplete Assessment', 'Please answer all questions before submitting.');
+      }
       return;
     }
 
@@ -80,46 +101,63 @@ export default function FamilyAssessment() {
       // Calculate priorities
       const priorities = assessmentService.calculateModulePriorities(responses, assessmentQuestions);
       const summary = assessmentService.generateAssessmentSummary(priorities);
-      
+
       // Save results (will save to both Firebase and localStorage)
       await assessmentService.saveAssessmentResults(summary);
-      
+
       // Refresh family data
       await refreshFamily();
-      
-      Alert.alert(
-        'Assessment Complete!',
-        `Assessment completed for ${family.studentName || 'your student'}. You can now view their personalized learning modules.`,
-        [
-          {
-            text: 'View Results',
-            onPress: () => router.push(`/family/${code}/results`)
-          }
-        ]
-      );
+
+      if (Platform.OS === 'web') {
+        window.alert("Thanks for showing us where you are now! Let's hear from some other kids who already use the tools you're about to learn.");
+        router.push('/intro-student');
+      } else {
+        Alert.alert(
+          'Assessment Complete!',
+          "Thanks for showing us where you are now! Let's hear from some other kids who already use the tools you're about to learn.",
+          [
+            {
+              text: 'Continue',
+              onPress: () => router.push('/intro-student')
+            }
+          ]
+        );
+      }
     } catch (error) {
       console.error('Error submitting assessment:', error);
-      Alert.alert('Error', 'Failed to save assessment results. Please try again.');
+      if (Platform.OS === 'web') {
+        window.alert('Failed to save assessment results. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to save assessment results. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleRetakeAssessment = () => {
-    Alert.alert(
-      'Retake Assessment',
-      'Are you sure you want to retake the assessment? This will replace your current results.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Retake', 
-          onPress: () => {
-            setResponses([]);
-            setHasExistingResults(false);
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('Are you sure you want to retake the assessment? This will replace your current results.');
+      if (confirmed) {
+        setResponses([]);
+        setHasExistingResults(false);
+      }
+    } else {
+      Alert.alert(
+        'Retake Assessment',
+        'Are you sure you want to retake the assessment? This will replace your current results.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Retake',
+            onPress: () => {
+              setResponses([]);
+              setHasExistingResults(false);
+            }
           }
-        }
-      ]
-    );
+        ]
+      );
+    }
   };
 
   if (questionsLoading) {

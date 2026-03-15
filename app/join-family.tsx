@@ -80,6 +80,7 @@ export default function JoinFamily() {
             value={familyCode}
             onChangeText={(text) => setFamilyCode(formatFamilyCode(text))}
             placeholder="BEAR-2024"
+            placeholderTextColor="#AAAAAA"
             autoCapitalize="characters"
             maxLength={9} // XXXX-XXXX format
           />

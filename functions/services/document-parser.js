@@ -32,6 +32,9 @@ class DocumentParser {
     this.currentBlock = null; // Track current content block
     this.globalQuestionCounter = 0; // Reset question counter for each document
     this.inlineObjects = document.inlineObjects || {}; // Store inline objects (images) for reference
+
+    // Detect if this is a Parent How To tab for Why/How/What parsing
+    this.isParentHowToTab = options.tab && options.tab.toLowerCase().includes('parent how to');
     
     // Debug: Log inline objects found in document
     const inlineObjectCount = Object.keys(this.inlineObjects).length;
@@ -278,7 +281,17 @@ class DocumentParser {
       console.warn('⚠️ parseParagraph called with undefined paragraph');
       return;
     }
-    
+
+    // Check for native Google Docs bullet FIRST (before text-based detection)
+    if (paragraph.bullet) {
+      const text = this.extractTextFromParagraph(paragraph);
+      if (text) {
+        console.log('📌 Native bullet detected:', text.substring(0, 50));
+        this.processBulletPoint(text);
+      }
+      return;
+    }
+
     const elements = paragraph.elements || [];
     let text = '';
     let isHeader = false;
@@ -378,7 +391,8 @@ class DocumentParser {
       /^Remember/i,
       /^Closing Conversation/i,
       /^Scenario:/i,
-      /^Job:/i
+      /^Job:/i,
+      /^Quick Reminder!/i
     ];
     
     return headerPatterns.some(pattern => pattern.test(text));
@@ -469,27 +483,111 @@ class DocumentParser {
   processBulletPoint(text) {
     // Clean bullet point text
     const bulletText = text.replace(/^[\s-•]+/, '').trim();
-    
-    if (this.currentSection && bulletText) {
-      this.parsedContent.sections[this.currentSection].items.push(bulletText);
-    } else if (!this.currentSection) {
+
+    if (!bulletText) return; // Skip empty bullets
+
+    // Ensure we have a section to add to
+    if (!this.currentSection || !this.parsedContent.sections[this.currentSection]) {
       // Create default section if no header exists
       this.currentSection = 'general';
       this.parsedContent.sections[this.currentSection] = {
         title: 'General',
         type: 'section',
-        items: [bulletText],
+        items: [],
         content: ''
       };
     }
-    
-    // Add to current content block
-    if (this.currentBlock) {
-      this.currentBlock.content.push({
-        type: 'bullet',
-        text: bulletText
-      });
+
+    // Add to section items
+    this.parsedContent.sections[this.currentSection].items.push(bulletText);
+
+    // Ensure we have a content block
+    if (!this.currentBlock) {
+      this.currentBlock = {
+        id: this.parsedContent.contentBlocks.length + 1,
+        header: null,
+        content: [],
+        type: 'text'
+      };
+      this.parsedContent.contentBlocks.push(this.currentBlock);
     }
+
+    // Add to current content block
+    this.currentBlock.content.push({
+      type: 'bullet',
+      text: bulletText
+    });
+  }
+
+  /**
+   * Split text by Why?/How?/What? keywords for Parent How To tabs
+   * @param {string} text - Text content to split
+   * @returns {Array|null} - Array of { keyword, content } objects, or null if no keywords found
+   */
+  splitByWhyHowWhat(text) {
+    if (!text) return null;
+
+    // Check if text contains any of the keywords
+    const hasKeywords = /Why\?|How\?|What\?/i.test(text);
+    if (!hasKeywords) return null;
+
+    const sections = [];
+
+    // Use regex to split by Why?/How?/What? while preserving the keywords
+    // This handles text like "Why? content here How? more content What? final content"
+    const whyMatch = text.match(/(Why\?.*?)(?=How\?|What\?|$)/is);
+    const howMatch = text.match(/(How\?.*?)(?=What\?|$)/is);
+    const whatMatch = text.match(/(What\?.*)$/is);
+
+    // Check for intro text before the first keyword
+    const firstKeywordIndex = Math.min(
+      text.search(/Why\?/i) >= 0 ? text.search(/Why\?/i) : Infinity,
+      text.search(/How\?/i) >= 0 ? text.search(/How\?/i) : Infinity,
+      text.search(/What\?/i) >= 0 ? text.search(/What\?/i) : Infinity
+    );
+
+    if (firstKeywordIndex > 0 && firstKeywordIndex !== Infinity) {
+      const introText = text.substring(0, firstKeywordIndex).trim();
+      if (introText) {
+        sections.push({
+          keyword: null,
+          content: introText
+        });
+      }
+    }
+
+    if (whyMatch) {
+      const content = whyMatch[1].replace(/^Why\?\s*/i, '').trim();
+      if (content) {
+        sections.push({
+          keyword: 'Why?',
+          content: content
+        });
+      }
+    }
+
+    if (howMatch) {
+      const content = howMatch[1].replace(/^How\?\s*/i, '').trim();
+      if (content) {
+        sections.push({
+          keyword: 'How?',
+          content: content
+        });
+      }
+    }
+
+    if (whatMatch) {
+      const content = whatMatch[1].replace(/^What\?\s*/i, '').trim();
+      if (content) {
+        sections.push({
+          keyword: 'What?',
+          content: content
+        });
+      }
+    }
+
+    console.log('🔀 splitByWhyHowWhat result:', sections.length, 'sections found');
+    return sections.length > 0 ? sections : null;
   }
 
   /**
@@ -497,9 +595,53 @@ class DocumentParser {
    * @param {string} text - Regular text content
    */
   processRegularText(text) {
+    // For Parent How To tabs, check for Why/How/What patterns and split into separate blocks
+    if (this.isParentHowToTab) {
+      const sections = this.splitByWhyHowWhat(text);
+      if (sections) {
+        console.log('📦 Creating separate blocks for Why/How/What sections in Parent How To tab');
+        sections.forEach(section => {
+          if (section.keyword) {
+            // Create a new block for each keyword section
+            this.currentBlock = {
+              id: this.parsedContent.contentBlocks.length + 1,
+              header: section.keyword,
+              content: [{
+                type: 'text',
+                text: section.content
+              }],
+              type: 'text'
+            };
+            this.parsedContent.contentBlocks.push(this.currentBlock);
+            console.log(`   Created ${section.keyword} block`);
+          } else if (section.content) {
+            // Intro text before first keyword - add to current block or create new
+            if (this.currentBlock) {
+              this.currentBlock.content.push({
+                type: 'text',
+                text: section.content
+              });
+            } else {
+              this.currentBlock = {
+                id: this.parsedContent.contentBlocks.length + 1,
+                header: null,
+                content: [{
+                  type: 'text',
+                  text: section.content
+                }],
+                type: 'text'
+              };
+              this.parsedContent.contentBlocks.push(this.currentBlock);
+            }
+          }
+        });
+        return; // Don't continue with normal processing
+      }
+    }
+
     if (this.currentSection) {
       const existingContent = this.parsedContent.sections[this.currentSection].content;
-      this.parsedContent.sections[this.currentSection].content = 
+      this.parsedContent.sections[this.currentSection].content =
         existingContent ? `${existingContent}\n${text}` : text;
     }
     

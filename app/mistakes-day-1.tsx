@@ -38,7 +38,7 @@ export default function MistakesDay1Screen() {
           <ThemedText style={styles.subtitle}>Parent + Child • Collaborative Learning</ThemedText>
         </ThemedView>
         <ThemedView style={styles.errorContainer}>
-          <ThemedText style={styles.errorTitle}>⚠️ Content Unavailable</ThemedText>
+          <ThemedText style={styles.errorTitle}>Content Unavailable</ThemedText>
           <ThemedText style={styles.errorText}>{error}</ThemedText>
           <TouchableOpacity style={styles.retryButton} onPress={refetch}>
             <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>

@@ -1,5 +1,6 @@
 import CollapsibleDayCard from '@/components/CollapsibleDayCard';
 import { ImageViewer } from '@/components/ImageViewer';
+import { ModuleCompletionTracker } from '@/components/ModuleCompletionTracker';
 import SurveyButton from '@/components/SurveyButton';
 import { TableViewer } from '@/components/TableViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
@@ -39,7 +40,7 @@ export default function MasteryMomentsModuleScreen() {
   // Debug: Log content structure to help troubleshoot images
   React.useEffect(() => {
     if (content) {
-      console.log('📄 Content loaded:', {
+      console.log('Content loaded:', {
         hasContentBlocks: !!content.contentBlocks,
         contentBlocksLength: content.contentBlocks?.length || 0,
         hasSections: !!content.sections,
@@ -50,7 +51,7 @@ export default function MasteryMomentsModuleScreen() {
         content.contentBlocks.forEach((block, index) => {
           const imageCount = block.content?.filter(item => item.type === 'image').length || 0;
           if (imageCount > 0) {
-            console.log(`🖼️ Block ${index + 1} has ${imageCount} images`);
+            console.log(`Block ${index + 1} has ${imageCount} images`);
             block.content?.filter(item => item.type === 'image').forEach((img, imgIndex) => {
               const isDataUrl = img.uri?.startsWith('data:');
               console.log(`   Image ${imgIndex + 1}: ${isDataUrl ? 'DATA URL' : 'EXTERNAL URL'} - ${img.alt}`);
@@ -64,57 +65,57 @@ export default function MasteryMomentsModuleScreen() {
   const dayModules: DayModule[] = [
     {
       id: 'day1',
-      title: 'Recognizing Success',
-      description: 'Learning to identify your achievements',
+      title: 'Connect and Understand',
+      description: '',
       dayNumber: 1,
       isCompleted: false,
       isLocked: false,
-      color: '#FFC93C',
-      icon: '🌟',
+      color: '#F7EDCC',
+      icon: '',
       type: 'collaborative'
     },
     {
       id: 'day2',
-      title: 'Celebrating Progress',
-      description: 'Acknowledging growth and improvement',
+      title: 'Think Together',
+      description: '',
       dayNumber: 2,
       isCompleted: false,
       isLocked: false,
-      color: '#FF9A3C',
-      icon: '🎉',
+      color: '#F0DB99',
+      icon: '',
       type: 'collaborative'
     },
     {
       id: 'day3',
-      title: 'Sharing Achievements',
-      description: 'Communicating your successes with others',
+      title: 'Choose and Observe',
+      description: '',
       dayNumber: 3,
       isCompleted: false,
       isLocked: false,
-      color: '#FF6F3C',
-      icon: '📢',
+      color: '#E8C866',
+      icon: '',
       type: 'collaborative'
     },
     {
       id: 'day4',
-      title: 'Building Confidence',
-      description: 'Using success to boost self-confidence',
+      title: 'Lead and Learn',
+      description: '',
       dayNumber: 4,
       isCompleted: false,
       isLocked: false,
-      color: '#155263',
-      icon: '💪',
+      color: '#E1B633',
+      icon: '',
       type: 'collaborative'
     },
     {
       id: 'day5',
-      title: 'Future Goals',
-      description: 'Setting new targets based on past success',
+      title: 'Spotlight and Celebrate',
+      description: '',
       dayNumber: 5,
       isCompleted: false,
       isLocked: false,
-      color: '#939393',
-      icon: '🏆',
+      color: '#D9A400',
+      icon: '',
       type: 'evaluation'
     }
   ];
@@ -201,7 +202,7 @@ export default function MasteryMomentsModuleScreen() {
         }
       });
       
-      console.log('🔍 Scenario Block Parsed:', {
+      console.log('Scenario Block Parsed:', {
         blockId: block.id,
         hasQuestion: !!scenarioQuestion,
         optionsCount: scenarioOptions.length,
@@ -303,7 +304,7 @@ export default function MasteryMomentsModuleScreen() {
                 />
               );
             } else if (item.type === 'table') {
-              console.log('📊 Rendering TableViewer with:', { 
+              console.log('Rendering TableViewer with:', { 
                 id: item.id, 
                 rows: item.rows?.length, 
                 columns: item.columns 
@@ -316,7 +317,7 @@ export default function MasteryMomentsModuleScreen() {
                 />
               );
             } else if (item.type === 'chart') {
-              console.log('📈 Rendering chart placeholder with:', { 
+              console.log('Rendering chart placeholder with:', { 
                 id: item.id, 
                 title: item.title, 
                 chartType: item.chartType 
@@ -324,7 +325,7 @@ export default function MasteryMomentsModuleScreen() {
               return (
                 <ThemedView key={idx} style={styles.chartPlaceholder}>
                   <ThemedText style={styles.chartTitle}>
-                    📈 {item.title || 'Chart'}
+                    {item.title || 'Chart'}
                   </ThemedText>
                   <ThemedText style={styles.chartSubtitle}>
                     Type: {item.chartType || 'Unknown'}
@@ -374,9 +375,9 @@ export default function MasteryMomentsModuleScreen() {
     <ThemedView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <ThemedView style={styles.header}>
-          <ThemedText style={styles.title}>🏆 Mastery Moments Module</ThemedText>
+          <ThemedText style={styles.title}>Mastery Moments Module</ThemedText>
           <ThemedText style={styles.subtitle}>
-            Celebrating success
+            I notice the wins along the way.
           </ThemedText>
         </ThemedView>
 
@@ -400,9 +401,9 @@ export default function MasteryMomentsModuleScreen() {
 
                   {error && (
                     <ThemedView style={styles.errorContainer}>
-                      <ThemedText style={styles.errorText}>⚠️ {error}</ThemedText>
+                      <ThemedText style={styles.errorText}>{error}</ThemedText>
                       <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
-                        <ThemedText style={styles.refreshButtonText}>🔄 Retry</ThemedText>
+                        <ThemedText style={styles.refreshButtonText}>Retry</ThemedText>
                       </TouchableOpacity>
                     </ThemedView>
                   )}
@@ -421,10 +422,10 @@ export default function MasteryMomentsModuleScreen() {
                       {/* Fallback: Render legacy sections format if no content blocks */}
                       {(!content.contentBlocks || content.contentBlocks.length === 0) && content.sections && (
                         <ThemedView style={styles.sectionsContainer}>
-                          {content.sections.learning_goals && renderSection('learning_goals', content.sections.learning_goals, '🎯')}
-                          {content.sections.vocabulary && renderSection('vocabulary', content.sections.vocabulary, '📖')}
-                          {content.sections.activity && renderSection('activity', content.sections.activity, '🎨')}
-                          {content.sections.reflection && renderSection('reflection', content.sections.reflection, '💭')}
+                          {content.sections.learning_goals && renderSection('learning_goals', content.sections.learning_goals, '')}
+                          {content.sections.vocabulary && renderSection('vocabulary', content.sections.vocabulary, '')}
+                          {content.sections.activity && renderSection('activity', content.sections.activity, '')}
+                          {content.sections.reflection && renderSection('reflection', content.sections.reflection, '')}
                         </ThemedView>
                       )}
 
@@ -432,13 +433,24 @@ export default function MasteryMomentsModuleScreen() {
                       {content.metadata && (
                         <ThemedView style={styles.metadataContainer}>
                           <ThemedText style={styles.metadataText}>
-                            📄 Sections: {content.metadata.totalSections}
+                            Sections: {content.metadata.totalSections}
                           </ThemedText>
                         </ThemedView>
                       )}
 
+                      {/* Module Completion Tracker */}
+                      <ModuleCompletionTracker
+                        moduleId="masterymoments"
+                        moduleName="Mastery Moments"
+                        currentDay={day.dayNumber}
+                        totalDays={5}
+                        onProgressUpdate={(completedDays, isCompleted) => {
+                          console.log('Progress updated:', { completedDays, isCompleted });
+                        }}
+                      />
+
                       {/* Survey Button - Only show for Day 5 */}
-                      <SurveyButton 
+                      <SurveyButton
                         moduleId="masterymoments"
                         moduleName="Mastery Moments"
                         dayNumber={day.dayNumber}
@@ -657,31 +669,31 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: '#009688', // Teal border
   },
-  // Day-specific bubble styles that match day card colors
+  // Day-specific bubble styles - all gray for consistent appearance
   bubbleDay1: {
-    backgroundColor: '#FFF8E1', // Light version of #FFC93C
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#FFC93C', // Day 1 golden yellow
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay2: {
-    backgroundColor: '#FFF3E0', // Light version of #FF9A3C  
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#FF9A3C', // Day 2 orange
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay3: {
-    backgroundColor: '#FFEBE0', // Light version of #FF6F3C
-    borderLeftWidth: 4, 
-    borderLeftColor: '#FF6F3C', // Day 3 red-orange
+    backgroundColor: '#F5F5F5',
+    borderLeftWidth: 4,
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay4: {
-    backgroundColor: '#E0F4F3', // Light version of #155263
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#155263', // Day 4 dark teal  
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay5: {
-    backgroundColor: '#F5F5F5', // Light version of #939393
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#939393', // Day 5 gray
+    borderLeftColor: '#BDBDBD',
   },
   // Bold header style
   bubbleHeaderBold: {

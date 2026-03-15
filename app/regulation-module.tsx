@@ -1,5 +1,6 @@
 import CollapsibleDayCard from '@/components/CollapsibleDayCard';
 import { ImageViewer } from '@/components/ImageViewer';
+import { ModuleCompletionTracker } from '@/components/ModuleCompletionTracker';
 import SurveyButton from '@/components/SurveyButton';
 import { TableViewer } from '@/components/TableViewer';
 import { TextWithYouTube } from '@/components/TextWithYouTube';
@@ -39,7 +40,7 @@ export default function RegulationModuleScreen() {
   // Debug: Log content structure to help troubleshoot images
   React.useEffect(() => {
     if (content) {
-      console.log('📄 Content loaded:', {
+      console.log('Content loaded:', {
         hasContentBlocks: !!content.contentBlocks,
         contentBlocksLength: content.contentBlocks?.length || 0,
         hasSections: !!content.sections,
@@ -50,7 +51,7 @@ export default function RegulationModuleScreen() {
         content.contentBlocks.forEach((block, index) => {
           const imageCount = block.content?.filter(item => item.type === 'image').length || 0;
           if (imageCount > 0) {
-            console.log(`🖼️ Block ${index + 1} has ${imageCount} images`);
+            console.log(`Block ${index + 1} has ${imageCount} images`);
             block.content?.filter(item => item.type === 'image').forEach((img, imgIndex) => {
               const isDataUrl = img.uri?.startsWith('data:');
               console.log(`   Image ${imgIndex + 1}: ${isDataUrl ? 'DATA URL' : 'EXTERNAL URL'} - ${img.alt}`);
@@ -64,57 +65,57 @@ export default function RegulationModuleScreen() {
   const dayModules: DayModule[] = [
     {
       id: 'day1',
-      title: 'Understanding Emotions',
-      description: 'Learning to identify and name our feelings',
+      title: 'Connect and Understand',
+      description: '',
       dayNumber: 1,
       isCompleted: false,
       isLocked: false,
-      color: '#FFC93C',
-      icon: '😊',
+      color: '#F7E9E5',
+      icon: '',
       type: 'collaborative'
     },
     {
       id: 'day2',
-      title: 'Calming Strategies',
-      description: 'Tools and techniques for self-regulation',
+      title: 'Think Together',
+      description: '',
       dayNumber: 2,
       isCompleted: false,
       isLocked: false,
-      color: '#FF9A3C',
-      icon: '🧘',
+      color: '#EFD2CA',
+      icon: '',
       type: 'collaborative'
     },
     {
       id: 'day3',
-      title: 'Recognizing Triggers',
-      description: 'Understanding what makes us feel big emotions',
+      title: 'Choose and Observe',
+      description: '',
       dayNumber: 3,
       isCompleted: false,
       isLocked: false,
-      color: '#FF6F3C',
-      icon: '🔍',
+      color: '#E8BCB0',
+      icon: '',
       type: 'collaborative'
     },
     {
       id: 'day4',
-      title: 'Practicing Control',
-      description: 'Building skills for emotional management',
+      title: 'Lead and Learn',
+      description: '',
       dayNumber: 4,
       isCompleted: false,
       isLocked: false,
-      color: '#155263',
-      icon: '💪',
+      color: '#E0A595',
+      icon: '',
       type: 'collaborative'
     },
     {
       id: 'day5',
-      title: 'Putting It Together',
-      description: 'Reflecting on growth and progress',
+      title: 'Spotlight and Celebrate',
+      description: '',
       dayNumber: 5,
       isCompleted: false,
       isLocked: false,
-      color: '#939393',
-      icon: '🌟',
+      color: '#D88F7B',
+      icon: '',
       type: 'evaluation'
     }
   ];
@@ -133,17 +134,17 @@ export default function RegulationModuleScreen() {
   };
 
   const toggleRevealAnswer = (blockId: number) => {
-    console.log('🔄 Toggle Answer for block:', blockId);
+    console.log('Toggle Answer for block:', blockId);
     setRevealedAnswers(prev => {
       const newSet = new Set(prev);
       if (newSet.has(blockId)) {
-        console.log('➖ Hiding answer for block:', blockId);
+        console.log('Hiding answer for block:', blockId);
         newSet.delete(blockId);
       } else {
-        console.log('➕ Revealing answer for block:', blockId);
+        console.log('Revealing answer for block:', blockId);
         newSet.add(blockId);
       }
-      console.log('📊 Updated revealed answers:', Array.from(newSet));
+      console.log('Updated revealed answers:', Array.from(newSet));
       return newSet;
     });
   };
@@ -209,7 +210,7 @@ export default function RegulationModuleScreen() {
         }
       });
       
-      console.log('🔍 Scenario Block Parsed:', {
+      console.log('Scenario Block Parsed:', {
         blockId: block.id,
         hasQuestion: !!scenarioQuestion,
         optionsCount: scenarioOptions.length,
@@ -311,7 +312,7 @@ export default function RegulationModuleScreen() {
                 />
               );
             } else if (item.type === 'table') {
-              console.log('📊 Rendering TableViewer with:', { 
+              console.log('Rendering TableViewer with:', { 
                 id: item.id, 
                 rows: item.rows?.length, 
                 columns: item.columns 
@@ -324,7 +325,7 @@ export default function RegulationModuleScreen() {
                 />
               );
             } else if (item.type === 'chart') {
-              console.log('📈 Rendering chart placeholder with:', { 
+              console.log('Rendering chart placeholder with:', { 
                 id: item.id, 
                 title: item.title, 
                 chartType: item.chartType 
@@ -332,7 +333,7 @@ export default function RegulationModuleScreen() {
               return (
                 <ThemedView key={idx} style={styles.chartPlaceholder}>
                   <ThemedText style={styles.chartTitle}>
-                    📈 {item.title || 'Chart'}
+                    {item.title || 'Chart'}
                   </ThemedText>
                   <ThemedText style={styles.chartSubtitle}>
                     Type: {item.chartType || 'Unknown'}
@@ -380,14 +381,14 @@ export default function RegulationModuleScreen() {
 
   const getSectionIcon = (sectionKey: string): string => {
     const iconMap: Record<string, string> = {
-      rules: '📋',
-      instructions: '💭', 
-      activities: '🎯',
-      understanding_emotions: '😊',
-      think_together: '💭',
-      todays_activities: '🎯',
+      rules: '',
+      instructions: '',
+      activities: '',
+      understanding_emotions: '',
+      think_together: '',
+      todays_activities: '',
     };
-    return iconMap[sectionKey] || '📝';
+    return iconMap[sectionKey] || '';
   };
 
   const renderDayContent = (day: DayModule) => {
@@ -412,7 +413,7 @@ export default function RegulationModuleScreen() {
       if (error) {
         return (
           <ThemedView style={styles.errorContainer}>
-            <ThemedText style={styles.errorTitle}>⚠️ Content Unavailable</ThemedText>
+            <ThemedText style={styles.errorTitle}>Content Unavailable</ThemedText>
             <ThemedText style={styles.errorText}>{error}</ThemedText>
             <TouchableOpacity style={styles.retryButton} onPress={refetch}>
               <ThemedText style={styles.retryButtonText}>Try Again</ThemedText>
@@ -426,7 +427,7 @@ export default function RegulationModuleScreen() {
         <ThemedView>
           {/* Refresh button */}
           <TouchableOpacity style={styles.refreshButton} onPress={refetch}>
-            <ThemedText style={styles.refreshButtonText}>🔄 Refresh Content</ThemedText>
+            <ThemedText style={styles.refreshButtonText}>Refresh Content</ThemedText>
           </TouchableOpacity>
 
           {content?.contentBlocks && content.contentBlocks.length > 0 ? (
@@ -440,7 +441,7 @@ export default function RegulationModuleScreen() {
           ) : (
             // Fallback content if no Google Docs content is available
             <ThemedView style={styles.section}>
-              <ThemedText style={styles.sectionTitle}>📝 Day {day.dayNumber} Content</ThemedText>
+              <ThemedText style={styles.sectionTitle}>Day {day.dayNumber} Content</ThemedText>
               <ThemedText style={styles.contentText}>
                 Content is loading from Google Docs...
               </ThemedText>
@@ -460,8 +461,19 @@ export default function RegulationModuleScreen() {
             </ThemedView>
           )}
 
+          {/* Module Completion Tracker */}
+          <ModuleCompletionTracker
+            moduleId="regulation"
+            moduleName="Self-Regulation"
+            currentDay={day.dayNumber}
+            totalDays={5}
+            onProgressUpdate={(completedDays, isCompleted) => {
+              console.log('Progress updated:', { completedDays, isCompleted });
+            }}
+          />
+
           {/* Survey Button - Only show for Day 5 */}
-          <SurveyButton 
+          <SurveyButton
             moduleId="regulation"
             moduleName="Self-Regulation & Control"
             dayNumber={day.dayNumber}
@@ -469,11 +481,11 @@ export default function RegulationModuleScreen() {
         </ThemedView>
       );
     }
-    
+
     // This shouldn't happen with our new logic, but keeping as fallback
     return (
       <ThemedView>
-        <ThemedText style={styles.contentTitle}>🚀 Loading...</ThemedText>
+        <ThemedText style={styles.contentTitle}>Loading...</ThemedText>
         <ThemedText style={styles.contentText}>
           Preparing Day {day.dayNumber} content...
         </ThemedText>
@@ -486,7 +498,7 @@ export default function RegulationModuleScreen() {
       <ThemedView style={styles.header}>
         <ThemedText type="title" style={styles.moduleTitle}>Self-Regulation & Control</ThemedText>
         <ThemedText style={styles.moduleSubtitle}>
-          Build emotional awareness and self-regulation skills through 5 focused days...
+          I can breathe to help me calm and make decisions.
         </ThemedText>
       </ThemedView>
 
@@ -731,31 +743,31 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: '#009688', // Teal border
   },
-  // Day-specific bubble styles that match day card colors
+  // Day-specific bubble styles - all gray for consistent appearance
   bubbleDay1: {
-    backgroundColor: '#FFF8E1', // Light version of #FFC93C
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#FFC93C', // Day 1 golden yellow
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay2: {
-    backgroundColor: '#FFF3E0', // Light version of #FF9A3C  
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#FF9A3C', // Day 2 orange
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay3: {
-    backgroundColor: '#FFEBE0', // Light version of #FF6F3C
-    borderLeftWidth: 4, 
-    borderLeftColor: '#FF6F3C', // Day 3 red-orange
+    backgroundColor: '#F5F5F5',
+    borderLeftWidth: 4,
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay4: {
-    backgroundColor: '#E0F4F3', // Light version of #155263
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#155263', // Day 4 dark teal  
+    borderLeftColor: '#BDBDBD',
   },
   bubbleDay5: {
-    backgroundColor: '#F5F5F5', // Light version of #939393
+    backgroundColor: '#F5F5F5',
     borderLeftWidth: 4,
-    borderLeftColor: '#939393', // Day 5 gray
+    borderLeftColor: '#BDBDBD',
   },
   // Bold header style
   bubbleHeaderBold: {

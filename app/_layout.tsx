@@ -1,5 +1,11 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
+import {
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+} from '@expo-google-fonts/poppins';
 import { router, Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Platform, Text, TouchableOpacity } from 'react-native';
@@ -81,6 +87,7 @@ function TutorialManager() {
 }
 
 import { AuthGuard } from '@/components/AuthGuard';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { IntroGuard } from '@/components/IntroGuard';
 import { FamilyOnboardingTutorial } from '@/components/FamilyOnboardingTutorial';
 import { AppModeProvider, useAppMode } from '@/contexts/AppModeContext';
@@ -93,6 +100,11 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    material: require('@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf'),
   });
 
   if (!loaded) {
@@ -126,9 +138,9 @@ export default function RootLayout() {
           minHeight: 50,
         }}
       >
-        <Text style={{ 
+        <Text style={{
           fontSize: 40, // Bigger size
-          fontWeight: '300', // Lighter weight like iOS
+          fontFamily: 'Poppins_400Regular',
           color: colorScheme === 'dark' ? '#0A84FF' : '#007AFF', // iOS blue
           lineHeight: 28,
           textAlign: 'center',
@@ -153,12 +165,13 @@ export default function RootLayout() {
   });
 
   return (
-    <TutorialProvider>
-      <AppModeProvider>
-        <CompletionProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <AuthGuard>
-              <IntroGuard>
+    <ErrorBoundary>
+      <TutorialProvider>
+        <AppModeProvider>
+          <CompletionProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <AuthGuard>
+                <IntroGuard>
                 <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen 
@@ -259,12 +272,13 @@ export default function RootLayout() {
                 <Stack.Screen name="+not-found" />
               </Stack>
               <TutorialManager />
-              </IntroGuard>
-            </AuthGuard>
-            <StatusBar style="auto" />
-          </ThemeProvider>
-        </CompletionProvider>
-      </AppModeProvider>
-    </TutorialProvider>
+                </IntroGuard>
+              </AuthGuard>
+              <StatusBar style="auto" />
+            </ThemeProvider>
+          </CompletionProvider>
+        </AppModeProvider>
+      </TutorialProvider>
+    </ErrorBoundary>
   );
 }

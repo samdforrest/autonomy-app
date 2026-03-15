@@ -3,50 +3,122 @@ import { ThemedView } from '@/components/ThemedView';
 import { useAppMode } from '@/contexts/AppModeContext';
 import { useGoogleDocsContent } from '@/hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '@/services/api';
-import { surveyService, type SurveyQuestion, type SurveyResponse } from '@/services/survey-service';
+import { surveyService } from '@/services/survey-service';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity
 } from 'react-native';
+
+type SurveyType = 'child' | 'parent';
+
+interface SurveyQuestion {
+  id: string;
+  text: string;
+}
 
 interface SurveyModalProps {
   visible: boolean;
   onClose: () => void;
   moduleId: string;
   moduleName: string;
+  surveyType: SurveyType;
 }
 
-export default function SurveyModal({ visible, onClose, moduleId, moduleName }: SurveyModalProps) {
-  const { userMode, currentFamilyCode } = useAppMode();
+// Parse questions from Google Docs content blocks
+function parseQuestionsFromContent(contentBlocks: any[]): SurveyQuestion[] {
+  const questions: SurveyQuestion[] = [];
+  let questionCounter = 1;
+
+  if (!contentBlocks) return questions;
+
+  contentBlocks.forEach((block) => {
+    // Check if block header contains a numbered question (e.g., "1. How was...")
+    if (block.header) {
+      const headerText = block.header.trim();
+      // Match patterns like "1. Question text" or just text that looks like a question
+      const numberedMatch = headerText.match(/^(\d+)\.\s*(.+)$/);
+      if (numberedMatch) {
+        questions.push({
+          id: `q${questionCounter}`,
+          text: headerText // Keep the full numbered format
+        });
+        questionCounter++;
+      } else if (headerText.endsWith('?') || headerText.length > 20) {
+        // Non-numbered question or longer text that might be a question
+        questions.push({
+          id: `q${questionCounter}`,
+          text: `${questionCounter}. ${headerText}`
+        });
+        questionCounter++;
+      }
+    }
+
+    // Check content items for questions (bullets and text)
+    if (block.content) {
+      block.content.forEach((item: any) => {
+        const text = item.text?.trim();
+        if (!text) return;
+
+        // Handle bullets as questions
+        if (item.type === 'bullet') {
+          questions.push({
+            id: `q${questionCounter}`,
+            text: `${questionCounter}. ${text}`
+          });
+          questionCounter++;
+        }
+        // Handle numbered text
+        else if (item.type === 'text') {
+          const numberedMatch = text.match(/^(\d+)\.\s*(.+)$/);
+          if (numberedMatch) {
+            questions.push({
+              id: `q${questionCounter}`,
+              text: text
+            });
+            questionCounter++;
+          }
+        }
+      });
+    }
+  });
+
+  return questions;
+}
+
+export default function SurveyModal({ visible, onClose, moduleId, moduleName, surveyType }: SurveyModalProps) {
+  const { currentFamilyCode } = useAppMode();
   const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [surveyCompleted, setSurveyCompleted] = useState(false);
 
+  // Determine which tab to fetch based on survey type
+  const tabName = surveyType === 'child' ? 'Student Survey' : 'Parent Survey';
+
   // Fetch survey content from Google Docs
   const { content, loading, error } = useGoogleDocsContent(
     DOCUMENT_REFS.MAIN_DOCUMENT,
     'raw',
-    { tab: 'Choose to Grow – Parent Feedback Survey', autoFetch: visible }
+    { tab: tabName, autoFetch: visible }
   );
 
   // Parse questions when content loads
   useEffect(() => {
     if (content?.contentBlocks) {
-      console.log('📋 Parsing survey questions from content blocks...');
-      const parsedQuestions = surveyService.parseSurveyQuestions(content.contentBlocks);
+      console.log(`📋 Parsing ${surveyType} survey questions from content blocks...`);
+      const parsedQuestions = parseQuestionsFromContent(content.contentBlocks);
       console.log('📋 Parsed questions:', parsedQuestions.length, 'questions found');
       setQuestions(parsedQuestions);
-      
+
       // Initialize responses object
       const initialResponses: Record<string, string> = {};
       parsedQuestions.forEach(q => {
@@ -54,7 +126,7 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName }: 
       });
       setResponses(initialResponses);
     }
-  }, [content]);
+  }, [content, surveyType]);
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -65,7 +137,7 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName }: 
     }
   }, [visible]);
 
-  const handleResponse = (questionId: string, answer: string, answerLabel?: string) => {
+  const handleResponse = (questionId: string, answer: string) => {
     setResponses(prev => ({
       ...prev,
       [questionId]: answer
@@ -97,36 +169,24 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName }: 
       setIsSubmitting(true);
 
       // Convert responses to SurveyResponse format
-      const surveyResponses: SurveyResponse[] = questions.map(question => {
-        const answer = responses[question.id] || '';
-        let answerLabel: string | undefined = undefined;
+      const surveyResponses = questions.map(question => ({
+        questionId: question.id,
+        questionText: question.text,
+        answer: responses[question.id] || '',
+        timestamp: new Date()
+      }));
 
-        // For multiple choice, find the label of the selected option
-        if (question.type === 'multiple-choice' && question.options) {
-          const selectedOption = question.options.find(opt => opt.text === answer);
-          answerLabel = selectedOption?.label;
-        }
-
-        return {
-          questionId: question.id,
-          questionText: question.text,
-          answer,
-          answerLabel: answerLabel || undefined, // Keep undefined here, will be cleaned in service
-          timestamp: new Date()
-        };
-      });
-
-      // Submit survey
+      // Submit survey with survey type (child/parent)
       await surveyService.submitSurvey(
         surveyResponses,
         currentFamilyCode,
         moduleId,
         moduleName,
-        userMode
+        surveyType
       );
 
       setSurveyCompleted(true);
-      
+
       // Auto-close after 2 seconds
       setTimeout(() => {
         onClose();
@@ -145,58 +205,24 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName }: 
   };
 
   const renderQuestion = (question: SurveyQuestion) => {
-    if (question.type === 'multiple-choice' && question.options) {
-      return (
-        <ThemedView style={styles.questionContainer}>
-          <ThemedText style={styles.questionText}>
-            {question.text}
-          </ThemedText>
-          
-          <ThemedView style={styles.optionsContainer}>
-            {question.options.map((option, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.optionButton,
-                  responses[question.id] === option.text && styles.optionButtonSelected
-                ]}
-                onPress={() => handleResponse(question.id, option.text, option.label)}
-              >
-                <ThemedView style={styles.optionContent}>
-                  <ThemedText style={styles.optionLabel}>{option.label}.</ThemedText>
-                  <ThemedText style={[
-                    styles.optionText,
-                    responses[question.id] === option.text && styles.optionTextSelected
-                  ]}>
-                    {option.text}
-                  </ThemedText>
-                </ThemedView>
-              </TouchableOpacity>
-            ))}
-          </ThemedView>
-        </ThemedView>
-      );
-    } else {
-      // Open-ended question
-      return (
-        <ThemedView style={styles.questionContainer}>
-          <ThemedText style={styles.questionText}>
-            {question.text}
-          </ThemedText>
-          
-          <TextInput
-            style={styles.textInput}
-            value={responses[question.id] || ''}
-            onChangeText={(text) => handleResponse(question.id, text)}
-            placeholder="Type your response here..."
-            placeholderTextColor="#999"
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-          />
-        </ThemedView>
-      );
-    }
+    return (
+      <ThemedView style={styles.questionContainer}>
+        <ThemedText style={styles.questionText}>
+          {question.text}
+        </ThemedText>
+
+        <TextInput
+          style={styles.textInput}
+          value={responses[question.id] || ''}
+          onChangeText={(text) => handleResponse(question.id, text)}
+          placeholder="Type your response here..."
+          placeholderTextColor="#999"
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
+        />
+      </ThemedView>
+    );
   };
 
   if (loading) {
@@ -216,8 +242,8 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName }: 
         <ThemedView style={styles.errorContainer}>
           <ThemedText style={styles.errorTitle}>Survey Unavailable</ThemedText>
           <ThemedText style={styles.errorText}>{error}</ThemedText>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <ThemedText style={styles.closeButtonText}>Close</ThemedText>
+          <TouchableOpacity style={styles.errorCloseButton} onPress={onClose}>
+            <ThemedText style={styles.errorCloseButtonText}>Close</ThemedText>
           </TouchableOpacity>
         </ThemedView>
       </Modal>
@@ -228,7 +254,7 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName }: 
     return (
       <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
         <ThemedView style={styles.completedContainer}>
-          <ThemedText style={styles.completedTitle}>✅ Survey Completed!</ThemedText>
+          <ThemedText style={styles.completedTitle}>Survey Completed!</ThemedText>
           <ThemedText style={styles.completedText}>
             Thank you for your feedback on the {moduleName} module. Your responses help us improve the learning experience.
           </ThemedText>
@@ -253,7 +279,9 @@ export default function SurveyModal({ visible, onClose, moduleId, moduleName }: 
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <ThemedText style={styles.closeButtonText}>✕</ThemedText>
           </TouchableOpacity>
-          <ThemedText style={styles.title}>Parent Feedback Survey</ThemedText>
+          <ThemedText style={styles.title}>
+            {surveyType === 'child' ? 'Child Feedback Survey' : 'Parent Feedback Survey'}
+          </ThemedText>
           <ThemedText style={styles.subtitle}>{moduleName} Module</ThemedText>
         </ThemedView>
 
@@ -387,41 +415,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     lineHeight: 26,
   },
-  optionsContainer: {
-    gap: 12,
-  },
-  optionButton: {
-    borderWidth: 2,
-    borderColor: '#e9ecef',
-    borderRadius: 8,
-    padding: 16,
-    backgroundColor: '#f8f9fa',
-  },
-  optionButtonSelected: {
-    borderColor: '#007AFF',
-    backgroundColor: '#e3f2fd',
-  },
-  optionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  optionLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginRight: 12,
-    minWidth: 24,
-  },
-  optionText: {
-    fontSize: 16,
-    color: '#333',
-    flex: 1,
-  },
-  optionTextSelected: {
-    color: '#007AFF',
-    fontWeight: '600',
-  },
   textInput: {
     borderWidth: 1,
     borderColor: '#e9ecef',
@@ -501,6 +494,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 24,
+  },
+  errorCloseButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  errorCloseButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   completedContainer: {
     flex: 1,

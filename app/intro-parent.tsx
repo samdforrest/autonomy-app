@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { TextWithYouTube } from '@/components/TextWithYouTube';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { TextWithYouTube } from '@/components/TextWithYouTube';
-import { useGoogleDocsContent } from '@/hooks/useGoogleDocsContent';
-import { useColorInheritance } from '@/hooks/useColorInheritance';
 import { useAppMode } from '@/contexts/AppModeContext';
-import { familyService } from '@/services/family-service';
+import { useColorInheritance } from '@/hooks/useColorInheritance';
+import { useGoogleDocsContent } from '@/hooks/useGoogleDocsContent';
 import { DOCUMENT_REFS } from '@/services/api';
+import { familyService } from '@/services/family-service';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function ParentIntroScreen() {
   const router = useRouter();
@@ -141,8 +141,14 @@ export default function ParentIntroScreen() {
           </ThemedText>
         </View>
 
-        {/* Content Blocks */}
-        {content?.contentBlocks?.map((block: any, index: number) => renderContentBlock(block, index))}
+        {/* Content Blocks - Videos first, then other content */}
+        {content?.contentBlocks && (() => {
+          // Separate video blocks from non-video blocks
+          const videoBlocks = content.contentBlocks.filter((block: any) => isYouTubeUrl(block.header));
+          const otherBlocks = content.contentBlocks.filter((block: any) => !isYouTubeUrl(block.header));
+          // Render videos first, then other content
+          return [...videoBlocks, ...otherBlocks].map((block: any, index: number) => renderContentBlock(block, index));
+        })()}
 
         {/* Continue Button */}
         <View style={styles.buttonContainer}>
@@ -152,7 +158,7 @@ export default function ParentIntroScreen() {
             disabled={isCompleting}
           >
             <ThemedText style={styles.buttonText}>
-              {isCompleting ? 'Continuing...' : 'Continue to Student Introduction'}
+              {isCompleting ? 'Continuing...' : 'Continue to Student Guide'}
             </ThemedText>
           </TouchableOpacity>
         </View>

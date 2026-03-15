@@ -49,7 +49,7 @@ export function ImageViewer({
   if (hasError) {
     return (
       <ThemedView style={[styles.container, styles.errorContainer, style]}>
-        <ThemedText style={styles.errorText}>❌ Failed to load image</ThemedText>
+        <ThemedText style={styles.errorText}>Failed to load image</ThemedText>
         {alt && <ThemedText style={styles.altText}>{alt}</ThemedText>}
       </ThemedView>
     );

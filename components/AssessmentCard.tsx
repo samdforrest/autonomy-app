@@ -10,15 +10,19 @@ interface AssessmentCardProps {
 }
 
 export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
-  const hasCompletedAssessment = assessmentService.hasCompletedAssessment();
+  const [hasCompletedAssessment, setHasCompletedAssessment] = React.useState(false);
   const [assessmentResults, setAssessmentResults] = React.useState<any>(null);
 
   React.useEffect(() => {
-    const loadResults = async () => {
-      const results = await assessmentService.loadAssessmentResults();
+    const loadData = async () => {
+      const [completed, results] = await Promise.all([
+        assessmentService.hasCompletedAssessment(),
+        assessmentService.loadAssessmentResults()
+      ]);
+      setHasCompletedAssessment(completed);
       setAssessmentResults(results);
     };
-    loadResults();
+    loadData();
   }, []);
 
   const handlePress = () => {
@@ -63,11 +67,11 @@ export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
           ? `Student assessment completed. Recommended starting point: ${topModule}`
           : 'Your student needs to take the assessment to personalize their learning path.',
         buttonText: hasCompletedAssessment ? 'View Student Progress' : 'Remind Student',
-        icon: hasCompletedAssessment ? '📈' : '⏳'
+        // icon: hasCompletedAssessment ? '📈' : '⏳'
       };
     } else {
       return {
-        title: '🎯 Learning Assessment',
+        title: 'Learning Assessment',
         subtitle: hasCompletedAssessment 
           ? 'See your personalized learning path'
           : 'Discover your learning priorities',
@@ -75,7 +79,7 @@ export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
           ? `Your recommended starting point: ${topModule}`
           : 'Take a quick assessment to find out which skills to focus on first.',
         buttonText: hasCompletedAssessment ? 'Take Assessment' : 'Take Assessment',
-        icon: hasCompletedAssessment ? '🌟' : '🚀'
+        // icon: hasCompletedAssessment ? '🌟' : '🚀'
       };
     }
   };
@@ -103,7 +107,7 @@ export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
         {hasCompletedAssessment && (
           <ThemedView style={styles.statusContainer}>
             <ThemedView style={styles.statusBadge}>
-              <ThemedText style={styles.statusText}>✅ Completed</ThemedText>
+              <ThemedText style={styles.statusText}>Completed</ThemedText>
             </ThemedView>
           </ThemedView>
         )}
@@ -128,20 +132,20 @@ export const AssessmentCard: React.FC<AssessmentCardProps> = ({ userMode }) => {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: 'white',
-    borderRadius: 16,
-    marginVertical: 8,
-    marginHorizontal: 16,
+    borderRadius: 12,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   cardContent: {
-    padding: 20,
     backgroundColor: 'transparent',
   },
   cardHeader: {

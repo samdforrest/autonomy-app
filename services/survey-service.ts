@@ -29,6 +29,8 @@ export interface SurveyResponse {
   timestamp: Date;
 }
 
+export type SurveyType = 'child' | 'parent';
+
 export interface SurveySubmission {
   id?: string; // Optional for Firestore auto-generated IDs
   familyCode: string | null;
@@ -36,20 +38,20 @@ export interface SurveySubmission {
   moduleName: string;
   responses: SurveyResponse[];
   submittedAt: Date | Timestamp;
-  completedBy: 'parent' | 'student';
+  surveyType: SurveyType;
 }
 
 class SurveyService {
   private readonly COLLECTION_NAME = 'survey_responses';
 
   /**
-   * Generate a meaningful submission ID in format: FAMILY-CODE-LESSON-NAME
-   * Examples: BEAR-1234-mistakes, LION-5678-collaboration, individual-regulation
+   * Generate a meaningful submission ID in format: FAMILY-CODE-LESSON-NAME-SURVEYTYPE
+   * Examples: BEAR-1234-mistakes-child, LION-5678-collaboration-parent
    */
-  private generateSubmissionId(familyCode: string | null, moduleId: string): string {
+  private generateSubmissionId(familyCode: string | null, moduleId: string, surveyType: SurveyType): string {
     const family = familyCode || 'individual';
     const lesson = moduleId.toLowerCase();
-    return `${family}-${lesson}`;
+    return `${family}-${lesson}-${surveyType}`;
   }
 
   /**
@@ -172,14 +174,14 @@ class SurveyService {
    * @param familyCode - Current family code (null if not in family mode)
    * @param moduleId - Module identifier (e.g., 'mistakes', 'regulation')
    * @param moduleName - Human readable module name
-   * @param userMode - Whether submitted by parent or student
+   * @param surveyType - Whether this is a child or parent survey
    */
   async submitSurvey(
     responses: SurveyResponse[],
     familyCode: string | null,
     moduleId: string,
     moduleName: string,
-    userMode: 'parent' | 'student'
+    surveyType: SurveyType
   ): Promise<void> {
     try {
       // Clean responses to remove undefined values
@@ -190,17 +192,17 @@ class SurveyService {
           answer: response.answer || '',
           timestamp: response.timestamp || new Date()
         };
-        
+
         // Only add answerLabel if it exists and is not undefined
         if (response.answerLabel !== undefined && response.answerLabel !== null) {
           (cleaned as any).answerLabel = response.answerLabel;
         }
-        
+
         return cleaned;
       });
 
-      // Create a meaningful document ID: FAMILY-CODE-LESSON-NAME
-      const customDocId = this.generateSubmissionId(familyCode, moduleId);
+      // Create a meaningful document ID: FAMILY-CODE-LESSON-NAME-SURVEYTYPE
+      const customDocId = this.generateSubmissionId(familyCode, moduleId, surveyType);
 
       const submission: SurveySubmission = {
         familyCode: familyCode || null, // Use null instead of undefined
@@ -208,7 +210,7 @@ class SurveyService {
         moduleName: moduleName || '',
         responses: cleanedResponses,
         submittedAt: serverTimestamp(),
-        completedBy: userMode
+        surveyType: surveyType
       };
 
       // Remove any undefined values that might still exist
@@ -219,17 +221,19 @@ class SurveyService {
         customDocId,
         familyCode: cleanedSubmission.familyCode,
         moduleId: cleanedSubmission.moduleId,
+        surveyType: cleanedSubmission.surveyType,
         responsesCount: cleanedSubmission.responses.length,
         sampleResponse: cleanedSubmission.responses[0]
       });
 
       // Save to Firebase Firestore with custom document ID
       await setDoc(doc(db, this.COLLECTION_NAME, customDocId), cleanedSubmission);
-      
+
       console.log('✅ Survey submitted successfully to Firebase:', {
         submissionId: customDocId,
         familyCode,
         moduleId,
+        surveyType,
         responsesCount: responses.length
       });
     } catch (error) {
@@ -338,20 +342,22 @@ class SurveyService {
   }
 
   /**
-   * Check if survey has been completed for a specific module and family
+   * Check if survey has been completed for a specific module, family, and survey type
    * @param moduleId - Module ID to check
    * @param familyCode - Family code to check (null for individual mode)
+   * @param surveyType - Type of survey (child or parent)
    * @returns Whether survey has been completed
    */
-  async hasSurveyBeenCompleted(moduleId: string, familyCode: string | null): Promise<boolean> {
+  async hasSurveyBeenCompleted(moduleId: string, familyCode: string | null, surveyType: SurveyType): Promise<boolean> {
     try {
-      let q = query(
-        collection(db, this.COLLECTION_NAME),
-        where('moduleId', '==', moduleId),
-        where('familyCode', '==', familyCode)
+      const querySnapshot = await getDocs(
+        query(
+          collection(db, this.COLLECTION_NAME),
+          where('moduleId', '==', moduleId),
+          where('familyCode', '==', familyCode),
+          where('surveyType', '==', surveyType)
+        )
       );
-      
-      const querySnapshot = await getDocs(q);
       return !querySnapshot.empty;
     } catch (error) {
       console.error('❌ Failed to check survey completion in Firebase:', error);

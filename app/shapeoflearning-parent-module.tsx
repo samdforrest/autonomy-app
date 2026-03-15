@@ -88,108 +88,6 @@ export default function ShapeofLearningParentModuleScreen() {
   // Color inheritance for bubbles
   const { getBubbleStyle } = useColorInheritance(content?.contentBlocks, styles);
 
-  const parseWhyHowWhatContent = () => {
-    if (!content?.contentBlocks) return [];
-    
-    const parsedBubbles: any[] = [];
-    
-    content.contentBlocks.forEach((block: any, blockIndex: number) => {
-      // First, add the main header as an intro bubble if it exists
-      if (block.header && block.header !== 'Why?' && block.header !== 'How?' && block.header !== 'What?') {
-        parsedBubbles.push({
-          id: `${block.id || blockIndex}-intro`,
-          header: block.header,
-          content: []
-        });
-      }
-      
-      if (block.content && block.content.length > 0) {
-        // Look for Why/How/What patterns within the text content
-        let currentSection = '';
-        let currentContent: any[] = [];
-        let foundSections = false;
-        
-        block.content.forEach((item: any, itemIndex: number) => {
-          if (item.type === 'text' && item.text) {
-            const text = item.text.trim();
-            console.log(`🔍 Shape of Learning analyzing text: "${text}"`);
-            
-            // Split text by Why/How/What patterns
-            const whyMatch = text.match(/(Why\?.*?)(?=How\?|What\?|$)/s);
-            const howMatch = text.match(/(How\?.*?)(?=What\?|$)/s);
-            const whatMatch = text.match(/(What\?.*?)$/s);
-            
-            if (whyMatch) {
-              console.log('📍 Shape of Learning Found Why section:', whyMatch[1]);
-              parsedBubbles.push({
-                id: `${block.id || blockIndex}-why`,
-                header: 'Why?',
-                content: [{
-                  type: 'text',
-                  text: whyMatch[1].replace(/^Why\?\s*/, '').trim()
-                }]
-              });
-              foundSections = true;
-            }
-            
-            if (howMatch) {
-              console.log('📍 Shape of Learning Found How section:', howMatch[1]);
-              parsedBubbles.push({
-                id: `${block.id || blockIndex}-how`,
-                header: 'How?',
-                content: [{
-                  type: 'text',
-                  text: howMatch[1].replace(/^How\?\s*/, '').trim()
-                }]
-              });
-              foundSections = true;
-            }
-            
-            if (whatMatch) {
-              console.log('📍 Shape of Learning Found What section:', whatMatch[1]);
-              parsedBubbles.push({
-                id: `${block.id || blockIndex}-what`,
-                header: 'What?',
-                content: [{
-                  type: 'text',
-                  text: whatMatch[1].replace(/^What\?\s*/, '').trim()
-                }]
-              });
-              foundSections = true;
-            }
-            
-            // If no Why/How/What found in this text, treat as regular content
-            if (!whyMatch && !howMatch && !whatMatch) {
-              if (!currentSection) {
-                currentContent.push(item);
-              }
-            }
-          } else {
-            // Non-text content
-            currentContent.push(item);
-          }
-        });
-        
-        // If no Why/How/What sections were found, create a single bubble with all content
-        if (!foundSections && currentContent.length > 0) {
-          parsedBubbles.push({
-            id: block.id || `block-${blockIndex}`,
-            header: block.header || 'Content',
-            content: [...currentContent]
-          });
-        }
-      }
-    });
-    
-    // Fallback: if no bubbles were created, return original content
-    if (parsedBubbles.length === 0 && content?.contentBlocks) {
-      return content.contentBlocks;
-    }
-    
-    console.log('🎯 Shape of Learning Final parsed bubbles:', parsedBubbles);
-    return parsedBubbles;
-  };
-
   const renderContent = () => {
     if (loading) {
       return (
@@ -211,13 +109,10 @@ export default function ShapeofLearningParentModuleScreen() {
       );
     }
 
-    const parsedContent = parseWhyHowWhatContent();
-    
-    // Debug: Log parsed content
-    console.log('🔍 Shape of Learning Parsed content length:', parsedContent.length);
-    console.log('🔍 Shape of Learning Parsed content:', parsedContent);
+    // Use contentBlocks directly - backend now handles Why/How/What parsing
+    const contentToRender = content?.contentBlocks || [];
 
-    if (!parsedContent.length) {
+    if (!contentToRender.length) {
       return (
         <ThemedView style={styles.noContentContainer}>
           <ThemedText style={styles.noContentText}>
@@ -227,7 +122,7 @@ export default function ShapeofLearningParentModuleScreen() {
       );
     }
 
-    return parsedContent.map((block: any, index: number) => {
+    return contentToRender.map((block: any, index: number) => {
       const isAnswerRevealed = revealedAnswers.has(block.id || `block-${index}`);
 
       return (
