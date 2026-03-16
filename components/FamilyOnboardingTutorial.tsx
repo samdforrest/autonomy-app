@@ -77,7 +77,7 @@ const NAV_TAB_IDS = ['home-resources', 'modules-nav', 'progress-tracking-nav'] a
 type NavTabId = typeof NAV_TAB_IDS[number];
 
 const NAV_TABS = [
-  { id: 'home-resources' as NavTabId, label: 'Home', icon: require('../assets/images/home-icon.png') },
+  { id: 'home-resources' as NavTabId, label: 'Resources', icon: require('../assets/images/home-icon.png') },
   { id: 'modules-nav' as NavTabId, label: 'Modules', icon: require('../assets/images/modules-icon.png') },
   { id: 'progress-tracking-nav' as NavTabId, label: 'Progress Tracking', icon: require('../assets/images/progress-tracking-icon.png') },
 ];
@@ -299,6 +299,7 @@ export function FamilyOnboardingTutorial({
   if (!visible) return null;
 
   const isNavStep = NAV_TAB_IDS.includes(currentTutorialStep.id as NavTabId);
+  const isParentViewStep = currentTutorialStep.id === 'parent-view';
 
   return (
     <Modal
@@ -307,7 +308,11 @@ export function FamilyOnboardingTutorial({
       animationType="none"
       onRequestClose={onClose}
     >
-      <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
+      <Animated.View style={[
+        styles.overlay,
+        isParentViewStep && styles.overlayLight,
+        { opacity: fadeAnim },
+      ]}>
 
         {/* Arrow indicator pointing to the mode toggle button (bottom-right) */}
         {currentTutorialStep.id === 'mode-switcher-intro' && (
@@ -317,7 +322,11 @@ export function FamilyOnboardingTutorial({
           </View>
         )}
 
-        <View style={[styles.tutorialCard, isNavStep && styles.tutorialCardWithNav]}>
+        <View style={[
+          styles.tutorialCard,
+          isNavStep && styles.tutorialCardWithNav,
+          isParentViewStep && styles.tutorialCardCompact,
+        ]}>
           {/* Progress indicator */}
           <View style={styles.progressContainer}>
             <View style={styles.progressBar}>
@@ -344,6 +353,16 @@ export function FamilyOnboardingTutorial({
             <ThemedText style={styles.stepDescription}>
               {currentTutorialStep.description}
             </ThemedText>
+
+            {/* Upward callout for parent-view step */}
+            {isParentViewStep && (
+              <View style={styles.dashboardCallout}>
+                <Text style={styles.dashboardCalloutArrow}>↑</Text>
+                <Text style={styles.dashboardCalloutText}>
+                  Your learning dashboard, priorities, and progress are shown above
+                </Text>
+              </View>
+            )}
 
             {/* Mode switcher: button illustrations + interactive toggle */}
             {currentTutorialStep.id === 'mode-switcher-intro' && (
@@ -467,6 +486,34 @@ const styles = StyleSheet.create({
   },
   tutorialCardWithNav: {
     maxHeight: '60%',
+  },
+  tutorialCardCompact: {
+    maxHeight: '32%',
+  },
+  overlayLight: {
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  dashboardCallout: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F0FE',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 10,
+    marginBottom: 8,
+  },
+  dashboardCalloutArrow: {
+    fontSize: 22,
+    color: '#007AFF',
+    fontWeight: 'bold',
+  },
+  dashboardCalloutText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#1A56DB',
+    fontWeight: '500',
+    lineHeight: 20,
   },
   progressContainer: {
     flexDirection: 'row',

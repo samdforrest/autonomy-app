@@ -36,7 +36,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Home',
+            title: 'Resources',
             tabBarIcon: ({ color }) => (
               <Image
                 source={require('@/assets/images/home-icon.png')}
