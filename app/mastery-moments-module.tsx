@@ -275,18 +275,20 @@ export default function MasteryMomentsModuleScreen() {
               );
             } else if (item.type === 'bullet') {
               return (
-                <TextWithYouTube 
-                  key={idx} 
+                <TextWithYouTube
+                  key={idx}
                   text={`• ${item.text}`}
+                  spans={item.spans ? [{ text: '• ', bold: false }, ...item.spans] : undefined}
                   textStyle={styles.bulletPoint}
                   videoHeight={180}
                 />
               );
             } else if (item.type === 'text') {
               return (
-                <TextWithYouTube 
-                  key={idx} 
+                <TextWithYouTube
+                  key={idx}
                   text={item.text}
+                  spans={item.spans}
                   textStyle={styles.bubbleText}
                   videoHeight={200}
                 />
