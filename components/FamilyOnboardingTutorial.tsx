@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
+  Image,
   Modal,
   ScrollView,
   StyleSheet,
@@ -9,26 +10,17 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { ModeToggle } from './ModeToggle';
 import { ThemedText } from './ThemedText';
 
 interface TutorialStep {
   id: string;
   title: string;
   description: string;
-  targetArea?: 'header' | 'mode-switcher' | 'family-dashboard' | 'assessment' | 'modules';
+  targetArea?: 'header' | 'mode-switcher' | 'family-dashboard' | 'assessment' | 'modules' | 'home-nav' | 'modules-nav' | 'progress-nav';
   perspective: 'both' | 'parent' | 'student';
-  highlightPosition?: {
-    top?: number;
-    left?: number;
-    right?: number;
-    bottom?: number;
-    width?: number;
-    height?: number;
-  };
-   action?: 'switch-to-parent' | 'switch-to-student' | 'switch-to-parent-and-navigate-profile' | 'switch-to-student-and-navigate-profile' | 'navigate-to-assessment' | 'navigate-to-explore' | 'navigate-to-profile' | 'navigate-to-home' | 'none';
-   isInteractive?: boolean; // Requires user interaction before proceeding
-   interactionTarget?: 'mode-switcher'; // What the user needs to interact with
+  action?: 'switch-to-parent' | 'switch-to-student' | 'switch-to-parent-and-navigate-profile' | 'switch-to-student-and-navigate-profile' | 'navigate-to-assessment' | 'navigate-to-explore' | 'navigate-to-profile' | 'navigate-to-home' | 'none';
+  isInteractive?: boolean;
+  interactionTarget?: 'mode-switcher';
 }
 
 const TUTORIAL_STEPS: TutorialStep[] = [
@@ -39,20 +31,14 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     perspective: 'both',
   },
   {
-    id: 'family-concept',
-    title: 'How Families Work In the App',
-    description: 'Your family code connects everyone! Parents can track progress while students do fun learning activities. Everyone stays connected but has their own experience.',
+    id: 'mode-switcher-intro',
+    title: 'Switch Between Parent & Student View',
+    description: 'This toggle moves between parent and student view. It\'s available no matter where you are in the app so you can move back and forth as you need to.\n\nIf it is blue with the parent icon, it is in parent mode. If it is orange with the student icon, it\'s in student mode.\n\nTry it to move to the next screen.',
     perspective: 'both',
+    targetArea: 'mode-switcher',
+    isInteractive: true,
+    interactionTarget: 'mode-switcher',
   },
-   {
-     id: 'mode-switcher-intro',
-     title: 'Try the Mode Switcher!',
-     description: 'See this toggle? It switches between Parent View (for tracking and insights) and Student View (for learning and activities). Go ahead - try switching it! We\'ll wait for you to explore both modes.',
-     perspective: 'both',
-     targetArea: 'mode-switcher',
-     isInteractive: true,
-     interactionTarget: 'mode-switcher',
-   },
   {
     id: 'parent-view',
     title: 'Parent View: Your Mission Control',
@@ -62,32 +48,38 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     targetArea: 'family-dashboard',
   },
   {
-    id: 'assessment-purpose',
-    title: 'The Learning Assessment',
-    description: 'Students take a quick assessment that creates a personalized learning path. It figures out which skills to focus on first - pretty cool, right? Here\'s what it looks like!',
+    id: 'home-resources',
+    title: 'Home',
+    description: 'Resources have videos and guides for you. You\'ll start here, and you can refer to them whenever you need throughout your experience.',
     perspective: 'both',
-    action: 'navigate-to-assessment',
+    targetArea: 'home-nav',
+    action: 'navigate-to-home',
   },
   {
-    id: 'modules-explained',
-    title: 'Learning Modules: Your Growth Areas',
-    description: 'Each module focuses on important skills like handling mistakes, self-regulation, and curiosity. Parent view has a guide to each lesson. Student view walks you both through the five activities you complete together!',
-    perspective: 'student',
+    id: 'modules-nav',
+    title: 'Modules',
+    description: 'All the lessons live in Modules.',
+    perspective: 'both',
+    targetArea: 'modules-nav',
     action: 'navigate-to-explore',
-    targetArea: 'modules',
   },
   {
-    id: 'working-together',
-    title: 'Learning Together Works Best',
-    description: 'The magic happens when families use this together! Parents can support learning while kids stay engaged with age-appropriate content.',
+    id: 'progress-tracking-nav',
+    title: 'Progress Tracking',
+    description: 'This will be where you find results of your child\'s personalized assessment. It will also highlight what modules you have completed.',
     perspective: 'both',
+    targetArea: 'progress-nav',
+    action: 'navigate-to-profile',
   },
-  {
-    id: 'ready-to-start',
-    title: 'You\'re Ready to Begin!',
-    description: 'While your child starts with the learning assessment, you can start by watching the intro videos in the parent and student guide! Parents can always switch views to check progress. Happy learning!',
-    perspective: 'both',
-  }
+];
+
+const NAV_TAB_IDS = ['home-resources', 'modules-nav', 'progress-tracking-nav'] as const;
+type NavTabId = typeof NAV_TAB_IDS[number];
+
+const NAV_TABS = [
+  { id: 'home-resources' as NavTabId, label: 'Home', icon: require('../assets/images/home-icon.png') },
+  { id: 'modules-nav' as NavTabId, label: 'Modules', icon: require('../assets/images/modules-icon.png') },
+  { id: 'progress-tracking-nav' as NavTabId, label: 'Progress Tracking', icon: require('../assets/images/progress-tracking-icon.png') },
 ];
 
 interface FamilyOnboardingTutorialProps {
@@ -119,14 +111,10 @@ export function FamilyOnboardingTutorial({
   const [initialUserMode, setInitialUserMode] = useState<'parent' | 'student' | null>(null);
   const screenHeight = Dimensions.get('window').height;
   const screenWidth = Dimensions.get('window').width;
-  
-  // Track which actions have been executed to prevent infinite loops
+
   const executedActions = useRef<Set<string>>(new Set());
-  
-  // Add unique instance ID to prevent duplicate tutorials
   const instanceId = useRef(Math.random().toString(36).substr(2, 9));
-  
-  // Log when this component is created
+
   useEffect(() => {
     console.log('📚 Tutorial instance created with ID:', instanceId.current);
     return () => {
@@ -134,7 +122,6 @@ export function FamilyOnboardingTutorial({
     };
   }, []);
 
-  // Track initial user mode when tutorial starts
   useEffect(() => {
     if (visible && initialUserMode === null) {
       setInitialUserMode(currentUserMode);
@@ -143,20 +130,16 @@ export function FamilyOnboardingTutorial({
     }
   }, [visible, currentUserMode, initialUserMode]);
 
-  // Track mode switches during tutorial
   useEffect(() => {
     if (visible && initialUserMode !== null && currentUserMode !== initialUserMode) {
       console.log('🔄 Mode switch detected during tutorial:', initialUserMode, '→', currentUserMode);
-      console.log('✅ Interactive step completed! User can now proceed.');
       setHasInteractedWithModeSwitch(true);
     }
   }, [currentUserMode, initialUserMode, visible]);
 
   useEffect(() => {
     if (visible) {
-      // Clear executed actions for fresh tutorial start
       executedActions.current.clear();
-      // Reset animation to 0 first, then fade in
       fadeAnim.setValue(0);
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -164,7 +147,6 @@ export function FamilyOnboardingTutorial({
         useNativeDriver: true,
       }).start();
     } else {
-      // When hiding, fade out quickly
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 150,
@@ -173,26 +155,18 @@ export function FamilyOnboardingTutorial({
     }
   }, [visible, fadeAnim]);
 
-  // Handle navigation when step changes
   useEffect(() => {
     if (!visible) return;
-    
+
     const step = TUTORIAL_STEPS[currentStep];
     if (!step || !step.action) return;
 
-    // Create unique key for this step's action to prevent duplicate executions
     const actionKey = `${currentStep}-${step.action}`;
-    
-    // If we've already executed this action, don't do it again
-    if (executedActions.current.has(actionKey)) {
-      return;
-    }
+    if (executedActions.current.has(actionKey)) return;
 
     console.log('📚 Tutorial executing action for step', currentStep, ':', step.action);
 
-    // Small delay to let the step content render first
     const timer = setTimeout(() => {
-      // Mark this action as executed
       executedActions.current.add(actionKey);
 
       if (step.action === 'navigate-to-assessment' && onNavigateToAssessment) {
@@ -205,18 +179,16 @@ export function FamilyOnboardingTutorial({
         onNavigateToHome();
       } else if (step.action === 'switch-to-parent-and-navigate-profile') {
         onModeSwitch('parent');
-        // Navigate to profile after mode switch
         setTimeout(() => {
           if (onNavigateToProfile) onNavigateToProfile();
         }, 500);
       } else if (step.action === 'switch-to-student-and-navigate-profile') {
         onModeSwitch('student');
-        // Navigate to profile after mode switch
         setTimeout(() => {
           if (onNavigateToProfile) onNavigateToProfile();
         }, 500);
       }
-    }, 300); // Small delay to let content appear first
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [currentStep, visible]);
@@ -224,16 +196,10 @@ export function FamilyOnboardingTutorial({
   const currentTutorialStep = TUTORIAL_STEPS[currentStep];
 
   const handleNext = () => {
-    // Check if this is an interactive step that requires completion
     const step = TUTORIAL_STEPS[currentStep];
     if (step?.isInteractive && step.interactionTarget === 'mode-switcher' && !hasInteractedWithModeSwitch) {
-      // Don't proceed if interaction is required but not completed
-      console.log('📚 Interactive step not completed yet, cannot proceed');
       return;
     }
-
-    // Navigation and mode switching now happen automatically when step shows
-    // This just advances to the next step
     if (currentStep < TUTORIAL_STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -241,40 +207,36 @@ export function FamilyOnboardingTutorial({
     }
   };
 
-  // Check if the next button should be enabled
   const canProceedToNext = () => {
     const step = TUTORIAL_STEPS[currentStep];
     if (step?.isInteractive && step.interactionTarget === 'mode-switcher') {
       return hasInteractedWithModeSwitch;
     }
-    return true; // Non-interactive steps can always proceed
+    return true;
   };
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      // Clear executed actions for the current step to allow re-execution when going forward again
       const currentActionKey = `${currentStep}-${TUTORIAL_STEPS[currentStep]?.action}`;
       const nextActionKey = `${currentStep - 1}-${TUTORIAL_STEPS[currentStep - 1]?.action}`;
       executedActions.current.delete(currentActionKey);
       executedActions.current.delete(nextActionKey);
-      
-      // Reset interaction state when going back to interactive step
+
       const prevStep = TUTORIAL_STEPS[currentStep - 1];
       if (prevStep?.isInteractive && prevStep.interactionTarget === 'mode-switcher') {
         setHasInteractedWithModeSwitch(false);
         setInitialUserMode(currentUserMode);
       }
-      
+
       setCurrentStep(currentStep - 1);
     }
   };
 
   const handleComplete = () => {
-    // Clear executed actions and interaction state for fresh restart
     executedActions.current.clear();
     setHasInteractedWithModeSwitch(false);
     setInitialUserMode(null);
-    
+
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 300,
@@ -285,11 +247,10 @@ export function FamilyOnboardingTutorial({
   };
 
   const handleSkip = () => {
-    // Clear executed actions and interaction state for fresh restart
     executedActions.current.clear();
     setHasInteractedWithModeSwitch(false);
     setInitialUserMode(null);
-    
+
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 300,
@@ -299,20 +260,9 @@ export function FamilyOnboardingTutorial({
     });
   };
 
-  const getHighlightOverlay = () => {
-    if (!currentTutorialStep.targetArea || !currentTutorialStep.highlightPosition) {
-      return null;
-    }
-
-    return (
-      <View style={[styles.highlight, currentTutorialStep.highlightPosition]} />
-    );
-  };
-
   const getPerspectiveBadge = () => {
     const step = currentTutorialStep;
     if (step.perspective === 'both') return null;
-
     return (
       <View style={[
         styles.perspectiveBadge,
@@ -325,7 +275,30 @@ export function FamilyOnboardingTutorial({
     );
   };
 
+  const renderNavBarIllustration = (activeStepId: string) => (
+    <View style={styles.navBarIllustration}>
+      {NAV_TABS.map((tab) => {
+        const isActive = tab.id === activeStepId;
+        return (
+          <View key={tab.id} style={styles.navTabItem}>
+            <View style={[styles.navTabIconWrapper, isActive && styles.navTabIconWrapperActive]}>
+              <Image
+                source={tab.icon}
+                style={[styles.navTabIcon, { tintColor: isActive ? '#007AFF' : '#9E9E9E' }]}
+              />
+            </View>
+            <Text style={[styles.navTabLabel, isActive && styles.navTabLabelActive]}>
+              {tab.label}
+            </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+
   if (!visible) return null;
+
+  const isNavStep = NAV_TAB_IDS.includes(currentTutorialStep.id as NavTabId);
 
   return (
     <Modal
@@ -335,17 +308,24 @@ export function FamilyOnboardingTutorial({
       onRequestClose={onClose}
     >
       <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
-        {getHighlightOverlay()}
-        
-        <View style={styles.tutorialCard}>
+
+        {/* Arrow indicator pointing to the mode toggle button (bottom-right) */}
+        {currentTutorialStep.id === 'mode-switcher-intro' && (
+          <View pointerEvents="none" style={styles.toggleArrowIndicator}>
+            <Text style={styles.toggleArrowEmoji}>↘</Text>
+            <Text style={styles.toggleArrowLabel}>Toggle button</Text>
+          </View>
+        )}
+
+        <View style={[styles.tutorialCard, isNavStep && styles.tutorialCardWithNav]}>
           {/* Progress indicator */}
           <View style={styles.progressContainer}>
             <View style={styles.progressBar}>
-              <View 
+              <View
                 style={[
-                  styles.progressFill, 
+                  styles.progressFill,
                   { width: `${((currentStep + 1) / TUTORIAL_STEPS.length) * 100}%` }
-                ]} 
+                ]}
               />
             </View>
             <Text style={styles.progressText}>
@@ -360,79 +340,107 @@ export function FamilyOnboardingTutorial({
             <ThemedText style={styles.stepTitle}>
               {currentTutorialStep.title}
             </ThemedText>
-            
-             <ThemedText style={styles.stepDescription}>
-               {currentTutorialStep.description}
-             </ThemedText>
 
-             {/* Interactive mode switcher for step 3 */}
-             {currentTutorialStep.isInteractive && currentTutorialStep.interactionTarget === 'mode-switcher' && (
-               <View style={styles.interactiveSection}>
-                 <ThemedText style={styles.interactionPrompt}>
-                   Try the toggle below - switch between Parent and Student views:
-                 </ThemedText>
-                 
-                 <View style={styles.embeddedToggleContainer}>
-                   <ModeToggle compact={true} />
-                 </View>
+            <ThemedText style={styles.stepDescription}>
+              {currentTutorialStep.description}
+            </ThemedText>
 
-                 {!hasInteractedWithModeSwitch ? (
-                   <View style={styles.waitingMessage}>
-                     <Text style={styles.waitingText}>
-                       Switch modes to see how the interface changes for parents vs students!
-                     </Text>
-                   </View>
-                 ) : (
-                   <View style={styles.completedMessage}>
-                     <Text style={styles.completedText}>
-                       Perfect! You've tried both modes. Notice how each view is designed for different users. Ready to continue?
-                     </Text>
-                   </View>
-                 )}
-               </View>
-             )}
+            {/* Mode switcher: button illustrations + interactive toggle */}
+            {currentTutorialStep.id === 'mode-switcher-intro' && (
+              <View style={styles.modeSwitcherSection}>
+                <View style={styles.modeButtonsRow}>
+                  <View style={styles.modeButtonExample}>
+                    <View style={[styles.modeButtonCircle, { backgroundColor: '#2196F3' }]}>
+                      <Image
+                        source={require('../assets/images/parent-icon.png')}
+                        style={styles.modeButtonIcon}
+                      />
+                    </View>
+                    <Text style={styles.modeButtonLabel}>Parent Mode</Text>
+                  </View>
+                  <View style={styles.modeButtonExample}>
+                    <View style={[styles.modeButtonCircle, { backgroundColor: '#FF9800' }]}>
+                      <Image
+                        source={require('../assets/images/student-icon.png')}
+                        style={styles.modeButtonIcon}
+                      />
+                    </View>
+                    <Text style={styles.modeButtonLabel}>Student Mode</Text>
+                  </View>
+                </View>
 
-             {/* Show current mode indicator when relevant */}
-            {(currentTutorialStep.perspective !== 'both' || currentTutorialStep.action) && (
-              <View style={styles.modeIndicator}>
-                <Text style={styles.currentModeText}>
-                  Currently in: {currentUserMode === 'parent' ? 'Parent' : 'Student'} View
-                </Text>
+                <View style={styles.embeddedToggleContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.inlineToggleButton,
+                      currentUserMode === 'parent' ? styles.inlineToggleParent : styles.inlineToggleStudent,
+                    ]}
+                    onPress={() => onModeSwitch(currentUserMode === 'parent' ? 'student' : 'parent')}
+                    activeOpacity={0.8}
+                  >
+                    <Image
+                      source={
+                        currentUserMode === 'parent'
+                          ? require('../assets/images/parent-icon.png')
+                          : require('../assets/images/student-icon.png')
+                      }
+                      style={styles.inlineToggleIcon}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                {!hasInteractedWithModeSwitch ? (
+                  <View style={styles.waitingMessage}>
+                    <Text style={styles.waitingText}>
+                      Switch modes to see how the interface changes!
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.completedMessage}>
+                    <Text style={styles.completedText}>
+                      You can switch anytime. Ready to continue?
+                    </Text>
+                  </View>
+                )}
               </View>
             )}
+
+            {/* Nav bar illustration for home/modules/progress steps */}
+            {isNavStep && renderNavBarIllustration(currentTutorialStep.id)}
           </ScrollView>
 
           {/* Navigation buttons */}
           <View style={styles.buttonContainer}>
             <View style={styles.navButtons}>
               {currentStep > 0 && (
-                <TouchableOpacity 
-                  style={[styles.button, styles.previousButton]} 
+                <TouchableOpacity
+                  style={[styles.button, styles.previousButton]}
                   onPress={handlePrevious}
                 >
                   <Text style={styles.previousButtonText}>Previous</Text>
                 </TouchableOpacity>
               )}
 
-               <TouchableOpacity 
-                 style={[
-                   styles.button, 
-                   styles.nextButton,
-                   !canProceedToNext() && styles.nextButtonDisabled
-                 ]} 
-                 onPress={handleNext}
-                 disabled={!canProceedToNext()}
-               >
-                 <Text style={[
-                   styles.nextButtonText,
-                   !canProceedToNext() && styles.nextButtonTextDisabled
-                 ]}>
-                   {!canProceedToNext() 
-                     ? 'Try the toggle first!' 
-                     : currentStep === TUTORIAL_STEPS.length - 1 ? 'Get Started!' : 'Next'
-                   }
-                 </Text>
-               </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  styles.nextButton,
+                  !canProceedToNext() && styles.nextButtonDisabled
+                ]}
+                onPress={handleNext}
+                disabled={!canProceedToNext()}
+              >
+                <Text style={[
+                  styles.nextButtonText,
+                  !canProceedToNext() && styles.nextButtonTextDisabled
+                ]}>
+                  {!canProceedToNext()
+                    ? 'Try the toggle first!'
+                    : currentStep === TUTORIAL_STEPS.length - 1 ? 'Get Started!' : 'Next'
+                  }
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -447,22 +455,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'flex-end',
   },
-  highlight: {
-    position: 'absolute',
-    borderRadius: 8,
-    borderWidth: 3,
-    borderColor: '#FFD700',
-    backgroundColor: 'transparent',
-  },
   tutorialCard: {
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '40%',
+    maxHeight: '55%',
     minHeight: 200,
     paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 20,
+  },
+  tutorialCardWithNav: {
+    maxHeight: '60%',
   },
   progressContainer: {
     flexDirection: 'row',
@@ -519,27 +523,171 @@ const styles = StyleSheet.create({
     color: '#666',
     lineHeight: 24,
     textAlign: 'center',
+    marginBottom: 16,
+  },
+  // Mode switcher step
+  modeSwitcherSection: {
+    marginTop: 4,
+  },
+  modeButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 32,
     marginBottom: 20,
   },
-  modeIndicator: {
-    backgroundColor: '#F8F9FA',
-    padding: 12,
-    borderRadius: 8,
+  modeButtonExample: {
     alignItems: 'center',
-    marginTop: 16,
+    gap: 8,
   },
-  currentModeText: {
+  modeButtonCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  modeButtonIcon: {
+    width: 26,
+    height: 26,
+    tintColor: 'white',
+    resizeMode: 'contain',
+  },
+  modeButtonLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#444',
+  },
+  embeddedToggleContainer: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  inlineToggleButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  inlineToggleParent: {
+    backgroundColor: '#2196F3',
+  },
+  inlineToggleStudent: {
+    backgroundColor: '#FF9800',
+  },
+  inlineToggleIcon: {
+    width: 32,
+    height: 32,
+    tintColor: '#fff',
+  },
+  waitingMessage: {
+    padding: 12,
+    backgroundColor: '#FFF3CD',
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFC107',
+  },
+  waitingText: {
     fontSize: 14,
-    color: '#495057',
+    color: '#856404',
+    textAlign: 'center',
     fontWeight: '500',
   },
+  completedMessage: {
+    padding: 12,
+    backgroundColor: '#D1ECF1',
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#17A2B8',
+  },
+  completedText: {
+    fontSize: 14,
+    color: '#0C5460',
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  // Arrow indicator for mode toggle button location
+  toggleArrowIndicator: {
+    position: 'absolute',
+    bottom: 290,
+    right: 24,
+    alignItems: 'center',
+  },
+  toggleArrowEmoji: {
+    fontSize: 28,
+    color: 'white',
+  },
+  toggleArrowLabel: {
+    fontSize: 12,
+    color: 'white',
+    fontWeight: '600',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  // Nav bar illustration
+  navBarIllustration: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    marginTop: 4,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  navTabItem: {
+    alignItems: 'center',
+    flex: 1,
+    gap: 4,
+  },
+  navTabIconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navTabIconWrapperActive: {
+    backgroundColor: '#E8F0FE',
+  },
+  navTabIcon: {
+    width: 26,
+    height: 26,
+    resizeMode: 'contain',
+  },
+  navTabLabel: {
+    fontSize: 11,
+    color: '#9E9E9E',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  navTabLabelActive: {
+    color: '#007AFF',
+    fontWeight: '700',
+  },
+  // Buttons
   buttonContainer: {
-    marginTop: 20,
+    marginTop: 16,
   },
   navButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 12,
+    marginTop: 8,
   },
   button: {
     paddingHorizontal: 24,
@@ -563,63 +711,16 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 12,
   },
-   nextButtonText: {
-     fontSize: 16,
-     color: 'white',
-     fontWeight: 'bold',
-   },
-   nextButtonDisabled: {
-     backgroundColor: '#BDC3C7',
-     opacity: 0.6,
-   },
-   nextButtonTextDisabled: {
-     color: '#7F8C8D',
-   },
-   interactiveSection: {
-     backgroundColor: '#F8F9FA',
-     borderRadius: 12,
-     padding: 16,
-     marginVertical: 16,
-     borderLeftWidth: 4,
-     borderLeftColor: '#007AFF',
-   },
-   interactionPrompt: {
-     fontSize: 16,
-     fontWeight: '600',
-     color: '#007AFF',
-     textAlign: 'center',
-     marginBottom: 16,
-   },
-   embeddedToggleContainer: {
-     alignItems: 'center',
-     marginVertical: 8,
-   },
-   waitingMessage: {
-     marginTop: 12,
-     padding: 12,
-     backgroundColor: '#FFF3CD',
-     borderRadius: 8,
-     borderLeftWidth: 4,
-     borderLeftColor: '#FFC107',
-   },
-   waitingText: {
-     fontSize: 14,
-     color: '#856404',
-     textAlign: 'center',
-     fontWeight: '500',
-   },
-   completedMessage: {
-     marginTop: 12,
-     padding: 12,
-     backgroundColor: '#D1ECF1',
-     borderRadius: 8,
-     borderLeftWidth: 4,
-     borderLeftColor: '#17A2B8',
-   },
-   completedText: {
-     fontSize: 14,
-     color: '#0C5460',
-     textAlign: 'center',
-     fontWeight: '600',
-   },
- });
+  nextButtonText: {
+    fontSize: 16,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  nextButtonDisabled: {
+    backgroundColor: '#BDC3C7',
+    opacity: 0.6,
+  },
+  nextButtonTextDisabled: {
+    color: '#7F8C8D',
+  },
+});

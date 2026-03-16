@@ -1,12 +1,19 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { parseTextWithYouTube } from '../utils/youtube';
 import { ThemedText } from './ThemedText';
 import { EnhancedYouTubePlayer } from './EnhancedYouTubePlayer';
 
+interface RichSpan {
+  text: string;
+  bold: boolean;
+}
+
 interface TextWithYouTubeProps {
   /** The text content that may contain YouTube URLs */
   text: string;
+  /** Optional rich text spans with bold formatting info */
+  spans?: RichSpan[];
   /** Style for the text portions */
   textStyle?: any;
   /** Style for the container */
@@ -32,6 +39,7 @@ interface TextWithYouTubeProps {
  */
 export function TextWithYouTube({
   text,
+  spans,
   textStyle,
   style,
   videoHeight = 200,
@@ -89,8 +97,19 @@ export function TextWithYouTube({
     return { title, description, category };
   };
 
-  // If no YouTube URLs found, render as regular text
+  // If no YouTube URLs found, render as regular text (with optional bold spans)
   if (parsedContent.length === 1 && parsedContent[0].type === 'text') {
+    if (spans && spans.length > 0) {
+      return (
+        <ThemedText style={[textStyle, style]}>
+          {spans.map((span, i) =>
+            span.bold
+              ? <Text key={i} style={{ fontWeight: 'bold' }}>{span.text}</Text>
+              : span.text
+          )}
+        </ThemedText>
+      );
+    }
     return (
       <ThemedText style={[textStyle, style]}>
         {parsedContent[0].content}
