@@ -6,8 +6,8 @@ import { useFamilyTutorial } from '@/contexts/TutorialContext';
 import { assessmentService, type AssessmentSummary } from '@/services/assessment-service';
 import { familyService } from '@/services/family-service';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
@@ -18,6 +18,14 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(false);
   const [assessmentResults, setAssessmentResults] = useState<AssessmentSummary | null>(null);
   const [loadingResults, setLoadingResults] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Scroll to top whenever this screen is focused (e.g. tutorial navigation)
+  useFocusEffect(
+    useCallback(() => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+    }, [])
+  );
 
   // Load assessment results
   useEffect(() => {
@@ -134,7 +142,7 @@ export default function ProfileScreen() {
 
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView ref={scrollViewRef} style={styles.container}>
       <ThemedView style={styles.header}>
         <View style={styles.profileIconContainer}>
           <Image
