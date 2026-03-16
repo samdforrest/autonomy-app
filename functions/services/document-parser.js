@@ -232,17 +232,43 @@ class DocumentParser {
     if (!paragraph) {
       return '';
     }
-    
+
     let text = '';
     const elements = paragraph.elements || [];
-    
+
     elements.forEach(element => {
       if (element && element.textRun && element.textRun.content) {
         text += element.textRun.content;
       }
     });
-    
+
     return text.trim();
+  }
+
+  /**
+   * Extract rich text spans (with bold info) from a paragraph element
+   * Returns null if no bold formatting is present (plain text only)
+   * @param {Object} paragraph - Paragraph element
+   * @returns {Array|null} - Array of {text, bold} spans, or null if no bold
+   */
+  extractRichSpans(paragraph) {
+    if (!paragraph) return null;
+
+    const elements = paragraph.elements || [];
+    const spans = [];
+    let hasBold = false;
+
+    elements.forEach(element => {
+      if (element && element.textRun && element.textRun.content) {
+        const spanText = element.textRun.content.replace(/\n$/, '');
+        if (!spanText) return;
+        const bold = !!(element.textRun.textStyle?.bold);
+        if (bold) hasBold = true;
+        spans.push({ text: spanText, bold });
+      }
+    });
+
+    return hasBold ? spans : null;
   }
 
   /**
@@ -287,7 +313,8 @@ class DocumentParser {
       const text = this.extractTextFromParagraph(paragraph);
       if (text) {
         console.log('📌 Native bullet detected:', text.substring(0, 50));
-        this.processBulletPoint(text);
+        const spans = this.extractRichSpans(paragraph);
+        this.processBulletPoint(text, spans);
       }
       return;
     }
@@ -295,23 +322,33 @@ class DocumentParser {
     const elements = paragraph.elements || [];
     let text = '';
     let isHeader = false;
+    const richSpans = [];
+    let hasBold = false;
 
     // Extract text and check formatting, also handle inline objects (images)
     elements.forEach(element => {
       if (element && element.textRun) {
-        text += element.textRun.content || '';
-        
+        const content = element.textRun.content || '';
+        text += content;
+
         // Check if this is a header (bold, larger font, etc.)
         const textStyle = element.textRun.textStyle || {};
-        if (textStyle.bold || textStyle.fontSize?.magnitude > 12) {
+        const bold = !!textStyle.bold;
+        if (bold || textStyle.fontSize?.magnitude > 12) {
           isHeader = true;
         }
+        if (bold) hasBold = true;
+
+        const spanText = content.replace(/\n$/, '');
+        if (spanText) richSpans.push({ text: spanText, bold });
       } else if (element && element.inlineObjectElement) {
         // Handle inline objects (images)
         console.log('🔍 Found inlineObjectElement:', element.inlineObjectElement.inlineObjectId);
         this.processInlineObject(element.inlineObjectElement);
       }
     });
+
+    const spans = hasBold ? richSpans : null;
 
     // Clean up text
     text = text.trim();
@@ -326,14 +363,14 @@ class DocumentParser {
 
     // Determine content type and process accordingly
     const isHeaderDetected = this.isHeader(text, paragraph, isHeader);
-    
+
     if (isHeaderDetected) {
       console.log('✅ Header detected:', text.substring(0, 60) + (text.length > 60 ? '...' : ''));
       this.processHeader(text);
     } else if (this.isBulletPoint(text)) {
-      this.processBulletPoint(text);
+      this.processBulletPoint(text, spans);
     } else if (text.length > 0) {
-      this.processRegularText(text);
+      this.processRegularText(text, spans);
     }
   }
 
@@ -479,8 +516,9 @@ class DocumentParser {
   /**
    * Process bullet point and add to current section
    * @param {string} text - Bullet point text
+   * @param {Array|null} spans - Optional rich text spans with bold info
    */
-  processBulletPoint(text) {
+  processBulletPoint(text, spans = null) {
     // Clean bullet point text
     const bulletText = text.replace(/^[\s-•]+/, '').trim();
 
@@ -512,10 +550,24 @@ class DocumentParser {
       this.parsedContent.contentBlocks.push(this.currentBlock);
     }
 
+    // Clean spans by stripping any leading bullet/dash prefix from the first span
+    let cleanSpans = null;
+    if (spans) {
+      cleanSpans = spans.map((span, i) => {
+        if (i === 0) {
+          const cleanText = span.text.replace(/^[\s-•]+/, '');
+          return cleanText ? { ...span, text: cleanText } : null;
+        }
+        return span;
+      }).filter(Boolean);
+      if (cleanSpans.length === 0) cleanSpans = null;
+    }
+
     // Add to current content block
     this.currentBlock.content.push({
       type: 'bullet',
-      text: bulletText
+      text: bulletText,
+      ...(cleanSpans && { spans: cleanSpans })
     });
   }
 
@@ -594,7 +646,7 @@ class DocumentParser {
    * Process regular text content
    * @param {string} text - Regular text content
    */
-  processRegularText(text) {
+  processRegularText(text, spans = null) {
     // For Parent How To tabs, check for Why/How/What patterns and split into separate blocks
     if (this.isParentHowToTab) {
       const sections = this.splitByWhyHowWhat(text);
@@ -682,13 +734,14 @@ class DocumentParser {
       } else {
         this.currentBlock.content.push({
           type: 'text',
-          text: text
+          text: text,
+          ...(spans && { spans })
         });
       }
     } else {
       // If no current block exists, create one for orphan content
       let contentType = 'text';
-      let contentData = { text: text };
+      let contentData = { text: text, ...(spans && { spans }) };
       
       if (optionMatch) {
         contentType = 'option';
