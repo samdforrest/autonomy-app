@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { ModeToggle } from './ModeToggle';
 import { ThemedText } from './ThemedText';
 
 interface TutorialStep {
@@ -371,7 +370,24 @@ export function FamilyOnboardingTutorial({
                 </View>
 
                 <View style={styles.embeddedToggleContainer}>
-                  <ModeToggle compact={true} />
+                  <TouchableOpacity
+                    style={[
+                      styles.inlineToggleButton,
+                      currentUserMode === 'parent' ? styles.inlineToggleParent : styles.inlineToggleStudent,
+                    ]}
+                    onPress={() => onModeSwitch(currentUserMode === 'parent' ? 'student' : 'parent')}
+                    activeOpacity={0.8}
+                  >
+                    <Image
+                      source={
+                        currentUserMode === 'parent'
+                          ? require('../assets/images/parent-icon.png')
+                          : require('../assets/images/student-icon.png')
+                      }
+                      style={styles.inlineToggleIcon}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
                 </View>
 
                 {!hasInteractedWithModeSwitch ? (
@@ -549,6 +565,29 @@ const styles = StyleSheet.create({
   embeddedToggleContainer: {
     alignItems: 'center',
     marginBottom: 12,
+  },
+  inlineToggleButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  inlineToggleParent: {
+    backgroundColor: '#2196F3',
+  },
+  inlineToggleStudent: {
+    backgroundColor: '#FF9800',
+  },
+  inlineToggleIcon: {
+    width: 32,
+    height: 32,
+    tintColor: '#fff',
   },
   waitingMessage: {
     padding: 12,
