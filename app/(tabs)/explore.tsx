@@ -253,14 +253,6 @@ export default function TabTwoScreen() {
       isActive: true,
       day3Color: '#E8C866',
       day5Color: '#D9A400'
-    },
-    {
-      id: '11',
-      title: 'Learning Conversations',
-      description: 'Guiding meaningful learning discussions',
-      isActive: true,
-      day3Color: '#C7DEF0',
-      day5Color: '#A2C8E6'
     }
   ];
 
@@ -284,7 +276,7 @@ export default function TabTwoScreen() {
       'Shape of Learning': userMode === 'parent' ? '/shapeoflearning-parent-module' : '/shapeoflearning-module',
       'Neuroplasticity': userMode === 'parent' ? '/neuroplasticity-parent-module' : '/neuroplasticity-module',
       'Mastery Moments': userMode === 'parent' ? '/mastery-moments-parent-module' : '/mastery-moments-module',
-      'Learning Conversations': userMode === 'parent' ? '/learning-conversations-parent-module' : '/learning-conversations-module'
+      'Learning Conversations': '/learning-conversations-module'
     };
 
     const route = moduleRoutes[module.title as keyof typeof moduleRoutes];

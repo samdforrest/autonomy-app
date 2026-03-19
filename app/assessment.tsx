@@ -185,10 +185,10 @@ export default function AssessmentScreen() {
         // Student-specific completion message
         Alert.alert(
           'Assessment Complete!',
-          "Thanks for showing us where you are now! Let's hear from some other kids who already use the tools you're about to learn.",
+          "Thanks for showing us where you are now! Let's start with your first learning activity.",
           [
             { text: 'Continue', onPress: () => {
-              router.push('/intro-student');
+              router.push('/learning-conversations-module');
             } }
           ]
         );
