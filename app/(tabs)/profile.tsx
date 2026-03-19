@@ -61,7 +61,8 @@ export default function ProfileScreen() {
       shapeoflearning: 'Shape of Learning',
       neuroplasticity: 'Neuroplasticity',
       masterymoments: 'Mastery Moments',
-      selfmonitoring: 'Self-Monitoring'
+      selfmonitoring: 'Self-Monitoring',
+      learningconversations: 'Learning Conversations'
     };
     return names[moduleId] || moduleId;
   };

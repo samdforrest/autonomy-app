@@ -339,7 +339,7 @@ export class FamilyService {
     const students = family.students ? Object.values(family.students) : [];
     console.log('📊 Family completion stats - students found:', students.length);
     
-    const moduleIds = ['mistakes', 'regulation', 'job', 'collaboration', 'selfcoach', 'curiosity', 'shapeoflearning', 'neuroplasticity', 'masterymoments', 'selfmonitoring'];
+    const moduleIds = ['mistakes', 'regulation', 'job', 'collaboration', 'selfcoach', 'curiosity', 'shapeoflearning', 'neuroplasticity', 'masterymoments', 'selfmonitoring', 'learningconversations'];
     
     const moduleStats: { [moduleId: string]: { 
       completed: number; 

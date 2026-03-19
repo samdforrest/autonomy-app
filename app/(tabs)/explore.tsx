@@ -29,6 +29,7 @@ const MODULE_TITLE_TO_ID: Record<string, string> = {
   'Mistakes': 'mistakes',
   'Neuroplasticity': 'neuroplasticity',
   'Mastery Moments': 'masterymoments',
+  'Learning Conversations': 'learningconversations',
 };
 
 export default function TabTwoScreen() {
@@ -161,6 +162,14 @@ export default function TabTwoScreen() {
       isActive: true,
       day3Color: '#E8C866',
       day5Color: '#D9A400'
+    },
+    {
+      id: '11',
+      title: 'Learning Conversations',
+      description: 'Talking through my learning',
+      isActive: true,
+      day3Color: '#C7DEF0',
+      day5Color: '#A2C8E6'
     }
   ];
 
@@ -244,6 +253,14 @@ export default function TabTwoScreen() {
       isActive: true,
       day3Color: '#E8C866',
       day5Color: '#D9A400'
+    },
+    {
+      id: '11',
+      title: 'Learning Conversations',
+      description: 'Guiding meaningful learning discussions',
+      isActive: true,
+      day3Color: '#C7DEF0',
+      day5Color: '#A2C8E6'
     }
   ];
 
@@ -266,7 +283,8 @@ export default function TabTwoScreen() {
       'Curiosity': userMode === 'parent' ? '/curiosity-parent-module' : '/curiosity-module',
       'Shape of Learning': userMode === 'parent' ? '/shapeoflearning-parent-module' : '/shapeoflearning-module',
       'Neuroplasticity': userMode === 'parent' ? '/neuroplasticity-parent-module' : '/neuroplasticity-module',
-      'Mastery Moments': userMode === 'parent' ? '/mastery-moments-parent-module' : '/mastery-moments-module'
+      'Mastery Moments': userMode === 'parent' ? '/mastery-moments-parent-module' : '/mastery-moments-module',
+      'Learning Conversations': userMode === 'parent' ? '/learning-conversations-parent-module' : '/learning-conversations-module'
     };
 
     const route = moduleRoutes[module.title as keyof typeof moduleRoutes];
