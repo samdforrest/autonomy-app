@@ -69,23 +69,21 @@ export default function ProfileScreen() {
 
   // Auto-trigger removed - users can start tutorial manually from buttons below
 
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
+
   const handleLogout = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out? You\'ll need to enter your family code again to access the app.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Sign Out', 
-          style: 'destructive',
-          onPress: () => {
-            console.log('🚪 User logging out');
-            clearFamilyContext();
-            // No need to navigate - AuthGuard will automatically show login screen
-          }
-        }
-      ]
-    );
+    if (!confirmingLogout) {
+      setConfirmingLogout(true);
+      return;
+    }
+    console.log('🚪 User logging out');
+    setConfirmingLogout(false);
+    clearFamilyContext();
+    router.replace('/join-family');
+  };
+
+  const handleLogoutCancel = () => {
+    setConfirmingLogout(false);
   };
 
   // Student profile functions removed for now
@@ -277,12 +275,24 @@ export default function ProfileScreen() {
               <Text style={styles.quickActionText}>Share Family Code</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.quickAction, styles.logoutAction]}
-              onPress={handleLogout}
-            >
-              <Text style={[styles.quickActionText, styles.logoutActionText]}>Sign Out</Text>
-            </TouchableOpacity>
+            {confirmingLogout ? (
+              <View style={styles.logoutConfirmRow}>
+                <Text style={styles.logoutConfirmText}>Are you sure?</Text>
+                <TouchableOpacity style={styles.logoutConfirmButton} onPress={handleLogout}>
+                  <Text style={styles.logoutConfirmButtonText}>Yes, Sign Out</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.logoutCancelButton} onPress={handleLogoutCancel}>
+                  <Text style={styles.logoutCancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={[styles.quickAction, styles.logoutAction]}
+                onPress={handleLogout}
+              >
+                <Text style={[styles.quickActionText, styles.logoutActionText]}>Sign Out</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Admin Section - Only visible to admin families */}
@@ -581,6 +591,43 @@ const styles = StyleSheet.create({
   logoutActionText: {
     color: '#d32f2f',
     fontWeight: '600',
+  },
+  logoutConfirmRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 10,
+    backgroundColor: '#ffe6e6',
+    borderRadius: 8,
+    borderColor: '#ffcccc',
+    borderWidth: 1,
+  },
+  logoutConfirmText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#d32f2f',
+    fontWeight: '600',
+  },
+  logoutConfirmButton: {
+    backgroundColor: '#d32f2f',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  logoutConfirmButtonText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  logoutCancelButton: {
+    backgroundColor: '#e0e0e0',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  logoutCancelButtonText: {
+    color: '#333',
+    fontSize: 13,
   },
   // Family Access styles
   sectionSubtitle: {
