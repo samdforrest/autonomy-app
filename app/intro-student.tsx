@@ -12,7 +12,7 @@ import { DOCUMENT_REFS } from '@/services/api';
 
 export default function StudentIntroScreen() {
   const router = useRouter();
-  const { currentFamilyCode } = useAppMode();
+  const { currentFamilyCode, switchMode } = useAppMode();
   const [isCompleting, setIsCompleting] = useState(false);
 
   // Fetch Google Docs content for Student Intro tab
@@ -105,7 +105,10 @@ export default function StudentIntroScreen() {
     try {
       console.log('🎓 Student intro completed, marking as complete');
       await familyService.markStudentIntroComplete(currentFamilyCode);
-      
+
+      console.log('🎓 Switching to student mode before assessment');
+      switchMode('student');
+
       console.log('📝 Navigating to assessment');
       router.replace('/assessment');
     } catch (error) {
